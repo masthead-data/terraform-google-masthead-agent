@@ -2,6 +2,8 @@
 
 Tools for Masthead deployment into customer's environment.
 
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FMasthead-Data%2Fmasthead-deployment)
+
 ## Overview
 
 This repository contains Terraform configurations to deploy the integration resources for Masthead Data in Google Cloud.
@@ -48,6 +50,18 @@ This repository contains Terraform configurations to deploy the integration reso
 3. Run `terraform init` to initialize the configuration.
 4. Run `terraform plan` to create an execution plan.
 5. Run `terraform apply` to deploy the infrastructure.
+
+! Important
+
+The credentials used in Terraform must have the following roles:
+
+- `roles/logging.configWriter` - Access to manage configuration of logging resources.
+
+
+The deployment process requires the following variables to be set:
+
+- `project_id` - Google Cloud project ID where the resources will be deployed.
+- `project_number` - Google Cloud project number.
 
 ### Complete Deployment Example
 
