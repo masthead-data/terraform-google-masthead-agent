@@ -91,7 +91,7 @@ resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
 }
 
 #5. Grant Masthead service account required roles: BigQuery Metadata Viewer, BigQuery Resource Viewer, PubSub Subscriber.
-resource "google_project_iam_member" "grant-masthead-pubsub-subscriber-role" {
+resource "google_project_iam_member" "grant-masthead-data-roles" {
   for_each = toset(["roles/bigquery.metadataViewer", "roles/bigquery.resourceViewer", "roles/pubsub.subscriber"])
 
   project = var.project_id
