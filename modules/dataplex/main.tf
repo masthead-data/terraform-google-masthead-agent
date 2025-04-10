@@ -115,5 +115,5 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
 resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:service-${var.project_number}@gcp-sa-logging.iam.gserviceaccount.com"
+  member  = "serviceAccount:cloud-logs@system.gserviceaccount.com"
 }
