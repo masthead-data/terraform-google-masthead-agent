@@ -23,7 +23,9 @@ Running a full deployment you will deploy the agent resources required for BigQu
 terraform init
 
 # Create an execution plan and save it to a file
-terraform plan -out=tfplan
+terraform plan -out=tfplan \
+    --var=project_id=PROJECT_ID \
+    --var=project_number=PROJECT_NUMBER
 
 # Apply the planned changes to deploy the complete infrastructure
 terraform apply tfplan
@@ -35,7 +37,11 @@ The deployment can be limited to the resources required to integrate Masthead Da
 
 ```bash
 terraform init
-terraform plan -out=tfplan -target=module.bigquery
+
+terraform plan -out=tfplan -target=module.bigquery \
+    --var=project_id=PROJECT_ID \
+    --var=project_number=PROJECT_NUMBER
+
 terraform apply tfplan
 ```
 
