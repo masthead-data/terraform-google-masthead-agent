@@ -77,7 +77,7 @@ resource "google_logging_project_sink" "masthead_sink" {
 resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:service-${var.project_number}@gcp-sa-logging.iam.gserviceaccount.com"
+  member  = "serviceAccount:cloud-logs@system.gserviceaccount.com"
 }
 
 #5. Grant Masthead service account required roles: BigQuery Metadata Viewer, BigQuery Resource Viewer, PubSub Subscriber.
