@@ -12,20 +12,23 @@ terraform {
 module "bigquery" {
   source = "./modules/bigquery"
 
-  project_id     = var.project_id
-  project_number = var.project_number
+  project_id = var.project_id
 }
 
 module "dataform" {
   source = "./modules/dataform"
 
-  project_id     = var.project_id
-  project_number = var.project_number
+  project_id = var.project_id
 }
 
 module "dataplex" {
   source = "./modules/dataplex"
 
-  project_id     = var.project_id
-  project_number = var.project_number
+  project_id = var.project_id
+}
+
+module "analytics_hub" {
+  source = "./modules/analytics-hub"
+
+  project_id = var.project_id
 }

@@ -69,7 +69,7 @@ resource "google_logging_project_sink" "masthead_sink" {
   description = "Masthead Agent log sink"
   destination = "pubsub.googleapis.com/projects/${var.project_id}/topics/masthead-topic"
   filter      = "protoPayload.methodName=\"google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows\" OR \"google.cloud.bigquery.v2.JobService.InsertJob\" OR \"google.cloud.bigquery.v2.TableService.InsertTable\" OR \"google.cloud.bigquery.v2.JobService.Query\" resource.type =\"bigquery_table\" OR resource.type =\"bigquery_dataset\" OR resource.type =\"bigquery_project\""
-  project     = var.project_number
+  project     = var.project_id
   unique_writer_identity = false
 }
 
@@ -81,7 +81,7 @@ resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
 }
 
 #5. Grant Masthead service account required roles: BigQuery Metadata Viewer, BigQuery Resource Viewer, PubSub Subscriber.
-resource "google_project_iam_member" "grant-masthead-data-roles" {
+resource "google_project_iam_member" "grant-masthead-bigquery-roles" {
   for_each = toset(["roles/bigquery.metadataViewer", "roles/bigquery.resourceViewer", "roles/pubsub.subscriber"])
 
   project = var.project_id
