@@ -1,7 +1,5 @@
 # Masthead Data agent Terraform Module for Google Cloud
 
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FMasthead-Data%2Fmasthead-deployment)
-
 [![Terraform Module](https://img.shields.io/badge/Terraform-Module-blue.svg)](https://registry.terraform.io/modules/masthead-data/masthead-agent/google/latest)
 
 ## Overview
@@ -14,6 +12,10 @@ This repository contains Terraform module that deploys the resources for Masthea
 2. Configure your [gcloud CLI](https://cloud.google.com/sdk/gcloud#download_and_install_the) with your Google Cloud credentials.
 3. Use Terraform module to deploy the infrastructure.
 
+or
+
+[![Open in Google Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FMasthead-Data%2Fmasthead-deployment)
+
 ### Complete Deployment
 
 Running a full deployment you will deploy the agent resources required for BigQuery, Dataform and Dataplex integration:
@@ -23,7 +25,8 @@ Running a full deployment you will deploy the agent resources required for BigQu
 terraform init
 
 # Create an execution plan and save it to a file
-terraform plan -out=tfplan --var=project_id=PROJECT_ID
+terraform plan -out=tfplan \
+    --var=project_id=PROJECT_ID
 
 # Apply the planned changes to deploy the complete infrastructure
 terraform apply tfplan
@@ -36,7 +39,8 @@ The deployment can be limited to the resources required to integrate Masthead Da
 ```bash
 terraform init
 
-terraform plan -out=tfplan -target=module.bigquery --var=project_id=PROJECT_ID
+terraform plan -out=tfplan -target=module.bigquery \
+    --var=project_id=PROJECT_ID
 
 terraform apply tfplan
 ```
