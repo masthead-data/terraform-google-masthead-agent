@@ -70,33 +70,11 @@ resource "google_project_iam_custom_role" "masthead_dataplex_locations" {
 }
 
 #4. Grant Masthead SA required roles: pubsub.subscriber, bigquery.jobUser, dataplex.dataScanAdmin, dataplex.storageDataReader, masthead_dataplex_locations;
-resource "google_project_iam_member" "masthead-dataplex-pubsub-subscriber-role" {
-  project = var.project_id
-  role    = "roles/pubsub.subscriber"
-  member  = "serviceAccount:masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
-}
+resource "google_project_iam_member" "grant-masthead-dataplex-roles" {
+  for_each = toset(["roles/pubsub.subscriber", "roles/dataplex.dataScanAdmin", "roles/dataplex.storageDataReader", "roles/bigquery.jobUser", "projects/${var.project_id}/roles/masthead_dataplex_locations"])
 
-resource "google_project_iam_member" "masthead-dataplex-bigquery-jobUser-role" {
   project = var.project_id
-  role    = "roles/bigquery.jobUser"
-  member  = "serviceAccount:masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
-}
-
-resource "google_project_iam_member" "masthead-dataplex-dataplex-dataScanAdmin-role" {
-  project = var.project_id
-  role    = "roles/dataplex.dataScanAdmin"
-  member  = "serviceAccount:masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
-}
-
-resource "google_project_iam_member" "masthead-dataplex-dataplex-storageDataReader-role" {
-  project = var.project_id
-  role    = "roles/dataplex.storageDataReader"
-  member  = "serviceAccount:masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
-}
-
-resource "google_project_iam_member" "masthead-dataplex-dataplex-locations-role" {
-  project = var.project_id
-  role    = "projects/${var.project_id}/roles/masthead_dataplex_locations"
+  role    = each.value
   member  = "serviceAccount:masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
 }
 
@@ -107,7 +85,7 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
   destination = "pubsub.googleapis.com/projects/${var.project_id}/topics/masthead-dataplex-topic"
   filter      = "jsonPayload.@type=\"type.googleapis.com/google.cloud.dataplex.v1.DataScanEvent\" OR protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.CreateDataScan\" OR protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.UpdateDataScan\" OR protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.DeleteDataScan\" AND (severity=\"INFO\" OR \"NOTICE\")"
   name        = "masthead-dataplex-sink"
-  project     = var.project_number
+  project     = var.project_id
   unique_writer_identity = false
 }
 
@@ -115,5 +93,5 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
 resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:service-${var.project_number}@gcp-sa-logging.iam.gserviceaccount.com"
+  member  = "serviceAccount:cloud-logs@system.gserviceaccount.com"
 }

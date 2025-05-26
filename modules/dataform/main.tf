@@ -63,15 +63,11 @@ resource "google_pubsub_subscription" "masthead_dataform_subscription" {
 }
 
 #3. Grant Masthead SA required roles: pubsub.subscriber, dataform.viewer
-resource "google_project_iam_member" "masthead-dataform-pubsub-subscriber-role" {
-  project = var.project_id
-  role    = "roles/pubsub.subscriber"
-  member  = "serviceAccount:masthead-dataform@masthead-prod.iam.gserviceaccount.com"
-}
+resource "google_project_iam_member" "grant-masthead-dataform-roles" {
+  for_each = toset(["roles/pubsub.subscriber", "roles/dataform.viewer"])
 
-resource "google_project_iam_member" "masthead-dataplex-bigquery-jobUser-role" {
   project = var.project_id
-  role    = "roles/dataform.viewer"
+  role    = each.value
   member  = "serviceAccount:masthead-dataform@masthead-prod.iam.gserviceaccount.com"
 }
 
@@ -82,7 +78,7 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
   destination = "pubsub.googleapis.com/projects/${var.project_id}/topics/masthead-dataform-topic"
   filter      = "protoPayload.serviceName=\"dataform.googleapis.com\" OR resource.type=\"dataform.googleapis.com/Repository\""
   name        = "masthead-dataform-sink"
-  project     = var.project_number
+  project     = var.project_id
   unique_writer_identity = false
 }
 
@@ -90,5 +86,5 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
 resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:service-${var.project_number}@gcp-sa-logging.iam.gserviceaccount.com"
+  member  = "serviceAccount:cloud-logs@system.gserviceaccount.com"
 }
