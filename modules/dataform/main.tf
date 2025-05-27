@@ -2,6 +2,10 @@ provider "google" {
   project = var.project_id
 }
 
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
 #1. Enable required services in GCP
 resource "google_project_service" "enable_pubsub_service" {
   project = var.project_id
@@ -79,12 +83,11 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
   filter      = "protoPayload.serviceName=\"dataform.googleapis.com\" OR resource.type=\"dataform.googleapis.com/Repository\""
   name        = "masthead-dataform-sink"
   project     = var.project_id
-  unique_writer_identity = false
 }
 
 #5. Grant cloud-logs SA PubSub Publisher role.
 resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:cloud-logs@system.gserviceaccount.com"
+  member  = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-logging.iam.gserviceaccount.com"
 }

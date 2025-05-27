@@ -2,6 +2,10 @@ provider "google" {
   project = var.project_id
 }
 
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
 #1. Enable required services in GCP
 resource "google_project_service" "enable_pubsub_service" {
   project = var.project_id
@@ -70,14 +74,13 @@ resource "google_logging_project_sink" "masthead_sink" {
   destination = "pubsub.googleapis.com/projects/${var.project_id}/topics/masthead-topic"
   filter      = "protoPayload.methodName=\"google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows\" OR \"google.cloud.bigquery.v2.JobService.InsertJob\" OR \"google.cloud.bigquery.v2.TableService.InsertTable\" OR \"google.cloud.bigquery.v2.JobService.Query\" resource.type =\"bigquery_table\" OR resource.type =\"bigquery_dataset\" OR resource.type =\"bigquery_project\""
   project     = var.project_id
-  unique_writer_identity = false
 }
 
 #4. Grant Cloud Logs default Service Account PubSub Publisher role.
 resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:cloud-logs@system.gserviceaccount.com"
+  member  = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-logging.iam.gserviceaccount.com"
 }
 
 #5. Grant Masthead service account required roles: BigQuery Metadata Viewer, BigQuery Resource Viewer, PubSub Subscriber.

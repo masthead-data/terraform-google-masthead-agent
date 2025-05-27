@@ -2,6 +2,10 @@ provider "google" {
   project = var.project_id
 }
 
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
 #1. Enable required services in GCP
 resource "google_project_service" "enable_pubsub_service" {
   project = var.project_id
@@ -78,7 +82,7 @@ resource "google_project_iam_member" "grant-masthead-dataplex-roles" {
   member  = "serviceAccount:masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
 }
 
-#5. Create Log Sink. roles/pubsub.publisher will be assigned to default serviceAccount:cloud-logs@system.gserviceaccount.com
+#5. Create Log Sink.
 resource "google_logging_project_sink" "masthead_dataplex_sink" {
   depends_on = [google_pubsub_topic.masthead_dataplex_topic,time_sleep.wait_30_seconds_to_enable_logging_service]
   description = "Masthead Dataplex log sink"
@@ -86,12 +90,11 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
   filter      = "jsonPayload.@type=\"type.googleapis.com/google.cloud.dataplex.v1.DataScanEvent\" OR protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.CreateDataScan\" OR protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.UpdateDataScan\" OR protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.DeleteDataScan\" AND (severity=\"INFO\" OR \"NOTICE\")"
   name        = "masthead-dataplex-sink"
   project     = var.project_id
-  unique_writer_identity = false
 }
 
 #6. Grant cloud-logs SA PubSub Publisher role.
 resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:cloud-logs@system.gserviceaccount.com"
+  member  = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-logging.iam.gserviceaccount.com"
 }
