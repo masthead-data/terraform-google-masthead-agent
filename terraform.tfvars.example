@@ -1,0 +1,34 @@
+# Example terraform.tfvars file
+# Copy this file to terraform.tfvars and customize the values
+
+# Required: Your GCP project ID
+project_id = "your-gcp-project-id"
+
+# Optional: GCP region (default: us-central1)
+# region = "us-central1"
+
+# Optional: Enable/disable specific modules (all enabled by default)
+# enable_modules = {
+#   bigquery      = true
+#   dataform      = true
+#   dataplex      = true
+#   analytics_hub = true
+# }
+
+# Optional: Customize Masthead service account emails (uses defaults if not specified)
+# masthead_service_accounts = {
+#   bigquery_sa  = "masthead-data@masthead-prod.iam.gserviceaccount.com"
+#   dataform_sa  = "masthead-dataform@masthead-prod.iam.gserviceaccount.com"
+#   dataplex_sa  = "masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
+#   retro_sa     = "retro-data@masthead-prod.iam.gserviceaccount.com"
+# }
+
+# Optional: Customize resource prefix (default: masthead)
+# resource_prefix = "masthead"
+
+# Optional: Add custom labels to all resources
+# labels = {
+#   environment = "production"
+#   team        = "data"
+#   cost_center = "engineering"
+# }
