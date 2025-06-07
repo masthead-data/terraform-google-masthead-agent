@@ -9,26 +9,52 @@ terraform {
   }
 }
 
+# Configure the Google Cloud Provider
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
 module "bigquery" {
+  count  = var.enable_modules.bigquery ? 1 : 0
   source = "./modules/bigquery"
 
-  project_id = var.project_id
+  project_id                = var.project_id
+  region                    = var.region
+  masthead_service_accounts = var.masthead_service_accounts
+  resource_prefix           = var.resource_prefix
+  labels                    = var.labels
 }
 
 module "dataform" {
+  count  = var.enable_modules.dataform ? 1 : 0
   source = "./modules/dataform"
 
-  project_id = var.project_id
+  project_id                = var.project_id
+  region                    = var.region
+  masthead_service_accounts = var.masthead_service_accounts
+  resource_prefix           = var.resource_prefix
+  labels                    = var.labels
 }
 
 module "dataplex" {
+  count  = var.enable_modules.dataplex ? 1 : 0
   source = "./modules/dataplex"
 
-  project_id = var.project_id
+  project_id                = var.project_id
+  region                    = var.region
+  masthead_service_accounts = var.masthead_service_accounts
+  resource_prefix           = var.resource_prefix
+  labels                    = var.labels
 }
 
 module "analytics_hub" {
+  count  = var.enable_modules.analytics_hub ? 1 : 0
   source = "./modules/analytics-hub"
 
-  project_id = var.project_id
+  project_id                = var.project_id
+  region                    = var.region
+  masthead_service_accounts = var.masthead_service_accounts
+  resource_prefix           = var.resource_prefix
+  labels                    = var.labels
 }

@@ -1,97 +1,122 @@
-provider "google" {
+# Dataplex module - handles logging and IAM for Dataplex monitoring
+# Note: Provider is configured at the root level
+
+locals {
+  resource_names = {
+    topic          = "${var.resource_prefix}-dataplex-topic"
+    subscription   = "${var.resource_prefix}-dataplex-subscription"
+    sink           = "${var.resource_prefix}-dataplex-sink"
+    custom_role_id = "${var.resource_prefix}_dataplex_locations"
+  }
+
+  # Merge default labels with user-provided labels
+  common_labels = merge(var.labels, {
+    component = "dataplex"
+    service   = "masthead-agent"
+  })
+}
+
+# Enable required Google Cloud APIs
+resource "google_project_service" "required_apis" {
+  for_each = toset([
+    "pubsub.googleapis.com",
+    "logging.googleapis.com",
+    "dataplex.googleapis.com",
+    "bigquery.googleapis.com"
+  ])
+
   project = var.project_id
+  service = each.value
+
+  disable_on_destroy         = false
+  disable_dependent_services = false
 }
 
-#1. Enable required services in GCP
-resource "google_project_service" "enable_pubsub_service" {
-  project = var.project_id
-  service = "pubsub.googleapis.com"
-
-  disable_dependent_services = true
-}
-
-resource "google_project_service" "enable_iam_service" {
-  project = var.project_id
-  service = "iam.googleapis.com"
-
-  disable_dependent_services = true
-}
-
-resource "google_project_service" "enable_logging_service" {
-  project = var.project_id
-  service = "logging.googleapis.com"
-
-  disable_dependent_services = true
-}
-
-resource "time_sleep" "wait_30_seconds_to_enable_pubsub_service" {
-  depends_on = [google_project_service.enable_pubsub_service]
-
-  create_duration = "30s"
-}
-resource "time_sleep" "wait_30_seconds_to_enable_logging_service" {
-  depends_on = [google_project_service.enable_logging_service]
-
-  create_duration = "30s"
-}
-
-#2. Create Pub/Sub topic and subscription
+# Create Pub/Sub topic for Dataplex audit logs
 resource "google_pubsub_topic" "masthead_dataplex_topic" {
-  name    = "masthead-dataplex-topic"
+  depends_on = [google_project_service.required_apis]
+
   project = var.project_id
-  depends_on = [time_sleep.wait_30_seconds_to_enable_pubsub_service]
+  name    = local.resource_names.topic
+
+  labels = local.common_labels
 }
 
-resource "time_sleep" "wait_30_seconds_to_create_topic" {
-  depends_on = [google_pubsub_topic.masthead_dataplex_topic]
-
-  create_duration = "30s"
-}
-
+# Create Pub/Sub subscription for the agent to consume messages
 resource "google_pubsub_subscription" "masthead_dataplex_subscription" {
-  ack_deadline_seconds = 60
+  project                    = var.project_id
+  name                       = local.resource_names.subscription
+  topic                      = google_pubsub_topic.masthead_dataplex_topic.id
+  message_retention_duration = "86400s" # 24 hours
+  ack_deadline_seconds       = 60
+
+  labels = local.common_labels
+
+  # Prevent subscription from expiring
   expiration_policy {
     ttl = ""
   }
-  message_retention_duration = "86400s"
-  name                       = "masthead-dataplex-subscription"
-  project                    = var.project_id
-  topic                      = "projects/${var.project_id}/topics/masthead-dataplex-topic"
-
-  depends_on = [time_sleep.wait_30_seconds_to_create_topic]
 }
 
-#3. Create custom role for Dataplex locations
+# Create custom IAM role for Dataplex locations access
 resource "google_project_iam_custom_role" "masthead_dataplex_locations" {
-  role_id     = "masthead_dataplex_locations"
-  title       = "masthead_dataplex_locations"
-  description = "Masthead DataPlex locations reader"
-  permissions = ["dataplex.locations.get", "dataplex.locations.list"]
+  depends_on = [google_project_service.required_apis]
+
+  project     = var.project_id
+  role_id     = local.resource_names.custom_role_id
+  title       = "Dataplex Locations (Masthead Data)"
+  description = "Custom role for Dataplex locations reader access for Masthead Data"
+  stage       = "GA"
+
+  permissions = [
+    "dataplex.locations.get",
+    "dataplex.locations.list"
+  ]
 }
 
-#4. Grant Masthead SA required roles: pubsub.subscriber, bigquery.jobUser, dataplex.dataScanAdmin, dataplex.storageDataReader, masthead_dataplex_locations;
-resource "google_project_iam_member" "grant-masthead-dataplex-roles" {
-  for_each = toset(["roles/pubsub.subscriber", "roles/dataplex.dataScanAdmin", "roles/dataplex.storageDataReader", "roles/bigquery.jobUser", "projects/${var.project_id}/roles/masthead_dataplex_locations"])
+# Grant Masthead service account required permissions
+resource "google_project_iam_member" "masthead_dataplex_permissions" {
+  for_each = toset([
+    "roles/pubsub.subscriber",
+    "roles/dataplex.dataScanAdmin",
+    "roles/dataplex.storageDataReader",
+    "roles/bigquery.jobUser",
+    "projects/${var.project_id}/roles/${google_project_iam_custom_role.masthead_dataplex_locations.role_id}"
+  ])
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
+  member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
+
+  depends_on = [google_project_iam_custom_role.masthead_dataplex_locations]
 }
 
-#5. Create Log Sink. roles/pubsub.publisher will be assigned to default serviceAccount:cloud-logs@system.gserviceaccount.com
+# Create logging sink to capture Dataplex audit logs
 resource "google_logging_project_sink" "masthead_dataplex_sink" {
-  depends_on = [google_pubsub_topic.masthead_dataplex_topic,time_sleep.wait_30_seconds_to_enable_logging_service]
-  description = "Masthead Dataplex log sink"
-  destination = "pubsub.googleapis.com/projects/${var.project_id}/topics/masthead-dataplex-topic"
-  filter      = "jsonPayload.@type=\"type.googleapis.com/google.cloud.dataplex.v1.DataScanEvent\" OR protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.CreateDataScan\" OR protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.UpdateDataScan\" OR protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.DeleteDataScan\" AND (severity=\"INFO\" OR \"NOTICE\")"
-  name        = "masthead-dataplex-sink"
+  depends_on = [google_project_service.required_apis]
+
   project     = var.project_id
-  unique_writer_identity = false
+  name        = local.resource_names.sink
+  description = "Masthead Dataplex log sink for audit logs"
+  destination = "pubsub.googleapis.com/${google_pubsub_topic.masthead_dataplex_topic.id}"
+
+  # Enhanced filter for comprehensive Dataplex monitoring
+  filter = join(" AND ", [
+    join(" OR ", [
+      "jsonPayload.@type=\"type.googleapis.com/google.cloud.dataplex.v1.DataScanEvent\"",
+      "protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.CreateDataScan\"",
+      "protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.UpdateDataScan\"",
+      "protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.DeleteDataScan\""
+    ]),
+    "(severity=\"INFO\" OR severity=\"NOTICE\")"
+  ])
+
+  unique_writer_identity = true
 }
 
-#6. Grant cloud-logs SA PubSub Publisher role.
-resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
+# Grant Cloud Logging service account permission to publish to Pub/Sub
+resource "google_project_iam_member" "logging_pubsub_publisher" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:cloud-logs@system.gserviceaccount.com"
+  member  = google_logging_project_sink.masthead_dataplex_sink.writer_identity
 }
