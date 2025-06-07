@@ -40,7 +40,7 @@ module "masthead_agent" {
   version = "~> 0.1.3"
 
   project_id = "your-gcp-project-id"
-  region     = "us-west2"
+  region     = "us-central1"
 
   # Enable only specific modules
   enable_modules = {
@@ -51,7 +51,7 @@ module "masthead_agent" {
   }
 
   # Custom resource naming
-  resource_prefix = "my-company"
+  resource_prefix = "masthead"
 
   # Custom labels for resource management
   labels = {
