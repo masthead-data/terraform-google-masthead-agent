@@ -10,13 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 - **Conditional Module Deployment**: Added ability to enable/disable individual modules via `enable_modules` variable
-- **Regional Configuration**: Added `region` variable to specify GCP region for resources
-- **Resource Naming**: Added `resource_prefix` variable for customizable resource naming
 - **Resource Labels**: Added `labels` variable to apply custom labels to all resources
-- **Comprehensive Outputs**: Added detailed outputs for all created resources
-- **Regional Restrictions**: Restricted Pub/Sub topics to specified region
-- **Example Configuration**: Added `terraform.tfvars.example` file
 - **Logging Sink Security**: Changed `unique_writer_identity` to `true` for better security isolation
+- **Service Management**: Added `disable_on_destroy` and `disable_dependent_services` configuration for `google_project_service` resources
+- **IAM Optimization**: Switched from `google_iam_member` to `google_pubsub_topic_iam_member` for more specific Pub/Sub permissions
 
 ### Migration Guide from 0.1.3
 
@@ -38,18 +35,12 @@ module "masthead_agent" {
   source     = "..."
   project_id = "your-project"
 
-  # Optional: Configure service accounts if different from defaults
-  masthead_service_accounts = {
-    bigquery_sa = "your-custom-sa@your-project.iam.gserviceaccount.com"
-    # ... other service accounts
-  }
-
   # Optional: Enable only specific modules
   enable_modules = {
     bigquery      = true
-    dataform      = false
+    dataform      = true
     dataplex      = true
-    analytics_hub = false
+    analytics_hub = true
   }
 }
 ```

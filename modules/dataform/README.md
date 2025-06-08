@@ -22,8 +22,6 @@ This module sets up the necessary infrastructure for Masthead Data to monitor Da
 
 ## Optional Variables
 
-- `region`: GCP region for resources (default: "us-central1")
-- `resource_prefix`: Prefix for resource names (default: "masthead")
 - `labels`: Labels to apply to all resources
 
 ## Outputs

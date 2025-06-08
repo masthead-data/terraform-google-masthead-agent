@@ -8,12 +8,6 @@ variable "project_id" {
   }
 }
 
-variable "region" {
-  type        = string
-  description = "The GCP region where regional resources will be created"
-  default     = "us-central1"
-}
-
 variable "masthead_service_accounts" {
   type = object({
     bigquery_sa = string
@@ -43,17 +37,6 @@ variable "enable_modules" {
     dataform      = true
     dataplex      = true
     analytics_hub = true
-  }
-}
-
-variable "resource_prefix" {
-  type        = string
-  description = "Prefix for all resource names"
-  default     = "masthead"
-
-  validation {
-    condition     = can(regex("^[a-z][a-z0-9-]*[a-z0-9]$", var.resource_prefix))
-    error_message = "Resource prefix must start with a lowercase letter, contain only lowercase letters, numbers, and hyphens, and end with an alphanumeric character."
   }
 }
 

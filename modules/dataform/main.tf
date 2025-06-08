@@ -3,9 +3,9 @@
 
 locals {
   resource_names = {
-    topic        = "${var.resource_prefix}-dataform-topic"
-    subscription = "${var.resource_prefix}-dataform-subscription"
-    sink         = "${var.resource_prefix}-dataform-sink"
+    topic        = "masthead-dataform-topic"
+    subscription = "masthead-dataform-subscription"
+    sink         = "masthead-dataform-sink"
   }
 
   # Merge default labels with user-provided labels

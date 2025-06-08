@@ -3,10 +3,10 @@
 
 locals {
   resource_names = {
-    topic          = "${var.resource_prefix}-dataplex-topic"
-    subscription   = "${var.resource_prefix}-dataplex-subscription"
-    sink           = "${var.resource_prefix}-dataplex-sink"
-    custom_role_id = "${var.resource_prefix}_dataplex_locations"
+    topic          = "masthead-dataplex-topic"
+    subscription   = "masthead-dataplex-subscription"
+    sink           = "masthead-dataplex-sink"
+    custom_role_id = "masthead_dataplex_locations"
   }
 
   # Merge default labels with user-provided labels

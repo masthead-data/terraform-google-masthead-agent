@@ -8,10 +8,10 @@ This Terraform module deploys the infrastructure required for Masthead Data agen
 
 The module creates monitoring infrastructure for each enabled service:
 
+- **API Enablement**: Required Google Cloud APIs
 - **Pub/Sub Topics & Subscriptions**: For reliable log message delivery
 - **Cloud Logging Sinks**: To route audit logs to Pub/Sub
 - **IAM Bindings**: Secure access for Masthead service accounts
-- **API Enablement**: Required Google Cloud APIs
 
 ## 🚀 Quick Start
 
@@ -40,7 +40,6 @@ module "masthead_agent" {
   version = "~> 0.1.3"
 
   project_id = "your-gcp-project-id"
-  region     = "us-central1"
 
   # Enable only specific modules
   enable_modules = {
@@ -49,9 +48,6 @@ module "masthead_agent" {
     dataplex      = true
     analytics_hub = false
   }
-
-  # Custom resource naming
-  resource_prefix = "masthead"
 
   # Custom labels for resource management
   labels = {
@@ -96,10 +92,7 @@ terraform apply tfplan
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | `project_id` | The GCP project ID where resources will be created | `string` | n/a | yes |
-| `region` | The GCP region where regional resources will be created | `string` | `"us-central1"` | no |
 | `enable_modules` | Enable/disable specific modules | `object` | All enabled | no |
-| `masthead_service_accounts` | Masthead service account emails | `object` | Masthead defaults | no |
-| `resource_prefix` | Prefix for all resource names | `string` | `"masthead"` | no |
 | `labels` | Labels to apply to all resources | `map(string)` | Default labels | no |
 
 ### Enable Modules Structure
@@ -134,15 +127,11 @@ masthead_service_accounts = {
 | `analytics_hub` | Analytics Hub module outputs (IAM bindings) |
 | `enabled_modules` | List of enabled modules |
 | `project_id` | The GCP project ID where resources were created |
-| `region` | The GCP region where resources were created |
 
 ## 🔒 Security Features
 
 - **Unique Writer Identities**: Each logging sink uses its own service account
 - **Least Privilege Access**: Minimal required permissions for each service account
-- **Dead Letter Queues**: Failed message handling for reliability
-- **Message Ordering**: Consistent log processing
-- **Regional Restrictions**: Pub/Sub topics restricted to specified region
 
 ## 🔧 Module Structure
 
@@ -167,7 +156,7 @@ Each module includes:
 - **Terraform**: >= 1.5.7
 - **Google Provider**: >= 6.13.0
 - **GCP APIs**: Automatically enabled by the module
-- **IAM Permissions**: Project Editor or equivalent custom role
+- **IAM Permissions**: Project Owner or equivalent custom role
 
 ## 🤝 Contributing
 

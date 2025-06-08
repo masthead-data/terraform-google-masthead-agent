@@ -3,9 +3,9 @@
 
 locals {
   resource_names = {
-    topic        = "${var.resource_prefix}-topic"
-    subscription = "${var.resource_prefix}-agent-subscription"
-    sink         = "${var.resource_prefix}-agent-sink"
+    topic        = "masthead-topic"
+    subscription = "masthead-agent-subscription"
+    sink         = "masthead-agent-sink"
   }
 
   # Merge default labels with user-provided labels
