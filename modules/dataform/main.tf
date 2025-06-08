@@ -86,9 +86,10 @@ resource "google_logging_project_sink" "masthead_dataform_sink" {
   unique_writer_identity = true
 }
 
-# Grant Cloud Logging service account permission to publish to Pub/Sub
-resource "google_project_iam_member" "logging_pubsub_publisher" {
+# Grant Cloud Logging service account permission to publish to Pub/Sub topic
+resource "google_pubsub_topic_iam_member" "logging_pubsub_publisher" {
   project = var.project_id
+  topic   = google_pubsub_topic.masthead_dataform_topic.name
   role    = "roles/pubsub.publisher"
   member  = google_logging_project_sink.masthead_dataform_sink.writer_identity
 }
