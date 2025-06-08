@@ -56,18 +56,6 @@ resource "google_pubsub_subscription" "masthead_dataform_subscription" {
   }
 }
 
-# Grant Masthead service account required permissions
-resource "google_project_iam_member" "masthead_dataform_permissions" {
-  for_each = toset([
-    "roles/pubsub.subscriber",
-    "roles/dataform.viewer"
-  ])
-
-  project = var.project_id
-  role    = each.value
-  member  = "serviceAccount:${var.masthead_service_accounts.dataform_sa}"
-}
-
 # Create logging sink to capture Dataform audit logs
 resource "google_logging_project_sink" "masthead_dataform_sink" {
   depends_on = [google_project_service.required_apis]
@@ -92,4 +80,23 @@ resource "google_pubsub_topic_iam_member" "logging_pubsub_publisher" {
   topic   = google_pubsub_topic.masthead_dataform_topic.name
   role    = "roles/pubsub.publisher"
   member  = google_logging_project_sink.masthead_dataform_sink.writer_identity
+}
+
+# Grant Masthead service account subscriber permission on the subscription
+resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscriber" {
+  project      = var.project_id
+  subscription = google_pubsub_subscription.masthead_dataform_subscription.name
+  role         = "roles/pubsub.subscriber"
+  member       = "serviceAccount:${var.masthead_service_accounts.dataform_sa}"
+}
+
+# Grant Masthead service account required Dataform permissions
+resource "google_project_iam_member" "masthead_dataform_permissions" {
+  for_each = toset([
+    "roles/dataform.viewer"
+  ])
+
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:${var.masthead_service_accounts.dataform_sa}"
 }

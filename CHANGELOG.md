@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Logging Sink Security**: Changed `unique_writer_identity` to `true` for better security isolation
 - **Service Management**: Added `disable_on_destroy` and `disable_dependent_services` configuration for `google_project_service` resources
 - **IAM Optimization**: Switched from `google_iam_member` to `google_pubsub_topic_iam_member` for more specific Pub/Sub permissions
+- **IAM Security Enhancement**: Moved Masthead subscriber role from project level to specific subscription level for improved security isolation
 
 ### Migration Guide from 0.1.3
 

@@ -88,12 +88,19 @@ resource "google_pubsub_topic_iam_member" "logging_pubsub_publisher" {
   member  = google_logging_project_sink.masthead_sink.writer_identity
 }
 
-# Grant Masthead service account required BigQuery and Pub/Sub permissions
+# Grant Masthead service account subscriber permission on the subscription
+resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscriber" {
+  project      = var.project_id
+  subscription = google_pubsub_subscription.masthead_agent_subscription.name
+  role         = "roles/pubsub.subscriber"
+  member       = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
+}
+
+# Grant Masthead service account required permissions
 resource "google_project_iam_member" "masthead_bigquery_permissions" {
   for_each = toset([
     "roles/bigquery.metadataViewer",
-    "roles/bigquery.resourceViewer",
-    "roles/pubsub.subscriber"
+    "roles/bigquery.resourceViewer"
   ])
 
   project = var.project_id

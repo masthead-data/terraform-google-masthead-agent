@@ -58,39 +58,6 @@ resource "google_pubsub_subscription" "masthead_dataplex_subscription" {
   }
 }
 
-# Create custom IAM role for Dataplex locations access
-resource "google_project_iam_custom_role" "masthead_dataplex_locations" {
-  depends_on = [google_project_service.required_apis]
-
-  project     = var.project_id
-  role_id     = local.resource_names.custom_role_id
-  title       = "Dataplex Locations (Masthead Data)"
-  description = "Custom role for Dataplex locations reader access for Masthead Data"
-  stage       = "GA"
-
-  permissions = [
-    "dataplex.locations.get",
-    "dataplex.locations.list"
-  ]
-}
-
-# Grant Masthead service account required permissions
-resource "google_project_iam_member" "masthead_dataplex_permissions" {
-  for_each = toset([
-    "roles/pubsub.subscriber",
-    "roles/dataplex.dataScanAdmin",
-    "roles/dataplex.storageDataReader",
-    "roles/bigquery.jobUser",
-    "projects/${var.project_id}/roles/${google_project_iam_custom_role.masthead_dataplex_locations.role_id}"
-  ])
-
-  project = var.project_id
-  role    = each.value
-  member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
-
-  depends_on = [google_project_iam_custom_role.masthead_dataplex_locations]
-}
-
 # Create logging sink to capture Dataplex audit logs
 resource "google_logging_project_sink" "masthead_dataplex_sink" {
   depends_on = [google_project_service.required_apis]
@@ -120,4 +87,44 @@ resource "google_pubsub_topic_iam_member" "logging_pubsub_publisher" {
   topic   = google_pubsub_topic.masthead_dataplex_topic.name
   role    = "roles/pubsub.publisher"
   member  = google_logging_project_sink.masthead_dataplex_sink.writer_identity
+}
+
+# Grant Masthead service account subscriber permission on the subscription
+resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscriber" {
+  project      = var.project_id
+  subscription = google_pubsub_subscription.masthead_dataplex_subscription.name
+  role         = "roles/pubsub.subscriber"
+  member       = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
+}
+
+# Create custom IAM role for Dataplex locations access
+resource "google_project_iam_custom_role" "masthead_dataplex_locations" {
+  depends_on = [google_project_service.required_apis]
+
+  project     = var.project_id
+  role_id     = local.resource_names.custom_role_id
+  title       = "Dataplex Locations (Masthead Data)"
+  description = "Custom role for Dataplex locations reader access for Masthead Data"
+  stage       = "GA"
+
+  permissions = [
+    "dataplex.locations.get",
+    "dataplex.locations.list"
+  ]
+}
+
+# Grant Masthead service account required Dataplex permissions
+resource "google_project_iam_member" "masthead_dataplex_permissions" {
+  for_each = toset([
+    "roles/dataplex.dataScanAdmin",
+    "roles/dataplex.storageDataReader",
+    "roles/bigquery.jobUser",
+    "projects/${var.project_id}/roles/${google_project_iam_custom_role.masthead_dataplex_locations.role_id}"
+  ])
+
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
+
+  depends_on = [google_project_iam_custom_role.masthead_dataplex_locations]
 }
