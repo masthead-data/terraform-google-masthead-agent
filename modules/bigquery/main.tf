@@ -67,15 +67,15 @@ resource "google_logging_project_sink" "masthead_sink" {
   destination = "pubsub.googleapis.com/${google_pubsub_topic.masthead_topic.id}"
 
   # Enhanced filter for comprehensive BigQuery monitoring
-  filter = join(" OR ", [
-    "protoPayload.methodName=\"google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows\"",
-    "protoPayload.methodName=\"google.cloud.bigquery.v2.JobService.InsertJob\"",
-    "protoPayload.methodName=\"google.cloud.bigquery.v2.TableService.InsertTable\"",
-    "protoPayload.methodName=\"google.cloud.bigquery.v2.JobService.Query\"",
-    "resource.type=\"bigquery_table\"",
-    "resource.type=\"bigquery_dataset\"",
-    "resource.type=\"bigquery_project\""
-  ])
+  filter = <<-EOT
+    protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows" OR
+    protoPayload.methodName="google.cloud.bigquery.v2.JobService.InsertJob" OR
+    protoPayload.methodName="google.cloud.bigquery.v2.TableService.InsertTable" OR
+    protoPayload.methodName="google.cloud.bigquery.v2.JobService.Query"
+    resource.type="bigquery_table" OR
+    resource.type="bigquery_dataset" OR
+    resource.type="bigquery_project"
+  EOT
 
   unique_writer_identity = true
 }

@@ -68,15 +68,13 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
   destination = "pubsub.googleapis.com/${google_pubsub_topic.masthead_dataplex_topic.id}"
 
   # Enhanced filter for comprehensive Dataplex monitoring
-  filter = join(" AND ", [
-    join(" OR ", [
-      "jsonPayload.@type=\"type.googleapis.com/google.cloud.dataplex.v1.DataScanEvent\"",
-      "protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.CreateDataScan\"",
-      "protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.UpdateDataScan\"",
-      "protoPayload.methodName=\"google.cloud.dataplex.v1.DataScanService.DeleteDataScan\""
-    ]),
-    "(severity=\"INFO\" OR severity=\"NOTICE\")"
-  ])
+  filter = <<-EOT
+    (jsonPayload.@type="type.googleapis.com/google.cloud.dataplex.v1.DataScanEvent" OR
+     protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.CreateDataScan" OR
+     protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.UpdateDataScan" OR
+     protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.DeleteDataScan") AND
+    (severity="INFO" OR severity="NOTICE")
+  EOT
 
   unique_writer_identity = true
 }

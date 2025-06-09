@@ -66,10 +66,10 @@ resource "google_logging_project_sink" "masthead_dataform_sink" {
   destination = "pubsub.googleapis.com/${google_pubsub_topic.masthead_dataform_topic.id}"
 
   # Enhanced filter for comprehensive Dataform monitoring
-  filter = join(" OR ", [
-    "protoPayload.serviceName=\"dataform.googleapis.com\"",
-    "resource.type=\"dataform.googleapis.com/Repository\""
-  ])
+  filter = <<-EOT
+    protoPayload.serviceName="dataform.googleapis.com" OR
+    resource.type="dataform.googleapis.com/Repository"
+  EOT
 
   unique_writer_identity = true
 }
