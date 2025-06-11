@@ -1,90 +1,102 @@
-provider "google" {
+# Dataform module - handles logging and IAM for Dataform monitoring
+# Note: Provider is configured at the root level
+
+locals {
+  resource_names = {
+    topic        = "masthead-dataform-topic"
+    subscription = "masthead-dataform-subscription"
+    sink         = "masthead-dataform-sink"
+  }
+
+  # Merge default labels with user-provided labels
+  common_labels = merge(var.labels, {
+    component = "dataform"
+    service   = "masthead-agent"
+  })
+}
+
+# Enable required Google Cloud APIs
+resource "google_project_service" "required_apis" {
+  for_each = toset([
+    "pubsub.googleapis.com",
+    "logging.googleapis.com",
+    "dataform.googleapis.com"
+  ])
+
   project = var.project_id
+  service = each.value
+
+  disable_on_destroy         = false
+  disable_dependent_services = false
 }
 
-#1. Enable required services in GCP
-resource "google_project_service" "enable_pubsub_service" {
-  project = var.project_id
-  service = "pubsub.googleapis.com"
-
-  disable_dependent_services = true
-}
-
-resource "google_project_service" "enable_iam_service" {
-  project = var.project_id
-  service = "iam.googleapis.com"
-
-  disable_dependent_services = true
-}
-
-resource "google_project_service" "enable_logging_service" {
-  project = var.project_id
-  service = "logging.googleapis.com"
-
-  disable_dependent_services = true
-}
-
-resource "time_sleep" "wait_30_seconds_to_enable_pubsub_service" {
-  depends_on = [google_project_service.enable_pubsub_service]
-
-  create_duration = "30s"
-}
-
-resource "time_sleep" "wait_30_seconds_to_enable_logging_service" {
-  depends_on = [google_project_service.enable_logging_service]
-
-  create_duration = "30s"
-}
-
-#2. Create Pub/Sub topic and subscription
+# Create Pub/Sub topic for Dataform audit logs
 resource "google_pubsub_topic" "masthead_dataform_topic" {
-  name    = "masthead-dataform-topic"
+  depends_on = [google_project_service.required_apis]
+
   project = var.project_id
-  depends_on = [time_sleep.wait_30_seconds_to_enable_pubsub_service]
+  name    = local.resource_names.topic
+
+  labels = local.common_labels
 }
 
-resource "time_sleep" "wait_30_seconds_to_create_topic" {
-  depends_on = [google_pubsub_topic.masthead_dataform_topic]
-
-  create_duration = "30s"
-}
-
+# Create Pub/Sub subscription for the agent to consume messages
 resource "google_pubsub_subscription" "masthead_dataform_subscription" {
-  ack_deadline_seconds = 60
+  project                    = var.project_id
+  name                       = local.resource_names.subscription
+  topic                      = google_pubsub_topic.masthead_dataform_topic.id
+  message_retention_duration = "86400s" # 24 hours
+  ack_deadline_seconds       = 60
+
+  labels = local.common_labels
+
+  # Prevent subscription from expiring
   expiration_policy {
     ttl = ""
   }
-  message_retention_duration = "86400s"
-  name                       = "masthead-dataform-subscription"
-  project                    = var.project_id
-  topic                      = "projects/${var.project_id}/topics/masthead-dataform-topic"
-
-  depends_on = [time_sleep.wait_30_seconds_to_create_topic]
 }
 
-#3. Grant Masthead SA required roles: pubsub.subscriber, dataform.viewer
-resource "google_project_iam_member" "grant-masthead-dataform-roles" {
-  for_each = toset(["roles/pubsub.subscriber", "roles/dataform.viewer"])
+# Create logging sink to capture Dataform audit logs
+resource "google_logging_project_sink" "masthead_dataform_sink" {
+  depends_on = [google_project_service.required_apis]
+
+  project     = var.project_id
+  name        = local.resource_names.sink
+  description = "Masthead Dataform log sink for audit logs"
+  destination = "pubsub.googleapis.com/${google_pubsub_topic.masthead_dataform_topic.id}"
+
+  # Enhanced filter for comprehensive Dataform monitoring
+  filter = <<-EOT
+    protoPayload.serviceName="dataform.googleapis.com" OR
+    resource.type="dataform.googleapis.com/Repository"
+  EOT
+
+  unique_writer_identity = true
+}
+
+# Grant Cloud Logging service account permission to publish to Pub/Sub topic
+resource "google_pubsub_topic_iam_member" "logging_pubsub_publisher" {
+  project = var.project_id
+  topic   = google_pubsub_topic.masthead_dataform_topic.name
+  role    = "roles/pubsub.publisher"
+  member  = google_logging_project_sink.masthead_dataform_sink.writer_identity
+}
+
+# Grant Masthead service account subscriber permission on the subscription
+resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscriber" {
+  project      = var.project_id
+  subscription = google_pubsub_subscription.masthead_dataform_subscription.name
+  role         = "roles/pubsub.subscriber"
+  member       = "serviceAccount:${var.masthead_service_accounts.dataform_sa}"
+}
+
+# Grant Masthead service account required Dataform permissions
+resource "google_project_iam_member" "masthead_dataform_permissions" {
+  for_each = toset([
+    "roles/dataform.viewer"
+  ])
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:masthead-dataform@masthead-prod.iam.gserviceaccount.com"
-}
-
-#4. Create Log Sink.
-resource "google_logging_project_sink" "masthead_dataplex_sink" {
-  depends_on = [google_pubsub_topic.masthead_dataform_topic,time_sleep.wait_30_seconds_to_enable_logging_service]
-  description = "Masthead Dataform log sink"
-  destination = "pubsub.googleapis.com/projects/${var.project_id}/topics/masthead-dataform-topic"
-  filter      = "protoPayload.serviceName=\"dataform.googleapis.com\" OR resource.type=\"dataform.googleapis.com/Repository\""
-  name        = "masthead-dataform-sink"
-  project     = var.project_id
-  unique_writer_identity = false
-}
-
-#5. Grant cloud-logs SA PubSub Publisher role.
-resource "google_project_iam_member" "grant-cloud-logs-publisher-role" {
-  project = var.project_id
-  role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:cloud-logs@system.gserviceaccount.com"
+  member  = "serviceAccount:${var.masthead_service_accounts.dataform_sa}"
 }

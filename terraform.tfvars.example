@@ -1,0 +1,20 @@
+# Example terraform.tfvars file
+# Copy this file to terraform.tfvars and customize the values
+
+# Required: Your GCP project ID
+project_id = "your-gcp-project-id"
+
+# Optional: Enable/disable specific modules (all enabled by default)
+# enable_modules = {
+#   bigquery      = true
+#   dataform      = true
+#   dataplex      = true
+#   analytics_hub = true
+# }
+
+# Optional: Add custom labels to all resources
+# labels = {
+#   environment = "production"
+#   team        = "data"
+#   cost_center = "engineering"
+# }
