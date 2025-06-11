@@ -4,7 +4,7 @@
 
 This Terraform module deploys the infrastructure required for Masthead Data agents to monitor Google Cloud services including BigQuery, Dataform, Dataplex, and Analytics Hub.
 
-## 🏗️ Architecture
+## Architecture
 
 The module creates monitoring infrastructure for each enabled service:
 
@@ -13,7 +13,7 @@ The module creates monitoring infrastructure for each enabled service:
 - **Cloud Logging Sinks**: To route audit logs to Pub/Sub
 - **IAM Bindings**: Secure access for Masthead service accounts
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -58,7 +58,7 @@ module "masthead_agent" {
 }
 ```
 
-## 📦 Deployment Options
+## Deployment Options
 
 ### Complete Deployment (All Services)
 
@@ -87,7 +87,7 @@ terraform apply tfplan
 
 [![Open in Google Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FMasthead-Data%2Fterraform-google-masthead-agent)
 
-## 📋 Input Variables
+## Input Variables
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
@@ -117,7 +117,7 @@ masthead_service_accounts = {
 }
 ```
 
-## 📤 Outputs
+## Outputs
 
 | Name | Description |
 |------|-------------|
@@ -128,12 +128,12 @@ masthead_service_accounts = {
 | `enabled_modules` | List of enabled modules |
 | `project_id` | The GCP project ID where resources were created |
 
-## 🔒 Security Features
+## Security Features
 
 - **Unique Writer Identities**: Each logging sink uses its own service account
 - **Least Privilege Access**: Minimal required permissions for each service account
 
-## 🔧 Module Structure
+## Module Structure
 
 ```text
 modules/
@@ -151,14 +151,14 @@ Each module includes:
 - `versions.tf` - Provider requirements
 - `README.md` - Module documentation
 
-## 🛡️ Requirements
+## Requirements
 
 - **Terraform**: >= 1.5.7
 - **Google Provider**: >= 6.13.0
 - **GCP APIs**: Automatically enabled by the module
 - **IAM Permissions**: Project Owner or equivalent custom role
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please ensure:
 
@@ -167,11 +167,11 @@ Contributions are welcome! Please ensure:
 3. Resources are properly labeled and documented
 4. README files are updated for any changes
 
-## 📄 License
+## License
 
 This module is released under Apache-2.0 license. See [LICENSE](LICENSE) for details.
 
-## 🔗 References
+## References
 
 - [Masthead Data Documentation](https://docs.mastheadata.com/saas-manual-resource-creation-google-cloud-+-bigquery)
 - [Module in Terraform Registry](https://registry.terraform.io/modules/masthead-data/masthead-agent/google/latest)

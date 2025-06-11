@@ -3,19 +3,9 @@ output "pubsub_topic_id" {
   value       = google_pubsub_topic.masthead_dataform_topic.id
 }
 
-output "pubsub_topic_name" {
-  description = "Name of the Pub/Sub topic created for Dataform logs"
-  value       = google_pubsub_topic.masthead_dataform_topic.name
-}
-
 output "pubsub_subscription_id" {
   description = "ID of the Pub/Sub subscription for the Masthead Dataform agent"
   value       = google_pubsub_subscription.masthead_dataform_subscription.id
-}
-
-output "pubsub_subscription_name" {
-  description = "Name of the Pub/Sub subscription for the Masthead Dataform agent"
-  value       = google_pubsub_subscription.masthead_dataform_subscription.name
 }
 
 output "logging_sink_id" {

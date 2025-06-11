@@ -2,9 +2,7 @@ output "bigquery" {
   description = "BigQuery module outputs"
   value = var.enable_modules.bigquery ? {
     pubsub_topic_id              = module.bigquery[0].pubsub_topic_id
-    pubsub_topic_name            = module.bigquery[0].pubsub_topic_name
     pubsub_subscription_id       = module.bigquery[0].pubsub_subscription_id
-    pubsub_subscription_name     = module.bigquery[0].pubsub_subscription_name
     logging_sink_id              = module.bigquery[0].logging_sink_id
     logging_sink_writer_identity = module.bigquery[0].logging_sink_writer_identity
   } : null
@@ -14,9 +12,7 @@ output "dataform" {
   description = "Dataform module outputs"
   value = var.enable_modules.dataform ? {
     pubsub_topic_id              = module.dataform[0].pubsub_topic_id
-    pubsub_topic_name            = module.dataform[0].pubsub_topic_name
     pubsub_subscription_id       = module.dataform[0].pubsub_subscription_id
-    pubsub_subscription_name     = module.dataform[0].pubsub_subscription_name
     logging_sink_id              = module.dataform[0].logging_sink_id
     logging_sink_writer_identity = module.dataform[0].logging_sink_writer_identity
   } : null
@@ -26,13 +22,10 @@ output "dataplex" {
   description = "Dataplex module outputs"
   value = var.enable_modules.dataplex ? {
     pubsub_topic_id              = module.dataplex[0].pubsub_topic_id
-    pubsub_topic_name            = module.dataplex[0].pubsub_topic_name
     pubsub_subscription_id       = module.dataplex[0].pubsub_subscription_id
-    pubsub_subscription_name     = module.dataplex[0].pubsub_subscription_name
     logging_sink_id              = module.dataplex[0].logging_sink_id
     logging_sink_writer_identity = module.dataplex[0].logging_sink_writer_identity
     custom_role_id               = module.dataplex[0].custom_role_id
-    custom_role_name             = module.dataplex[0].custom_role_name
   } : null
 }
 
