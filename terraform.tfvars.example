@@ -2,7 +2,7 @@
 # Copy this file to terraform.tfvars and customize the values
 
 # Required: Your GCP project ID
-project_id = "your-gcp-project-id"
+project_id = "YOUR_PROJECT_ID"
 
 # Optional: Enable/disable specific modules (all enabled by default)
 # enable_modules = {
