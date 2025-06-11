@@ -26,9 +26,9 @@ The module creates monitoring infrastructure for each enabled service:
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = "~> 0.1.3"
+  version = "~> 0.2.0"
 
-  project_id = "your-gcp-project-id"
+  project_id = "YOUR_PROJECT_ID"
 }
 ```
 
@@ -37,16 +37,16 @@ module "masthead_agent" {
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = "~> 0.1.3"
+  version = "~> 0.2.0"
 
-  project_id = "your-gcp-project-id"
+  project_id = "YOUR_PROJECT_ID"
 
   # Enable only specific modules
   enable_modules = {
     bigquery      = true
-    dataform      = false
+    dataform      = true
     dataplex      = true
-    analytics_hub = false
+    analytics_hub = true
   }
 
   # Custom labels for resource management
@@ -78,8 +78,8 @@ terraform apply tfplan
 ```bash
 terraform init
 terraform plan -out=tfplan \
-  -var="project_id=your-project-id" \
-  -var='enable_modules={"bigquery"=true,"dataform"=false,"dataplex"=false,"analytics_hub"=false}'
+  -var="project_id=YOUR_PROJECT_ID" \
+  -var='enable_modules={"bigquery"=true,"dataform"=true,"dataplex"=true,"analytics_hub"=true}'
 terraform apply tfplan
 ```
 
