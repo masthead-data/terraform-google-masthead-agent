@@ -79,7 +79,7 @@ terraform apply tfplan
 terraform init
 terraform plan -out=tfplan \
   -var="project_id=YOUR_PROJECT_ID" \
-  -var='enable_modules={"bigquery"=true,"dataform"=true,"dataplex"=true,"analytics_hub"=true}'
+  -var='enable_modules={"bigquery"=true,"dataform"=false,"dataplex"=false,"analytics_hub"=false}'
 terraform apply tfplan
 ```
 
@@ -113,7 +113,6 @@ masthead_service_accounts = {
   bigquery_sa  = string  # BigQuery monitoring service account
   dataform_sa  = string  # Dataform monitoring service account
   dataplex_sa  = string  # Dataplex monitoring service account
-  retro_sa     = string  # Retro analysis service account
 }
 ```
 
