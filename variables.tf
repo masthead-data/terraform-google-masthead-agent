@@ -13,14 +13,12 @@ variable "masthead_service_accounts" {
     bigquery_sa = string
     dataform_sa = string
     dataplex_sa = string
-    retro_sa    = string
   })
   description = "Masthead service account emails for different services"
   default = {
     bigquery_sa = "masthead-data@masthead-prod.iam.gserviceaccount.com"
     dataform_sa = "masthead-dataform@masthead-prod.iam.gserviceaccount.com"
     dataplex_sa = "masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
-    retro_sa    = "retro-data@masthead-prod.iam.gserviceaccount.com"
   }
 }
 
