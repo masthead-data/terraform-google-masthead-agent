@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.2.1] - 2025-07-01
+
+### Removed
+
+- Removed `roles/logging.privateLogViewer` permissions for Masthead service account.
+
 ## [0.2.0] - 2025-06-11
 
 ### Added

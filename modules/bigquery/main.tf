@@ -107,10 +107,3 @@ resource "google_project_iam_member" "masthead_bigquery_permissions" {
   role    = each.value
   member  = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
 }
-
-# Grant Masthead retro service account logging permissions
-resource "google_project_iam_member" "masthead_retro_logging_permissions" {
-  project = var.project_id
-  role    = "roles/logging.privateLogViewer"
-  member  = "serviceAccount:${var.masthead_service_accounts.retro_sa}"
-}

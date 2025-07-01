@@ -8,7 +8,6 @@ variable "masthead_service_accounts" {
     bigquery_sa = string
     dataform_sa = string
     dataplex_sa = string
-    retro_sa    = string
   })
   description = "Masthead service account emails for different services"
 }
