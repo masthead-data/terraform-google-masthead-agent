@@ -26,7 +26,7 @@ The module creates monitoring infrastructure for each enabled service:
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = "~> 0.2.2"
+  version = "~> 0.2.3"
 
   project_id = "YOUR_PROJECT_ID"
 }
@@ -37,7 +37,7 @@ module "masthead_agent" {
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = "~> 0.2.0"
+  version = "~> 0.2.3"
 
   project_id = "YOUR_PROJECT_ID"
 
