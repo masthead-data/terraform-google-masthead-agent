@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Removed provider configuration [to enable more arguments](https://developer.hashicorp.com/terraform/language/modules/develop/providers).
+- Removed provider configuration to align with Terraform module best practices.
 
 ## [0.2.1] - 2025-07-01
 
