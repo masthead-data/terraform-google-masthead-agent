@@ -9,11 +9,6 @@ terraform {
   }
 }
 
-# Configure the Google Cloud Provider
-provider "google" {
-  project = var.project_id
-}
-
 module "bigquery" {
   count  = var.enable_modules.bigquery ? 1 : 0
   source = "./modules/bigquery"
