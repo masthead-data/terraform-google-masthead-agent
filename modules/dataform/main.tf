@@ -67,9 +67,11 @@ resource "google_logging_project_sink" "masthead_dataform_sink" {
 
   # Enhanced filter for comprehensive Dataform monitoring
   filter = <<-EOT
-    protoPayload.serviceName="dataform.googleapis.com" OR
-    resource.type="dataform.googleapis.com/Repository"
-  EOT
+(
+  protoPayload.serviceName="dataform.googleapis.com" OR
+  resource.type="dataform.googleapis.com/Repository"
+)
+EOT
 
   unique_writer_identity = true
 }

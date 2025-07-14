@@ -68,14 +68,17 @@ resource "google_logging_project_sink" "masthead_sink" {
 
   # Enhanced filter for comprehensive BigQuery monitoring
   filter = <<-EOT
-    protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows" OR
-    protoPayload.methodName="google.cloud.bigquery.v2.JobService.InsertJob" OR
-    protoPayload.methodName="google.cloud.bigquery.v2.TableService.InsertTable" OR
-    protoPayload.methodName="google.cloud.bigquery.v2.JobService.Query"
-    resource.type="bigquery_table" OR
-    resource.type="bigquery_dataset" OR
-    resource.type="bigquery_project"
-  EOT
+(
+  protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows" OR
+  protoPayload.methodName="google.cloud.bigquery.v2.JobService.InsertJob" OR
+  protoPayload.methodName="google.cloud.bigquery.v2.TableService.InsertTable" OR
+  protoPayload.methodName="google.cloud.bigquery.v2.JobService.Query"
+) AND (
+  resource.type="bigquery_table" OR
+  resource.type="bigquery_dataset" OR
+  resource.type="bigquery_project"
+)
+EOT
 
   unique_writer_identity = true
 }

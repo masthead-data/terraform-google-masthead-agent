@@ -69,12 +69,16 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
 
   # Enhanced filter for comprehensive Dataplex monitoring
   filter = <<-EOT
-    (jsonPayload.@type="type.googleapis.com/google.cloud.dataplex.v1.DataScanEvent" OR
-     protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.CreateDataScan" OR
-     protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.UpdateDataScan" OR
-     protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.DeleteDataScan") AND
-    (severity="INFO" OR severity="NOTICE")
-  EOT
+(
+  jsonPayload.@type="type.googleapis.com/google.cloud.dataplex.v1.DataScanEvent" OR
+  protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.CreateDataScan" OR
+  protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.UpdateDataScan" OR
+  protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.DeleteDataScan"
+) AND (
+  severity="INFO" OR
+  severity="NOTICE"
+)
+EOT
 
   unique_writer_identity = true
 }
@@ -117,12 +121,10 @@ resource "google_project_iam_member" "masthead_dataplex_permissions" {
     "roles/dataplex.dataScanAdmin",
     "roles/dataplex.storageDataReader",
     "roles/bigquery.jobUser",
-    "projects/${var.project_id}/roles/${google_project_iam_custom_role.masthead_dataplex_locations.role_id}"
+    google_project_iam_custom_role.masthead_dataplex_locations.id
   ])
 
   project = var.project_id
   role    = each.value
   member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
-
-  depends_on = [google_project_iam_custom_role.masthead_dataplex_locations]
 }
