@@ -1,38 +1,28 @@
 # Basic Usage Example
 
-This example demonstrates the minimal configuration needed to use the `terraform-google-masthead-agent` module with all default settings.
+This example demonstrates minimal configuration for the `terraform-google-masthead-agent` module using default settings.
 
-## What This Example Does
+What this example does:
 
-- Deploys all modules (BigQuery, Dataform, Dataplex, Analytics Hub) with default configurations
+- Deploys all modules (BigQuery, Dataform, Dataplex, Analytics Hub) with defaults
 - Uses minimal required variables
-- Applies no labeling for resource management
-- Demonstrates the simplest way to get started with the module
+- No custom labeling applied
+- Simplest way to get started
 
 ## Prerequisites
 
-1. **Google Cloud Project**: A GCP project where you have appropriate permissions
-2. **Terraform**: Version >= 1.5.7
-3. **Google Provider**: Version >= 6.13.0
-4. **Authentication**: Configure authentication to Google Cloud via `gcloud auth application-default login`
+1. **Google Cloud Project** where you have appropriate roles
 
-## Required Permissions
+    - `roles/resourcemanager.projectIamAdmin`
+    - `roles/pubsub.admin`
+    - `roles/logging.admin`
+    - `roles/iam.roleAdmin`
 
-Your account needs the following IAM permissions in the target GCP project:
-
-- `resourcemanager.projects.setIamPolicy`
-- `pubsub.topics.create`
-- `pubsub.subscriptions.create`
-- `logging.sinks.create`
-- `iam.roles.create`
+2. **Authentication** to Google Cloud (e.g. with `gcloud auth application-default login`)
 
 ## Usage
 
-1. **Edit terraform.tfvars with your project ID:**
-
-   ```hcl
-   project_id = "your-actual-project-id"
-   ```
+1. **Edit terraform.tfvars with your project ID**
 
 2. **Run Terraform:**
 
@@ -41,15 +31,6 @@ Your account needs the following IAM permissions in the target GCP project:
    terraform plan
    terraform apply
    ```
-
-## What Gets Created
-
-This example will create:
-
-- **BigQuery Module**: Pub/Sub topic, subscription, and logging sink for BigQuery audit logs
-- **Dataform Module**: Pub/Sub topic, subscription, and logging sink for Dataform audit logs
-- **Dataplex Module**: Pub/Sub topic, subscription, logging sink, and custom IAM role for Dataplex audit logs
-- **Analytics Hub Module**: IAM role binding for Masthead service account
 
 ## Cleanup
 
@@ -61,6 +42,4 @@ terraform destroy
 
 ## Next Steps
 
-Once you're comfortable with this basic example, consider exploring:
-
-- [Advanced Example](../advanced/) - production-ready configuration with comprehensive labeling
+Once you're comfortable with this basic example, consider exploring a [full example](../full/).

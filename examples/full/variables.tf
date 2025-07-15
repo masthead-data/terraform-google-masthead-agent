@@ -1,11 +1,6 @@
 variable "project_id" {
   type        = string
   description = "The GCP project ID where resources will be created"
-
-  validation {
-    condition     = can(regex("^[a-z][a-z0-9-]{4,28}[a-z0-9]$", var.project_id))
-    error_message = "Project ID must be 6-30 characters, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens."
-  }
 }
 
 # Module enablement variables
@@ -30,12 +25,6 @@ variable "enable_dataplex" {
 variable "enable_analytics_hub" {
   type        = bool
   description = "Enable Analytics Hub module"
-  default     = true
-}
-
-variable "enable_privatelogviewer_role" {
-  type        = bool
-  description = "Enable Private Log Viewer role for Masthead service account in BigQuery module"
   default     = true
 }
 

@@ -32,14 +32,12 @@ output "project_id" {
   value       = module.masthead_agent.project_id
 }
 
-output "production_configuration" {
-  description = "Production configuration summary"
+output "full_configuration" {
+  description = "Full configuration summary"
   value = {
-    environment         = var.environment
+    environment        = var.environment
     team               = var.team
     cost_center        = var.cost_center
-    compliance_level   = var.compliance_level
-    backup_policy      = var.backup_policy
     monitoring_enabled = var.monitoring_enabled
     module_version     = var.module_version
     business_unit      = var.business_unit
@@ -49,7 +47,6 @@ output "production_configuration" {
       dataplex      = var.enable_dataplex
       analytics_hub = var.enable_analytics_hub
     }
-    privatelogviewer_enabled = var.enable_privatelogviewer_role
   }
 }
 
@@ -59,8 +56,6 @@ output "resource_labels" {
     environment   = var.environment
     team          = var.team
     cost_center   = var.cost_center
-    compliance    = var.compliance_level
-    backup        = var.backup_policy
     monitoring    = var.monitoring_enabled
     managed_by    = "terraform"
     module        = "masthead-agent"

@@ -19,7 +19,7 @@ provider "google" {
 }
 
 module "masthead_agent" {
-  source  = "masthead-data/masthead-agent/google"
+  source = "masthead-data/masthead-agent/google"
 
   project_id = var.project_id
 }

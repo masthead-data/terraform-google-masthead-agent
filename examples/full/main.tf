@@ -3,7 +3,7 @@ provider "google" {
 }
 
 module "masthead_agent" {
-  source = "masthead-data/masthead-agent/google"
+  source  = "masthead-data/masthead-agent/google"
   version = var.module_version
 
   project_id = var.project_id
@@ -14,8 +14,6 @@ module "masthead_agent" {
     dataplex      = var.enable_dataplex
     analytics_hub = var.enable_analytics_hub
   }
-
-  enable_privatelogviewer_role = var.enable_privatelogviewer_role
 
   labels = {
     environment   = var.environment
