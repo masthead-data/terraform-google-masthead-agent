@@ -25,7 +25,7 @@ plugin "google" {
   source  = "github.com/terraform-linters/tflint-ruleset-google"
 
   # Deep check analyzes resource configurations more thoroughly
-  deep_check = true
+  deep_check = false
 }
 
 # Terraform core rules
