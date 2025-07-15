@@ -36,6 +36,6 @@ jobs:
           tflint --recursive
 
       - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1.0.0
+        uses: aquasecurity/tfsec-action@v1.0.3
         with:
           additional_args: '--soft-fail'
