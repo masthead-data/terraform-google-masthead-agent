@@ -1,14 +1,3 @@
-# Analytics Hub module - handles IAM for Analytics Hub monitoring
-# Note: Provider is configured at the root level
-
-locals {
-  # Merge default labels with user-provided labels
-  common_labels = merge(var.labels, {
-    component = "analytics-hub"
-    service   = "masthead-agent"
-  })
-}
-
 # Enable required Google Cloud APIs
 resource "google_project_service" "required_apis" {
   for_each = toset([
