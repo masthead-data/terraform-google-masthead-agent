@@ -39,7 +39,6 @@ output "full_configuration" {
     team               = var.team
     cost_center        = var.cost_center
     monitoring_enabled = var.monitoring_enabled
-    module_version     = var.module_version
     business_unit      = var.business_unit
     enabled_modules = {
       bigquery      = var.enable_bigquery
@@ -57,9 +56,7 @@ output "resource_labels" {
     team          = var.team
     cost_center   = var.cost_center
     monitoring    = var.monitoring_enabled
-    managed_by    = "terraform"
     module        = "masthead-agent"
-    version       = var.module_version
     business_unit = var.business_unit
     project_owner = var.project_owner
   }

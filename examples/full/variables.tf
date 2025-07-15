@@ -63,12 +63,6 @@ variable "monitoring_enabled" {
   }
 }
 
-variable "module_version" {
-  type        = string
-  description = "Version of the masthead-agent module being deployed"
-  default     = ""
-}
-
 variable "business_unit" {
   type        = string
   description = "Business unit that owns these resources"
