@@ -3,8 +3,8 @@ provider "google" {
 }
 
 module "masthead_agent" {
-  source = "masthead-data/masthead-agent/google"
-  version = "0.2.3"
+  source  = "masthead-data/masthead-agent/google"
+  version = ">=0.2.3"
 
   project_id = var.project_id
 
