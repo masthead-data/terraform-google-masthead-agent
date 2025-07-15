@@ -11,9 +11,3 @@ variable "masthead_service_accounts" {
   })
   description = "Masthead service account emails for different services"
 }
-
-variable "labels" {
-  type        = map(string)
-  description = "Labels to apply to all resources"
-  default     = {}
-}
