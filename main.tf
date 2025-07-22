@@ -47,5 +47,4 @@ module "analytics_hub" {
   project_id                = var.project_id
   masthead_service_accounts = var.masthead_service_accounts
   enable_apis               = var.enable_apis
-  labels                    = var.labels
 }

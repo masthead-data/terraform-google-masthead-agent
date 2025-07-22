@@ -17,9 +17,3 @@ variable "enable_apis" {
   description = "Whether to enable required Google Cloud APIs"
   default     = false
 }
-
-variable "labels" {
-  type        = map(string)
-  description = "Labels to apply to all resources"
-  default     = {}
-}
