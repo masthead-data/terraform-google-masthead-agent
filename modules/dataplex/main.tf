@@ -130,8 +130,6 @@ resource "google_project_iam_member" "masthead_dataplex_permissions" {
 
 # Grant Masthead service account the custom Dataplex locations role
 resource "google_project_iam_member" "masthead_dataplex_custom_permissions" {
-  depends_on = [google_project_iam_custom_role.masthead_dataplex_locations]
-
   project = var.project_id
   role    = google_project_iam_custom_role.masthead_dataplex_locations.id
   member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
