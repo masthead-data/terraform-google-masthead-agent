@@ -16,6 +16,7 @@ module "bigquery" {
   project_id                   = var.project_id
   masthead_service_accounts    = var.masthead_service_accounts
   enable_privatelogviewer_role = var.enable_privatelogviewer_role
+  enable_apis                  = var.enable_apis
   labels                       = var.labels
 }
 
@@ -25,6 +26,7 @@ module "dataform" {
 
   project_id                = var.project_id
   masthead_service_accounts = var.masthead_service_accounts
+  enable_apis               = var.enable_apis
   labels                    = var.labels
 }
 
@@ -34,6 +36,7 @@ module "dataplex" {
 
   project_id                = var.project_id
   masthead_service_accounts = var.masthead_service_accounts
+  enable_apis               = var.enable_apis
   labels                    = var.labels
 }
 
@@ -43,4 +46,6 @@ module "analytics_hub" {
 
   project_id                = var.project_id
   masthead_service_accounts = var.masthead_service_accounts
+  enable_apis               = var.enable_apis
+  labels                    = var.labels
 }

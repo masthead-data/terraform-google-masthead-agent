@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.2.4] - 2025-07-23
+
+### Added
+
+- **Optional API Management**: Added `enable_apis` variable to control whether modules enable required Google Cloud APIs (disabled by default)
+
+### Changed
+
+- **API Enabling Behavior**: Google Cloud APIs are no longer automatically enabled by default. Set `enable_apis = true` if you want the module to manage API enablement
+
 ## [0.2.3] - 2025-07-12
 
 ### Added
