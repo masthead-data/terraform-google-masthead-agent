@@ -15,13 +15,13 @@ locals {
   })
 }
 
-# Enable required Google Cloud APIs
+# Enable required Google Cloud APIs (optional)
 resource "google_project_service" "required_apis" {
-  for_each = toset([
+  for_each = var.enable_apis ? toset([
     "pubsub.googleapis.com",
     "logging.googleapis.com",
     "dataform.googleapis.com"
-  ])
+  ]) : toset([])
 
   project = var.project_id
   service = each.value

@@ -12,6 +12,12 @@ variable "masthead_service_accounts" {
   description = "Masthead service account emails for different services"
 }
 
+variable "enable_apis" {
+  type        = bool
+  description = "Whether to enable required Google Cloud APIs"
+  default     = false
+}
+
 variable "labels" {
   type        = map(string)
   description = "Labels to apply to all resources"
