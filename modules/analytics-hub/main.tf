@@ -11,8 +11,8 @@ resource "google_project_service" "required_apis" {
   disable_dependent_services = false
 }
 
-# Grant Masthead service account Analytics Hub viewer permissions
-resource "google_project_iam_member" "masthead_analyticshub_permissions" {
+# Grant Masthead service account required Analytics Hub roles
+resource "google_project_iam_member" "masthead_analyticshub_roles" {
   depends_on = [google_project_service.required_apis]
 
   project = var.project_id
