@@ -12,9 +12,6 @@ project_id = "YOUR_PROJECT_ID"
 #   analytics_hub = true
 # }
 
-# Optional: Enable required Google Cloud APIs (disabled by default)
-# enable_apis = false
-
 # Optional: Enable required Google Cloud APIs (enabled by default)
 # enable_apis = true
 
