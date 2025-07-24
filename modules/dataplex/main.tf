@@ -91,7 +91,7 @@ resource "google_pubsub_topic_iam_member" "logging_pubsub_publisher" {
   member  = google_logging_project_sink.masthead_dataplex_sink.writer_identity
 }
 
-# Grant Masthead service account subscriber permission on the subscription
+# Grant Masthead service account subscriber role on the subscription
 resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscriber" {
   project      = var.project_id
   subscription = google_pubsub_subscription.masthead_dataplex_subscription.name
@@ -115,8 +115,8 @@ resource "google_project_iam_custom_role" "masthead_dataplex_locations" {
   ]
 }
 
-# Grant Masthead service account required standard Dataplex permissions
-resource "google_project_iam_member" "masthead_dataplex_permissions" {
+# Grant Masthead service account required Dataplex roles
+resource "google_project_iam_member" "masthead_dataplex_roles" {
   for_each = toset([
     "roles/dataplex.dataScanAdmin",
     "roles/dataplex.storageDataReader",
@@ -129,7 +129,7 @@ resource "google_project_iam_member" "masthead_dataplex_permissions" {
 }
 
 # Grant Masthead service account the custom Dataplex locations role
-resource "google_project_iam_member" "masthead_dataplex_custom_permissions" {
+resource "google_project_iam_member" "masthead_dataplex_custom_role" {
   project = var.project_id
   role    = google_project_iam_custom_role.masthead_dataplex_locations.id
   member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"

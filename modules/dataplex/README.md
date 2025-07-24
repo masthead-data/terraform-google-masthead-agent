@@ -7,5 +7,5 @@ This module sets up the necessary infrastructure for Masthead Data to monitor Da
 - **Pub/Sub Topic**: Receives Dataplex audit logs
 - **Pub/Sub Subscription**: Allows Masthead agents to consume audit logs
 - **Cloud Logging Sink**: Routes Dataplex audit logs to Pub/Sub
-- **Custom IAM Role**: Dataplex locations access permissions
+- **Custom IAM Role**: Custom role for Dataplex locations access
 - **IAM Bindings**: Grants necessary permissions to Masthead service accounts

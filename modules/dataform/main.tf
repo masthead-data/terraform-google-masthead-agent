@@ -84,7 +84,7 @@ resource "google_pubsub_topic_iam_member" "logging_pubsub_publisher" {
   member  = google_logging_project_sink.masthead_dataform_sink.writer_identity
 }
 
-# Grant Masthead service account subscriber permission on the subscription
+# Grant Masthead service account subscriber role on the subscription
 resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscriber" {
   project      = var.project_id
   subscription = google_pubsub_subscription.masthead_dataform_subscription.name
@@ -92,8 +92,8 @@ resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscrib
   member       = "serviceAccount:${var.masthead_service_accounts.dataform_sa}"
 }
 
-# Grant Masthead service account required Dataform permissions
-resource "google_project_iam_member" "masthead_dataform_permissions" {
+# Grant Masthead service account required Dataform roles
+resource "google_project_iam_member" "masthead_dataform_roles" {
   for_each = toset([
     "roles/dataform.viewer"
   ])
