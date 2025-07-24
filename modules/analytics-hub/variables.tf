@@ -15,5 +15,5 @@ variable "masthead_service_accounts" {
 variable "enable_apis" {
   type        = bool
   description = "Whether to enable required Google Cloud APIs"
-  default     = false
+  default     = true
 }
