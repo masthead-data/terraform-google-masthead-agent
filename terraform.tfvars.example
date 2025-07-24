@@ -12,8 +12,11 @@ project_id = "YOUR_PROJECT_ID"
 #   analytics_hub = true
 # }
 
-# Optional: Disable Private Log Viewer role (enabled by default)
-# enable_privatelogviewer_role = false
+# Optional: Enable required Google Cloud APIs (enabled by default)
+# enable_apis = true
+
+# Optional: Enable Private Log Viewer role (enabled by default)
+# enable_privatelogviewer_role = true
 
 # Optional: Add custom labels to all resources
 # labels = {

@@ -11,3 +11,9 @@ variable "masthead_service_accounts" {
   })
   description = "Masthead service account emails for different services"
 }
+
+variable "enable_apis" {
+  type        = bool
+  description = "Whether to enable required Google Cloud APIs"
+  default     = true
+}

@@ -46,6 +46,12 @@ variable "enable_privatelogviewer_role" {
   default     = true
 }
 
+variable "enable_apis" {
+  type        = bool
+  description = "Enable required Google Cloud APIs in all modules"
+  default     = true
+}
+
 variable "labels" {
   type        = map(string)
   description = "Labels to apply to all resources"

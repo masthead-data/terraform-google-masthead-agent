@@ -26,9 +26,9 @@ This Terraform module deploys infrastructure for Masthead Data to monitor Google
 
     module "masthead_agent" {
       source  = "masthead-data/masthead-agent/google"
-      version = ">=0.2.3"
+      version = ">=0.2.4"
 
-      project_id = var.project_id
+      project_id  = var.project_id
     }
     ```
 
@@ -50,9 +50,10 @@ This Terraform module deploys infrastructure for Masthead Data to monitor Google
 
     module "masthead_agent" {
       source                       = "masthead-data/masthead-agent/google"
-      version                      = ">=0.2.3"
+      version                      = ">=0.2.4"
 
       project_id                   = var.project_id
+      enable_apis                  = true
       enable_privatelogviewer_role = true
       enable_modules = {
         bigquery      = true

@@ -16,14 +16,14 @@ locals {
   })
 }
 
-# Enable required Google Cloud APIs
+# Enable required Google Cloud APIs (optional)
 resource "google_project_service" "required_apis" {
-  for_each = toset([
+  for_each = var.enable_apis ? toset([
     "pubsub.googleapis.com",
     "logging.googleapis.com",
     "dataplex.googleapis.com",
     "bigquery.googleapis.com"
-  ])
+  ]) : toset([])
 
   project = var.project_id
   service = each.value
@@ -115,16 +115,22 @@ resource "google_project_iam_custom_role" "masthead_dataplex_locations" {
   ]
 }
 
-# Grant Masthead service account required Dataplex permissions
+# Grant Masthead service account required standard Dataplex permissions
 resource "google_project_iam_member" "masthead_dataplex_permissions" {
   for_each = toset([
     "roles/dataplex.dataScanAdmin",
     "roles/dataplex.storageDataReader",
-    "roles/bigquery.jobUser",
-    google_project_iam_custom_role.masthead_dataplex_locations.id
+    "roles/bigquery.jobUser"
   ])
 
   project = var.project_id
   role    = each.value
+  member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
+}
+
+# Grant Masthead service account the custom Dataplex locations role
+resource "google_project_iam_member" "masthead_dataplex_custom_permissions" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.masthead_dataplex_locations.id
   member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
 }
