@@ -22,7 +22,7 @@ variable "enable_privatelogviewer_role" {
 variable "enable_apis" {
   type        = bool
   description = "Whether to enable required Google Cloud APIs"
-  default     = false
+  default     = true
 }
 
 variable "labels" {

@@ -48,8 +48,8 @@ variable "enable_privatelogviewer_role" {
 
 variable "enable_apis" {
   type        = bool
-  description = "Whether to enable required Google Cloud APIs in all modules"
-  default     = false
+  description = "Enable required Google Cloud APIs in all modules"
+  default     = true
 }
 
 variable "labels" {
