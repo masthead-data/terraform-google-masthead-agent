@@ -17,8 +17,3 @@ output "logging_sink_writer_identity" {
   description = "Writer identity of the logging sink"
   value       = google_logging_project_sink.masthead_dataplex_sink.writer_identity
 }
-
-output "custom_role_id" {
-  description = "ID of the custom IAM role for Dataplex locations"
-  value       = google_project_iam_custom_role.masthead_dataplex_locations.role_id
-}

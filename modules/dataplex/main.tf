@@ -3,10 +3,9 @@
 
 locals {
   resource_names = {
-    topic          = "masthead-dataplex-topic"
-    subscription   = "masthead-dataplex-subscription"
-    sink           = "masthead-dataplex-sink"
-    custom_role_id = "masthead_dataplex_locations"
+    topic        = "masthead-dataplex-topic"
+    subscription = "masthead-dataplex-subscription"
+    sink         = "masthead-dataplex-sink"
   }
 
   # Merge default labels with user-provided labels
@@ -99,22 +98,6 @@ resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscrib
   member       = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
 }
 
-# Create custom IAM role for Dataplex locations access
-resource "google_project_iam_custom_role" "masthead_dataplex_locations" {
-  depends_on = [google_project_service.required_apis]
-
-  project     = var.project_id
-  role_id     = local.resource_names.custom_role_id
-  title       = "Dataplex Locations (Masthead Data)"
-  description = "Custom role for Dataplex locations reader access for Masthead Data"
-  stage       = "GA"
-
-  permissions = [
-    "dataplex.locations.get",
-    "dataplex.locations.list"
-  ]
-}
-
 # Grant Masthead service account required Dataplex roles
 resource "google_project_iam_member" "masthead_dataplex_roles" {
   for_each = toset([
@@ -125,12 +108,5 @@ resource "google_project_iam_member" "masthead_dataplex_roles" {
 
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
-}
-
-# Grant Masthead service account the custom Dataplex locations role
-resource "google_project_iam_member" "masthead_dataplex_custom_role" {
-  project = var.project_id
-  role    = google_project_iam_custom_role.masthead_dataplex_locations.id
   member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
 }
