@@ -25,7 +25,6 @@ output "dataplex" {
     pubsub_subscription_id       = module.dataplex[0].pubsub_subscription_id
     logging_sink_id              = module.dataplex[0].logging_sink_id
     logging_sink_writer_identity = module.dataplex[0].logging_sink_writer_identity
-    custom_role_id               = module.dataplex[0].custom_role_id
   } : null
 }
 
