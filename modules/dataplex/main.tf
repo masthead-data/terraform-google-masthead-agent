@@ -102,7 +102,6 @@ resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscrib
 resource "google_project_iam_member" "masthead_dataplex_roles" {
   for_each = toset([
     "roles/dataplex.dataScanAdmin",
-    "roles/dataplex.storageDataReader",
     "roles/bigquery.jobUser"
   ])
 

@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.2.6] - 2025-09-25
+
+### Removed
+
+- **Dataplex IAM**: Removed `roles/dataplex.storageDataReader` role from Dataplex service account permissions
+
 ## [0.2.5] - 2025-08-26
 
 ### Removed
@@ -118,7 +124,8 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.2...v0.2.3
