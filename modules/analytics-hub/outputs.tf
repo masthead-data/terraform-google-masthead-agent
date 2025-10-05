@@ -5,5 +5,5 @@ output "service_account_member" {
 
 output "granted_role" {
   description = "IAM role granted to the service account"
-  value       = google_project_iam_member.masthead_analyticshub_roles.role
+  value       = google_project_iam_member.masthead_analyticshub_roles[each.key]
 }
