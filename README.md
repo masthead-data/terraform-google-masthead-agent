@@ -99,6 +99,7 @@ Example:
         "roles/logging.privateLogViewer",
         "roles/pubsub.subscriber",
         "roles/analyticshub.viewer",
+        "projects/YOUR_PROJECT_ID/roles/analyticsHubSubscriptionViewer", # Custom role for subscription viewing
         ... # Add any additional roles as needed
       ]
     }

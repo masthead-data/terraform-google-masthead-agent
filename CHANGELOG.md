@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.6] - 2025-10-06
 
+### Added
+
+- **Analytics Hub Custom Role**: Added custom IAM role `analyticsHubSubscriptionViewer` with permissions:
+  - `analyticshub.listings.viewSubscriptions`
+  - `analyticshub.dataExchanges.viewSubscriptions`
+
 ### Changed
 
 - **Dataplex IAM**: Changed from `roles/dataplex.dataScanAdmin` to `roles/dataplex.dataScanEditor` for reduced permissions scope
