@@ -23,9 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Analytics Hub Custom Role**: Added custom IAM role `analyticsHubSubscriptionViewer` with permissions:
-  - `analyticshub.listings.viewSubscriptions`
-  - `analyticshub.dataExchanges.viewSubscriptions`
+- **Analytics Hub Custom Role**: Added custom IAM role `analyticsHubSubscriptionViewer` with permission `analyticshub.listings.viewSubscriptions`
 
 ### Changed
 

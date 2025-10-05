@@ -16,11 +16,10 @@ resource "google_project_iam_custom_role" "analyticshub_subscription_viewer" {
   project     = var.project_id
   role_id     = "analyticsHubSubscriptionViewer"
   title       = "Analytics Hub Subscription Viewer"
-  description = "Custom role to view subscriptions for Analytics Hub listings and data exchanges"
+  description = "Custom role to view subscriptions for Analytics Hub listings"
 
   permissions = [
-    "analyticshub.listings.viewSubscriptions",
-    "analyticshub.dataExchanges.viewSubscriptions"
+    "analyticshub.listings.viewSubscriptions"
   ]
 }
 
