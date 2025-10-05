@@ -71,41 +71,6 @@ This Terraform module deploys infrastructure for Masthead Data to monitor Google
     }
     ```
 
-## VPC-SC Configuration
-
-If your project is within a VPC-SC perimeter, you must configure the VPC Service Control policy (VPC-SC) to ensure that the necessary resources are available to Masthead Data agent in compliance with VPC-SC restrictions.
-
-Example:
-
-  ```hcl
-  ingress_policies {
-    ingress_from {
-      identities = [
-        "serviceAccount:masthead-data@masthead-prod.iam.gserviceaccount.com",
-        "serviceAccount:retro-data@masthead-prod.iam.gserviceaccount.com",
-        ... # Add any additional Masthead service accounts as needed
-      ]
-
-      sources {
-        resource = "projects/431544431936" # masthead-prod
-      }
-    }
-
-    ingress_to {
-      resources = ["*"]
-      roles = [
-        "roles/bigquery.metadataViewer",
-        "roles/bigquery.resourceViewer",
-        "roles/logging.privateLogViewer",
-        "roles/pubsub.subscriber",
-        "roles/analyticshub.viewer",
-        "projects/YOUR_PROJECT_ID/roles/analyticsHubSubscriptionViewer", # Custom role for subscription viewing
-        ... # Add any additional roles as needed
-      ]
-    }
-  }
-  ```
-
 ## References
 
 - [Masthead Data Documentation](https://docs.mastheadata.com/saas-manual-resource-creation-google-cloud-+-bigquery)
