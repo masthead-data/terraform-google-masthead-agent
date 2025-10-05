@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `analyticshub.listings.viewSubscriptions`
   - `analyticshub.dataExchanges.viewSubscriptions`
 
+### Changed
+
+- **Dataplex IAM**: Changed from `roles/dataplex.dataScanAdmin` to `roles/dataplex.dataScanEditor` for reduced permissions scope
+
 ### Removed
 
 - **Dataplex IAM**: Removed `roles/dataplex.storageDataReader` role from Dataplex service account permissions
