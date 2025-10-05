@@ -27,10 +27,10 @@ resource "google_project_iam_custom_role" "analyticshub_subscription_viewer" {
 # Grant Masthead service account required Analytics Hub roles
 resource "google_project_iam_member" "masthead_analyticshub_roles" {
   depends_on = [google_project_service.required_apis]
-  for_each = toset([
-    "roles/analyticshub.viewer",
-    google_project_iam_custom_role.analyticshub_subscription_viewer.id
-  ])
+  for_each = {
+    viewer              = "roles/analyticshub.viewer"
+    subscription_viewer = google_project_iam_custom_role.analyticshub_subscription_viewer.id
+  }
 
   project = var.project_id
   role    = each.value

@@ -31,8 +31,7 @@ output "dataplex" {
 output "analytics_hub" {
   description = "Analytics Hub module outputs"
   value = var.enable_modules.analytics_hub ? {
-    service_account_member = module.analytics_hub[0].service_account_member
-    granted_role           = module.analytics_hub[0].granted_role
+    analyticshub_subscription_viewer_custom_role_id = module.analytics_hub[0].analyticshub_subscription_viewer_custom_role_id
   } : null
 }
 
