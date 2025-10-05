@@ -1,9 +1,4 @@
-output "service_account_member" {
-  description = "Service account member granted Analytics Hub roles"
-  value       = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
-}
-
-output "granted_role" {
-  description = "IAM role granted to the service account"
-  value       = google_project_iam_member.masthead_analyticshub_roles[each.key]
+output "analyticshub_subscription_viewer_custom_role_id" {
+  description = "ID of the custom Analytics Hub Subscription Viewer role"
+  value       = google_project_iam_custom_role.analyticshub_subscription_viewer.id
 }
