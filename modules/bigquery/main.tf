@@ -70,9 +70,11 @@ resource "google_logging_project_sink" "masthead_sink" {
   filter = <<-EOT
 (
   protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows" OR
+  protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.ReadRows" OR
   protoPayload.methodName="google.cloud.bigquery.v2.JobService.InsertJob" OR
-  protoPayload.methodName="google.cloud.bigquery.v2.TableService.InsertTable" OR
-  protoPayload.methodName="google.cloud.bigquery.v2.JobService.Query"
+  protoPayload.methodName="google.cloud.bigquery.v2.JobService.Query" OR
+  protoPayload.methodName="google.cloud.bigquery.v2.TableDataService.List" OR
+  protoPayload.methodName="google.cloud.bigquery.v2.TableService.InsertTable"
 ) AND (
   resource.type="bigquery_table" OR
   resource.type="bigquery_dataset" OR
