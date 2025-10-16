@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.2.7] - 2025-10-16
+
+### Added
+
+- **Enhanced BigQuery Monitoring**: Expanded logging sink filter to capture additional BigQuery operations:
+  - `google.cloud.bigquery.storage.v1.BigQueryWrite.ReadRows` - BigQuery Storage API read operations
+  - `google.cloud.bigquery.v2.TableDataService.List` - Listing the content of table in rows
+
 ## [0.2.6] - 2025-10-06
 
 ### Added
@@ -132,7 +140,8 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.7...HEAD
+[0.2.7]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.3...v0.2.4
