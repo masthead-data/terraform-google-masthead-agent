@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.2.8] - 2025-10-24
+
+### Changed
+
+- **Dataplex IAM**: Changed from `roles/dataplex.dataScanEditor` to `roles/dataplex.dataScanDataViewer` for reduced permissions scope
+
+### Removed
+
+- **Dataplex IAM**: Removed `roles/bigquery.jobUser` role from Dataplex service account permissions
+
 ## [0.2.7] - 2025-10-16
 
 ### Added
@@ -140,7 +150,8 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.7...HEAD
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.8...HEAD
+[0.2.8]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.4...v0.2.5
