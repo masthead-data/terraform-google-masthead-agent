@@ -18,6 +18,12 @@ variable "enable_apis" {
   default     = true
 }
 
+variable "enable_datascan_editing" {
+  type        = bool
+  description = "Whether to create/edit data scans in Dataplex"
+  default     = false
+}
+
 variable "labels" {
   type        = map(string)
   description = "Labels to apply to all resources"

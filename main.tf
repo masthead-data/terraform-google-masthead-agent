@@ -37,6 +37,7 @@ module "dataplex" {
   project_id                = var.project_id
   masthead_service_accounts = var.masthead_service_accounts
   enable_apis               = var.enable_apis
+  enable_datascan_editing   = var.enable_datascan_editing
   labels                    = var.labels
 }
 
