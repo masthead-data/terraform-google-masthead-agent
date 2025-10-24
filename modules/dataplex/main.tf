@@ -102,6 +102,8 @@ resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscrib
 resource "google_project_iam_member" "masthead_dataplex_roles" {
   for_each = var.enable_datascan_editing ? toset([
     "roles/dataplex.dataScanEditor",
+    "roles/bigquery.jobUser",
+    "roles/dataplex.storageDataReader",
     "roles/dataplex.dataScanDataViewer"
   ]) : toset([
     "roles/dataplex.dataScanDataViewer"
