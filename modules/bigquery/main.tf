@@ -11,7 +11,6 @@ locals {
   # Merge default labels with user-provided labels
   common_labels = merge(var.labels, {
     component = "bigquery"
-    service   = "masthead-agent"
   })
 }
 

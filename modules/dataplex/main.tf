@@ -11,7 +11,6 @@ locals {
   # Merge default labels with user-provided labels
   common_labels = merge(var.labels, {
     component = "dataplex"
-    service   = "masthead-agent"
   })
 }
 
@@ -100,9 +99,12 @@ resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscrib
 
 # Grant Masthead service account required Dataplex roles
 resource "google_project_iam_member" "masthead_dataplex_roles" {
-  for_each = toset([
+  for_each = var.enable_datascan_editing ? toset([
     "roles/dataplex.dataScanEditor",
-    "roles/bigquery.jobUser"
+    "roles/bigquery.jobUser",
+    "roles/dataplex.storageDataReader"
+    ]) : toset([
+    "roles/dataplex.dataScanDataViewer"
   ])
 
   project = var.project_id

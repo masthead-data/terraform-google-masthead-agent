@@ -19,6 +19,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.2.8] - 2025-10-27
+
+### Added
+
+- **Dataplex Configuration Flag**: Added `enable_datascan_editing` variable to control DataScan creation/editing permissions
+  - When `false` (default): Grants read-only access with `roles/dataplex.dataScanDataViewer`
+  - When `true`: Grants full DataScan management with `roles/dataplex.dataScanEditor`, `roles/bigquery.jobUser` and `roles/dataplex.storageDataReader`
+
+### Changed
+
+- **Dataplex IAM**: Default permissions reduced to read-only `roles/dataplex.dataScanDataViewer` for improved security
+- **Flexible Permissions**: DataScan editing capabilities now opt-in via `enable_datascan_editing` flag
+
 ## [0.2.7] - 2025-10-16
 
 ### Added
@@ -140,8 +153,7 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.7...HEAD
-[0.2.7]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.6...v0.2.7
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.6...HEAD
 [0.2.6]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.3...v0.2.4
