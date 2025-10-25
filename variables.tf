@@ -60,8 +60,8 @@ variable "enable_datascan_editing" {
 
 variable "labels" {
   type        = map(string)
-  description = "Labels to apply to all resources"
+  description = "Labels to apply to resources"
   default = {
-    service    = "masthead-agent"
+    service = "masthead-agent"
   }
 }
