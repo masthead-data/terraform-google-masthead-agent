@@ -1,6 +1,6 @@
 variable "project_id" {
   type        = string
-  description = "The GCP project ID where resources will be created"
+  description = "GCP project ID where resources will be created"
 
   validation {
     condition     = can(regex("^[a-z][a-z0-9-]{4,28}[a-z0-9]$", var.project_id))
@@ -15,7 +15,7 @@ variable "masthead_service_accounts" {
     dataplex_sa = string
     retro_sa    = string
   })
-  description = "Masthead service account emails for different services"
+  description = "Masthead service account emails"
   default = {
     bigquery_sa = "masthead-data@masthead-prod.iam.gserviceaccount.com"
     dataform_sa = "masthead-dataform@masthead-prod.iam.gserviceaccount.com"
@@ -54,7 +54,7 @@ variable "enable_apis" {
 
 variable "enable_datascan_editing" {
   type        = bool
-  description = "Enable permissions allowing Dataplex data scan editing"
+  description = "Enable permissions for creating and editing Dataplex DataScans"
   default     = false
 }
 
