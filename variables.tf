@@ -54,7 +54,7 @@ variable "enable_apis" {
 
 variable "enable_datascan_editing" {
   type        = bool
-  description = "Whether to create/edit data scans in Dataplex"
+  description = "Enable permissions allowing Dataplex data scan editing"
   default     = false
 }
 

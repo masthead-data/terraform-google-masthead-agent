@@ -19,15 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## [0.2.8] - 2025-10-24
+## [0.2.8] - 2025-10-27
+
+### Added
+
+- **Dataplex Configuration Flag**: Added `enable_datascan_editing` variable to control DataScan creation/editing permissions
+  - When `false` (default): Grants read-only access with `roles/dataplex.dataScanDataViewer`
+  - When `true`: Grants full DataScan management with `roles/dataplex.dataScanEditor`, `roles/bigquery.jobUser` and `roles/dataplex.storageDataReader`
 
 ### Changed
 
-- **Dataplex IAM**: Changed from `roles/dataplex.dataScanEditor` to `roles/dataplex.dataScanDataViewer` for reduced permissions scope
-
-### Removed
-
-- **Dataplex IAM**: Removed `roles/bigquery.jobUser` role from Dataplex service account permissions
+- **Dataplex IAM**: Default permissions reduced to read-only `roles/dataplex.dataScanDataViewer` for improved security
+- **Flexible Permissions**: DataScan editing capabilities now opt-in via `enable_datascan_editing` flag
 
 ## [0.2.7] - 2025-10-16
 
