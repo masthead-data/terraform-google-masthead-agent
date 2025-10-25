@@ -105,7 +105,7 @@ resource "google_project_iam_member" "masthead_dataplex_roles" {
     "roles/bigquery.jobUser",
     "roles/dataplex.storageDataReader",
     "roles/dataplex.dataScanDataViewer"
-  ]) : toset([
+    ]) : toset([
     "roles/dataplex.dataScanDataViewer"
   ])
 
