@@ -62,7 +62,6 @@ variable "labels" {
   type        = map(string)
   description = "Labels to apply to all resources"
   default = {
-    managed_by = "terraform"
-    module     = "masthead-agent"
+    service    = "masthead-agent"
   }
 }
