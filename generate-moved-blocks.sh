@@ -14,18 +14,25 @@ echo -e "${GREEN}Terraform Masthead Agent Migration Helper${NC}"
 echo "Generating 'moved' blocks to preserve existing resources..."
 echo ""
 
-# Check if terraform state exists
-if [ ! -f "terraform.tfstate" ]; then
-    echo -e "${RED}Error: terraform.tfstate not found in current directory${NC}"
-    echo "Please run this script from your Terraform root directory"
+# Check if we can access terraform state (local or remote)
+if ! terraform state list &> /dev/null; then
+    echo -e "${RED}Error: Cannot access Terraform state${NC}"
+    echo "Please ensure:"
+    echo "  1. You're in your Terraform root directory"
+    echo "  2. Terraform is initialized (run 'terraform init')"
+    echo "  3. You have access to the remote backend (if using remote state)"
     exit 1
 fi
 
-# Check for jq
+echo -e "${GREEN}✓${NC} Successfully connected to Terraform state"
+echo ""
+
+# Check for jq (not strictly required anymore, but good to have)
 if ! command -v jq &> /dev/null; then
-    echo -e "${RED}Error: jq is required but not installed${NC}"
+    echo -e "${YELLOW}Warning: jq is not installed${NC}"
+    echo "The script will work without it, but jq is recommended for advanced state analysis"
     echo "Install with: brew install jq (macOS) or apt-get install jq (Linux)"
-    exit 1
+    echo ""
 fi
 
 # Output file
