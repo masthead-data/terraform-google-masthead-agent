@@ -1,0 +1,48 @@
+# Hybrid Mode Example - Folder + Additional Projects
+# Use this to monitor a folder plus specific additional projects
+
+# Folder ID for folder-level log sinks (captures logs from all child projects)
+folder_id = "folders/123456789"
+
+# Organization ID for organization-level custom IAM roles (required for Analytics Hub)
+organization_id = "organizations/123456789"
+# OR just the numeric ID:
+# organization_id = "123456789"
+
+# Deployment project where Pub/Sub topics and subscriptions will be created
+deployment_project_id = "masthead-deployment-project"
+
+# Additional projects to monitor (outside the folder or requiring explicit monitoring)
+monitored_project_ids = [
+  "special-project-1",
+  "special-project-2",
+  "external-data-project"
+]
+
+# Masthead service accounts (update with your values)
+masthead_service_accounts = {
+  bigquery_sa = "masthead-data@masthead-prod.iam.gserviceaccount.com"
+  dataform_sa = "masthead-dataform@masthead-prod.iam.gserviceaccount.com"
+  dataplex_sa = "masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
+  retro_sa    = "retro-data@masthead-prod.iam.gserviceaccount.com"
+}
+
+# Module configuration
+enable_modules = {
+  bigquery      = true
+  dataform      = true
+  dataplex      = true
+  analytics_hub = true
+}
+
+# Optional configurations
+enable_privatelogviewer_role = true
+enable_apis                  = true
+enable_datascan_editing      = false
+
+# Labels
+labels = {
+  service     = "masthead-agent"
+  environment = "production"
+  mode        = "hybrid"
+}
