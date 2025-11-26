@@ -5,13 +5,13 @@ variable "pubsub_project_id" {
 
 variable "monitored_folder_ids" {
   type        = list(string)
-  description = "List of GCP folder IDs for folder-level log sinks (optional, for enterprise mode)"
+  description = "List of GCP folder IDs for folder-level log sinks (optional, for organization mode)"
   default     = []
 }
 
 variable "monitored_project_ids" {
   type        = list(string)
-  description = "List of GCP project IDs to monitor (for integrated mode or hybrid mode)"
+  description = "List of GCP project IDs to monitor (for project mode or hybrid mode)"
   default     = []
 }
 

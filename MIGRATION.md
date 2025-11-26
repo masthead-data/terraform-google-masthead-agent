@@ -7,11 +7,11 @@ This guide helps you migrate from the previous single-project architecture to th
 ### Variable Changes
 
 #### Renamed Variables
-- `project_id` is now **optional** and only used in **Integrated Mode**
+- `project_id` is now **optional** and only used in **Project Mode**
 
 #### New Variables
-- `folder_id` - For enterprise/folder-level deployments
-- `deployment_project_id` - Where Pub/Sub infrastructure is created in enterprise mode
+- `folder_id` - For organization/folder-level deployments
+- `deployment_project_id` - Where Pub/Sub infrastructure is created in organization mode
 - `monitored_project_ids` - List of additional projects to monitor
 
 ### Module Interface Changes
@@ -29,7 +29,7 @@ All service modules (BigQuery, Dataform, Dataplex) now use:
 
 ## Migration Paths
 
-### Path 1: Continue with Single Project (Integrated Mode)
+### Path 1: Continue with Single Project (Project Mode)
 
 **Configuration stays the same**, but resources will be recreated due to module restructuring:
 
@@ -44,9 +44,9 @@ module "masthead_agent" {
 }
 ```
 
-**Important**: Even in integrated mode, resources will be recreated because the internal module structure changed. The configuration syntax is backward compatible, but Terraform will see different resource addresses.
+**Important**: Even in project mode, resources will be recreated because the internal module structure changed. The configuration syntax is backward compatible, but Terraform will see different resource addresses.
 
-### Path 2: Upgrade to Enterprise Mode (Folder-Level)
+### Path 2: Upgrade to Organization Mode (Folder-Level)
 
 If you want to move to folder-level monitoring:
 
@@ -168,14 +168,14 @@ Terraform sees these as completely different resources.
 
 #### What Gets Recreated
 
-**Integrated Mode (same configuration)**:
+**Project Mode (same configuration)**:
 - ✅ **Configuration**: Unchanged, backward compatible
 - ⚠️ **Resources**: ALL recreated (new module paths)
 - ✅ **Same Project**: Pub/Sub topics/subscriptions in same project
 - ✅ **Same Scope**: Sinks and IAM remain project-level
 - ⏱️ **Downtime**: ~30-60 seconds during sink recreation
 
-**Enterprise Mode (folder-level)**:
+**Organization Mode (folder-level)**:
 - ⚠️ **Resources**: ALL recreated (module paths + scope change)
 - 🔄 **Scope Change**: Sinks move from project → folder level
 - 🔄 **IAM Change**: Bindings move from project → folder level
@@ -199,7 +199,7 @@ terraform state pull > backup-state.json
 cat moved-blocks.tf
 
 # 4. Update your configuration to v0.3.0
-# (Keep same variables for integrated mode, or add folder_id for enterprise)
+# (Keep same variables for project mode, or add folder_id for organization)
 
 # 5. Upgrade Terraform providers
 terraform init -upgrade
@@ -264,10 +264,10 @@ If you need to rollback:
 
 ## Required Permissions for Migration
 
-### Integrated Mode (no change needed)
+### Project Mode (no change needed)
 - Same as before: project-level IAM and logging permissions
 
-### Enterprise Mode (new requirements)
+### Organization Mode (new requirements)
 You need these **additional** permissions:
 - `resourcemanager.folders.get`
 - `resourcemanager.folders.setIamPolicy`
@@ -291,20 +291,20 @@ If you encounter issues during migration:
 ## Changelog Summary
 
 ### Added
-- Enterprise mode with folder-level logging
+- Organization mode with folder-level logging
 - Hybrid mode for folder + additional projects
 - Shared logging infrastructure module
 - Validation for deployment mode selection
 - New outputs: `deployment_mode`, `folder_id`, `monitored_project_ids`
 
 ### Changed
-- `project_id` is now optional (required for integrated mode only)
+- `project_id` is now optional (required for project mode only)
 - All service modules refactored to use shared infrastructure
 - IAM bindings now support both folder and project levels
 - Output structure changed for `logging_sink_id` and `logging_sink_writer_identity`
 
 ### Deprecated
-- None (backward compatible for integrated mode)
+- None (backward compatible for project mode)
 
 ### Removed
 - None

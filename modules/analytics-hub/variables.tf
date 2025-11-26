@@ -1,18 +1,18 @@
 variable "monitored_folder_ids" {
   type        = list(string)
-  description = "List of GCP folder IDs for folder-level IAM (optional, for enterprise mode)"
+  description = "List of GCP folder IDs for folder-level IAM (optional, for organization mode)"
   default     = []
 }
 
 variable "organization_id" {
   type        = string
-  description = "GCP organization ID for organization-level custom roles (required for enterprise mode)"
+  description = "GCP organization ID for organization-level custom roles (required for organization mode)"
   default     = null
 }
 
 variable "monitored_project_ids" {
   type        = list(string)
-  description = "List of GCP project IDs to monitor (for integrated mode or hybrid mode)"
+  description = "List of GCP project IDs to monitor (for project mode or hybrid mode)"
   default     = []
 }
 

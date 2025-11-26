@@ -14,7 +14,7 @@ This module creates the shared logging infrastructure for Masthead Agent, includ
 
 ## Usage
 
-### Folder-level (Enterprise)
+### Folder-level (Organization)
 
 ```hcl
 module "bigquery_logging" {
@@ -31,7 +31,7 @@ module "bigquery_logging" {
 }
 ```
 
-### Project-level (Integrated)
+### Project-level (Project)
 
 ```hcl
 module "bigquery_logging" {

@@ -1,5 +1,5 @@
-# Analytics Hub module - handles IAM for Analytics Hub monitoring
-# Supports both folder-level (enterprise) and project-level (integrated) configurations
+# Analytics Hub Module - IAM for Masthead Agent
+# Supports both folder-level (organization) and project-level (project) configurations
 
 locals {
   # Determine if we're operating at folder or project level

@@ -1,8 +1,18 @@
-# Integrated Mode Example - Single Project Setup
-# Use this for smaller deployments or single-project setups
+# Organization Mode Example - Folder-Level Setup
+# Use this for organization-wide deployments to capture logs from all projects under a folder
 
-# Single project where all resources (logs, Pub/Sub, IAM) will be created
-project_id = "my-data-project"
+# Folder ID for folder-level log sinks (captures logs from all child projects)
+folder_id = "folders/123456789"
+# OR just the numeric ID:
+# folder_id = "123456789"
+
+# Organization ID for organization-level custom IAM roles (required for Analytics Hub)
+organization_id = "organizations/123456789"
+# OR just the numeric ID:
+# organization_id = "123456789"
+
+# Deployment project where Pub/Sub topics and subscriptions will be created
+deployment_project_id = "masthead-deployment-project"
 
 # Masthead service accounts (update with your values)
 masthead_service_accounts = {
@@ -29,5 +39,5 @@ enable_datascan_editing      = false
 labels = {
   service     = "masthead-agent"
   environment = "production"
-  mode        = "integrated"
+  mode        = "organization"
 }

@@ -7,14 +7,14 @@
 # Choose ONE of the following deployment modes:
 
 # -----------------------------------------------------------------------------
-# OPTION 1: INTEGRATED MODE (Single Project)
+# OPTION 1: PROJECT MODE (Single Project)
 # Use this for smaller deployments or single-project setups
 # -----------------------------------------------------------------------------
 project_id = "YOUR_PROJECT_ID"
 
 # -----------------------------------------------------------------------------
-# OPTION 2: ENTERPRISE MODE (Multiple Folders)
-# Use this for enterprise deployments to capture logs from multiple GCP folders
+# OPTION 2: ORGANIZATION MODE (Multiple Folders)
+# Use this for organization-wide deployments to capture logs from multiple GCP folders
 # Comment out project_id above and uncomment below:
 # -----------------------------------------------------------------------------
 # deployment_project_id = "YOUR_DEPLOYMENT_PROJECT_ID"

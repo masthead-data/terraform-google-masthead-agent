@@ -10,18 +10,21 @@ This Terraform module deploys infrastructure for Masthead Data to monitor Google
 
 The module supports three deployment modes to fit different organizational structures:
 
-### 🏢 Integrated Mode (Single Project)
-For smaller deployments or single-project setups. All resources (logs, Pub/Sub, IAM) are created in one project.
+### 📦 Project Mode (Single Project)
 
-### 🏗️ Enterprise Mode (Folder-Level)
-For large organizations using GCP folders. Creates folder-level log sinks to capture logs from all projects under the folder, with centralized Pub/Sub infrastructure in a dedicated deployment project.
+For single-project setups. All resources (logs, Pub/Sub, IAM) are created in one project.
 
-### 🔄 Hybrid Mode (Folder + Additional Projects)
-Combines folder-level monitoring with specific additional projects. Useful when you need to monitor a folder plus some external projects.
+### 🏢 Organization Mode (Folder/Multi-Project)
+
+For organizations using GCP folders or monitoring multiple projects. Creates centralized Pub/Sub infrastructure in a dedicated deployment project with folder-level or project-level log sinks.
+
+### 🔄 Hybrid Mode (Folder + Project)
+
+Combines folder-level monitoring with project-level Pub/Sub. Useful for specific use cases requiring both configurations.
 
 ## Usage Examples
 
-### Integrated Mode - Single Project
+### Project Mode - Single Project
 
 Simplest setup for single-project deployments:
 
@@ -39,12 +42,12 @@ module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
   version = ">=0.3.0"
 
-  # Integrated mode: single project
+  # Project mode: single project
   project_id = var.project_id
 }
 ```
 
-### Enterprise Mode - Folder-Level Monitoring
+### Organization Mode - Folder-Level Monitoring
 
 For organizations using GCP folders:
 
@@ -67,7 +70,7 @@ module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
   version = ">=0.3.0"
 
-  # Enterprise mode: folder + deployment project
+  # Organization mode: folder + deployment project
   folder_id             = var.folder_id  # e.g., "folders/123456789" or "123456789"
   deployment_project_id = var.deployment_project_id
 
@@ -76,7 +79,7 @@ module "masthead_agent" {
 
   labels = {
     environment = "production"
-    mode        = "enterprise"
+    mode        = "organization"
   }
 }
 ```
@@ -136,10 +139,10 @@ module "masthead_agent" {
   version = ">=0.3.0"
 
   # Choose ONE mode:
-  # INTEGRATED: Set project_id only
+  # PROJECT: Set project_id only
   project_id = var.project_id
 
-  # ENTERPRISE: Set folder_id + deployment_project_id
+  # ORGANIZATION: Set folder_id + deployment_project_id
   # folder_id             = var.folder_id
   # deployment_project_id = var.deployment_project_id
 
@@ -181,8 +184,9 @@ module "masthead_agent" {
 
 ## Architecture
 
-### Integrated Mode
-```
+### Project Mode
+
+```text
 ┌─────────────────────────────────────┐
 │        Single GCP Project           │
 │                                     │
@@ -197,8 +201,9 @@ module "masthead_agent" {
 └─────────────────────────────────────┘
 ```
 
-### Enterprise Mode
-```
+### Organization Mode
+
+```text
 ┌────────────────────────────────────────┐
 │         GCP Folder                     │
 │  ┌──────────────────────────────────┐  │
@@ -219,7 +224,8 @@ module "masthead_agent" {
 ```
 
 ### Hybrid Mode
-```
+
+```text
 ┌────────────────────────────────────────┐
 │         GCP Folder                     │
 │  ┌──────────────────────────────────┐  │
@@ -248,30 +254,37 @@ module "masthead_agent" {
 
 ## IAM Permissions
 
-### Integrated Mode
+### Project Mode
+
 - IAM bindings applied at the **project level**
 - Log sinks created at the **project level**
 
-### Enterprise Mode
+### Organization Mode
+
 - IAM bindings applied at the **folder level** (inherited by all child projects)
 - Log sinks created at the **folder level** with `include_children = true`
 
 ### Hybrid Mode
+
 - IAM bindings applied at both **folder level** and **project level** (for additional projects)
 - Log sinks created at both **folder level** and **project level**
 
 ## Required GCP Permissions
 
-### For Integrated Mode
+### For Project Mode
+
 You need these permissions in the target project:
+
 - `logging.sinks.create`
 - `pubsub.topics.create`
 - `pubsub.subscriptions.create`
 - `iam.serviceAccounts.setIamPolicy`
 - `resourcemanager.projects.setIamPolicy`
 
-### For Enterprise/Hybrid Mode
+### For Organization/Hybrid Mode
+
 You need these permissions at the folder level:
+
 - `logging.sinks.create` (on folder)
 - `resourcemanager.folders.setIamPolicy` (on folder)
 - Plus project-level permissions for the deployment project (Pub/Sub)
@@ -279,8 +292,9 @@ You need these permissions at the folder level:
 ## Examples
 
 See the `examples/` directory for complete configuration examples:
-- `integrated-mode.tfvars.example` - Single project setup
-- `enterprise-mode.tfvars.example` - Folder-level setup
+
+- `project-mode.tfvars.example` - Single project setup
+- `organization-mode.tfvars.example` - Folder-level setup
 - `hybrid-mode.tfvars.example` - Folder + additional projects
 
 ## References

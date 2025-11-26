@@ -1,19 +1,19 @@
-# Refactoring Summary: Enterprise & Folder-Level Support
+# Refactoring Summary: Organization & Folder-Level Support
 
 ## Overview
 
-Successfully refactored the Masthead Terraform module to support enterprise deployments with GCP folders while maintaining backward compatibility with existing single-project configurations.
+Successfully refactored the Masthead Terraform module to support organization-wide deployments with GCP folders while maintaining backward compatibility with existing single-project configurations.
 
 ## Key Changes
 
 ### 1. New Deployment Modes
 
-#### ✅ Integrated Mode (Existing - Backward Compatible)
+#### ✅ Project Mode (Existing - Backward Compatible)
 - Single project setup
 - All resources in one project
 - **No changes required for existing users**
 
-#### ✅ Enterprise Mode (New)
+#### ✅ Organization Mode (New)
 - Folder-level log sinks
 - Centralized Pub/Sub in deployment project
 - IAM at folder level (inherited by all child projects)
@@ -63,13 +63,13 @@ Location: `modules/logging-infrastructure/`
 ```hcl
 variable "folder_id" {
   type        = string
-  description = "GCP folder ID for enterprise deployments"
+  description = "GCP folder ID for organization-wide deployments"
   default     = null
 }
 
 variable "deployment_project_id" {
   type        = string
-  description = "Project where Pub/Sub is deployed (enterprise mode)"
+  description = "Project where Pub/Sub is deployed (organization mode)"
   default     = null
 }
 
@@ -86,9 +86,9 @@ Added intelligent locals in root `variables.tf`:
 
 ```hcl
 locals {
-  integrated_mode = var.project_id != null && var.folder_id == null
-  enterprise_mode = var.folder_id != null && var.deployment_project_id != null
-  hybrid_mode     = var.folder_id != null && length(var.monitored_project_ids) > 0
+  project_mode      = var.project_id != null && var.folder_id == null
+  organization_mode = var.folder_id != null && var.deployment_project_id != null
+  hybrid_mode       = var.folder_id != null && length(var.monitored_project_ids) > 0
 
   pubsub_project_id      = coalesce(var.deployment_project_id, var.project_id)
   normalized_folder_id   = # Handles both "folders/123" and "123" formats
@@ -104,8 +104,8 @@ Added configuration validation to ensure correct mode usage:
 resource "null_resource" "validate_configuration" {
   lifecycle {
     precondition {
-      condition     = local.integrated_mode || local.enterprise_mode || local.hybrid_mode
-      error_message = "Invalid configuration. Choose integrated, enterprise, or hybrid mode."
+      condition     = local.project_mode || local.organization_mode || local.hybrid_mode
+      error_message = "Invalid configuration. Choose project, organization, or hybrid mode."
     }
   }
 }
@@ -122,8 +122,8 @@ terraform-google-masthead-agent/
 ├── CHANGELOG.md                     # v0.3.0 entry
 ├── MIGRATION.md                     # New migration guide
 ├── examples/
-│   ├── integrated-mode.tfvars.example
-│   ├── enterprise-mode.tfvars.example
+│   ├── project-mode.tfvars.example
+│   ├── organization-mode.tfvars.example
 │   └── hybrid-mode.tfvars.example
 └── modules/
     ├── logging-infrastructure/      # NEW SHARED MODULE
@@ -171,13 +171,13 @@ Single `logging-infrastructure` module handles:
 
 ## IAM Strategy
 
-### Integrated Mode
+### Project Mode
 ```hcl
 # Project-level IAM
 google_project_iam_member.masthead_roles["project-id"]["role-name"]
 ```
 
-### Enterprise Mode
+### Organization Mode
 ```hcl
 # Folder-level IAM (inherited by all children)
 google_folder_iam_member.masthead_roles["folder-id"]["role-name"]
@@ -204,8 +204,8 @@ google_project_iam_member.masthead_project_roles["project-id-role-name"]
 
 ### Created
 - ✅ `MIGRATION.md` - Comprehensive migration guide
-- ✅ `examples/integrated-mode.tfvars.example`
-- ✅ `examples/enterprise-mode.tfvars.example`
+- ✅ `examples/project-mode.tfvars.example`
+- ✅ `examples/organization-mode.tfvars.example`
 - ✅ `examples/hybrid-mode.tfvars.example`
 - ✅ `modules/logging-infrastructure/README.md`
 
@@ -219,7 +219,7 @@ google_project_iam_member.masthead_project_roles["project-id-role-name"]
 
 ### For Users
 
-1. **🏢 Enterprise Ready**: Support for large organizations using GCP folders
+1. **🏢 Organization Ready**: Support for large organizations using GCP folders
 2. **🔄 Flexible**: Choose the mode that fits your organization
 3. **⏪ Backward Compatible**: Existing configs work without changes
 4. **📖 Well Documented**: Comprehensive guides and examples
@@ -262,7 +262,7 @@ module "masthead_agent" {
 }
 ```
 
-### After (v0.3.0) - Integrated Mode (Same!)
+### After (v0.3.0) - Project Mode (Same!)
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
@@ -272,7 +272,7 @@ module "masthead_agent" {
 }
 ```
 
-### After (v0.3.0) - Enterprise Mode (New!)
+### After (v0.3.0) - Organization Mode (New!)
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
@@ -294,4 +294,4 @@ module "masthead_agent" {
 
 ## Conclusion
 
-Successfully delivered enterprise-grade folder support while maintaining 100% backward compatibility. The refactoring follows Terraform best practices with proper module composition, clear documentation, and comprehensive examples.
+Successfully delivered organization-grade folder support while maintaining 100% backward compatibility. The refactoring follows Terraform best practices with proper module composition, clear documentation, and comprehensive examples.

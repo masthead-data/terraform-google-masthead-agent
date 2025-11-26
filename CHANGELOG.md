@@ -9,17 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **🏢 Enterprise Mode**: Folder-level log sink support for monitoring all projects under a GCP folder
+- **🏢 Organization Mode**: Folder-level log sink support for monitoring all projects under a GCP folder
 - **🔄 Hybrid Mode**: Support for monitoring folder + additional specific projects simultaneously
 - **📦 Shared Logging Infrastructure Module**: New reusable module for Pub/Sub and logging sink management
-- **🔍 Deployment Mode Detection**: Automatic validation and mode detection (integrated/enterprise/hybrid)
+- **🔍 Deployment Mode Detection**: Automatic validation and mode detection (project/organization/hybrid)
 - **📊 Enhanced Outputs**: New outputs for `deployment_mode`, `folder_id`, and `monitored_project_ids`
 - **📝 Configuration Examples**: Added example tfvars for all three deployment modes
 - **📖 Migration Guide**: Comprehensive guide for upgrading from v0.2.x to v0.3.0
 
 ### Changed
 
-- **⚙️ Variable Structure**: `project_id` is now optional and used only for integrated mode
+- **⚙️ Variable Structure**: `project_id` is now optional and used only for project mode
 - **🏗️ Architecture**: All service modules (BigQuery, Dataform, Dataplex) refactored to use shared infrastructure
 - **🔐 IAM Flexibility**: IAM bindings now support both folder-level and project-level assignments
 - **📤 Output Structure**: `logging_sink_id` and `logging_sink_writer_identity` now return different formats based on mode
@@ -32,9 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
-⚠️ **Backward Compatible for Integrated Mode**: Existing single-project configurations continue to work without changes.
+⚠️ **Backward Compatible for Project Mode**: Existing single-project configurations continue to work without changes.
 
-For users migrating to enterprise mode, see [MIGRATION.md](./MIGRATION.md) for detailed upgrade instructions.
+For users migrating to organization mode, see [MIGRATION.md](./MIGRATION.md) for detailed upgrade instructions.
 
 ## [0.2.8] - 2025-10-27
 

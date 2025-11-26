@@ -1,5 +1,5 @@
-# BigQuery module - handles logging and IAM for BigQuery monitoring
-# Supports both folder-level (enterprise) and project-level (integrated) configurations
+# BigQuery Module - IAM and Logging for Masthead Agent
+# Supports both folder-level (organization) and project-level (project) configurations
 
 locals {
   resource_names = {
