@@ -42,7 +42,22 @@ output "enabled_modules" {
   ]
 }
 
-output "project_id" {
-  description = "The GCP project ID where resources were created"
-  value       = var.project_id
+output "deployment_mode" {
+  description = "Deployment mode (integrated, enterprise, or hybrid)"
+  value       = local.integrated_mode ? "integrated" : (local.hybrid_mode ? "hybrid" : "enterprise")
+}
+
+output "pubsub_project_id" {
+  description = "The GCP project ID where Pub/Sub resources are deployed"
+  value       = local.pubsub_project_id
+}
+
+output "folder_id" {
+  description = "The GCP folder ID being monitored (if applicable)"
+  value       = local.normalized_folder_id
+}
+
+output "monitored_project_ids" {
+  description = "List of project IDs being monitored directly"
+  value       = local.all_monitored_projects
 }

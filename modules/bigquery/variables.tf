@@ -1,6 +1,18 @@
-variable "project_id" {
+variable "pubsub_project_id" {
   type        = string
-  description = "GCP project ID where resources will be created"
+  description = "GCP project ID where Pub/Sub resources will be created"
+}
+
+variable "folder_id" {
+  type        = string
+  description = "GCP folder ID for folder-level log sink (optional, for enterprise mode)"
+  default     = null
+}
+
+variable "monitored_project_ids" {
+  type        = list(string)
+  description = "List of GCP project IDs to monitor (for integrated mode or hybrid mode)"
+  default     = []
 }
 
 variable "masthead_service_accounts" {
