@@ -31,10 +31,10 @@ All service modules (BigQuery, Dataform, Dataplex) now use:
 
 ### Path 1: Continue with Single Project (Integrated Mode)
 
-**No changes required!** Your existing configuration will continue to work:
+**Configuration stays the same**, but resources will be recreated due to module restructuring:
 
 ```hcl
-# Before (v0.2.x) - Still works in v0.3.0
+# Before (v0.2.x) - Configuration compatible with v0.3.0
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
   version = ">=0.3.0"
@@ -43,6 +43,8 @@ module "masthead_agent" {
   # ... rest of config
 }
 ```
+
+**Important**: Even in integrated mode, resources will be recreated because the internal module structure changed. The configuration syntax is backward compatible, but Terraform will see different resource addresses.
 
 ### Path 2: Upgrade to Enterprise Mode (Folder-Level)
 
@@ -73,7 +75,8 @@ module "masthead_agent" {
 
   # Remove project_id, add folder_id and deployment_project_id
   folder_id             = "folders/123456789"  # Your folder ID
-  deployment_project_id = "my-data-project"    # Same or different project
+  deployment_project_id = "my-data-project"    # Use same project ID
+  organization_id       = "123456789"          # Required for Analytics Hub
 
   enable_modules = {
     bigquery      = true
@@ -83,6 +86,8 @@ module "masthead_agent" {
   }
 }
 ```
+
+**Note**: Using the same project ID keeps Pub/Sub in the same location, but all resources will still be recreated due to new module paths.
 
 #### Migration Steps
 
@@ -97,24 +102,28 @@ module "masthead_agent" {
 
 3. **Plan the changes**
    ```bash
-   terraform plan
+   terraform plan -out=migration.tfplan
    ```
 
-   You will see:
-   - Existing project-level sinks will be **destroyed**
-   - New folder-level sinks will be **created**
-   - Pub/Sub topics and subscriptions may be recreated (depends on project)
-   - IAM bindings will move from project to folder level
+   Expected changes (~25-35 resources):
+   - **Destroyed**: All existing resources (project-level sinks, project IAM, Pub/Sub, etc.)
+   - **Created**: All new resources (folder-level sinks, folder IAM, Pub/Sub, etc.)
+   - Even resources in the same project will be recreated due to module path changes
 
-4. **Apply with caution**
+4. **Review the plan**
    ```bash
-   terraform apply
+   terraform show migration.tfplan | grep -E "(# module|will be created|will be destroyed)"
    ```
 
-5. **Verify**
-   - Check that folder-level sinks are created
-   - Verify IAM bindings at folder level
-   - Test that logs are flowing to Pub/Sub
+5. **Apply during maintenance window**
+   ```bash
+   terraform apply migration.tfplan
+   ```
+
+6. **Verify immediately**
+   - Check folder-level sinks exist: `gcloud logging sinks list --folder=123456789`
+   - Verify IAM at folder level
+   - Test logs flowing to Pub/Sub within 5 minutes
 
 ### Path 3: Hybrid Mode (Folder + Additional Projects)
 
@@ -127,6 +136,7 @@ module "masthead_agent" {
 
   folder_id              = "folders/123456789"
   deployment_project_id  = "central-logging-project"
+  organization_id        = "123456789"  # Required for Analytics Hub
   monitored_project_ids  = [
     "special-project-1",
     "external-project-2"
@@ -143,21 +153,98 @@ module "masthead_agent" {
 
 ## Important Notes
 
-### Resource Recreation
+### Resource Recreation - ALL Resources Will Be Recreated
 
-When migrating from integrated to enterprise mode:
+**Critical**: Due to the internal module restructuring in v0.3.0, **all resources will be recreated** regardless of your migration path:
 
-- **Log Sinks**: Project-level sinks will be destroyed and folder-level sinks created
-- **Pub/Sub**: Topics and subscriptions will be recreated if `deployment_project_id` differs from old `project_id`
-- **IAM Bindings**: Will move from project-level to folder-level
-- **Potential Data Loss**: Brief interruption in log collection during migration
+#### Why Resources Are Recreated
+The module structure changed from:
+- `module.bigquery.google_pubsub_topic.logs_topic`
+
+To:
+- `module.bigquery[0].module.logging_infrastructure.google_pubsub_topic.logs_topic`
+
+Terraform sees these as completely different resources.
+
+#### What Gets Recreated
+
+**Integrated Mode (same configuration)**:
+- ✅ **Configuration**: Unchanged, backward compatible
+- ⚠️ **Resources**: ALL recreated (new module paths)
+- ✅ **Same Project**: Pub/Sub topics/subscriptions in same project
+- ✅ **Same Scope**: Sinks and IAM remain project-level
+- ⏱️ **Downtime**: ~30-60 seconds during sink recreation
+
+**Enterprise Mode (folder-level)**:
+- ⚠️ **Resources**: ALL recreated (module paths + scope change)
+- 🔄 **Scope Change**: Sinks move from project → folder level
+- 🔄 **IAM Change**: Bindings move from project → folder level
+- 🔄 **Custom Roles**: Analytics Hub role moves to organization level
+- ⏱️ **Downtime**: ~30-60 seconds during sink recreation
+
+### Migration Strategies
+
+#### Option A: Use Moved Blocks (Recommended - Zero Recreation)
+
+**NEW**: Use the provided script to generate `moved` blocks that preserve your existing resources:
+
+```bash
+# 1. Backup your state first
+terraform state pull > backup-state.json
+
+# 2. Generate moved blocks from your current state
+./generate-moved-blocks.sh
+
+# 3. Review the generated moved-blocks.tf file
+cat moved-blocks.tf
+
+# 4. Update your configuration to v0.3.0
+# (Keep same variables for integrated mode, or add folder_id for enterprise)
+
+# 5. Upgrade Terraform providers
+terraform init -upgrade
+
+# 6. Plan - should show moves, not recreations
+terraform plan
+
+# 7. Apply the moves
+terraform apply
+
+# 8. Clean up the moved blocks file
+rm moved-blocks.tf
+```
+
+**Downtime**: Zero! Resources are preserved through Terraform moves
+**Risk**: Very low - just renames in state
+**Best for**: Production environments where downtime must be avoided
+
+**Note**: The script works for standard deployments. Complex configurations may need manual adjustment of the generated `moved-blocks.tf`.
+
+#### Option B: Accept Recreation (Simple)
+
+If you prefer a clean slate or have simple dev/test environments:
+
+1. **Backup state**: `terraform state pull > backup-state.json`
+2. **Update configuration**: Change version to `>=0.3.0`
+3. **Plan**: `terraform plan -out=migration.tfplan`
+4. **Review carefully**: Expect ~20-30 resources to be recreated
+5. **Apply during maintenance window**: `terraform apply migration.tfplan`
+6. **Verify**: Check logs are flowing within 5 minutes
+
+**Downtime**: 30-60 seconds for log collection
+**Risk**: Low (resources recreated with same/similar names)
+**Best for**: Dev/test environments, non-critical deployments
 
 ### Recommendations
 
-1. **Test in non-production first**: Try the migration in a dev/test environment
-2. **Plan during low-traffic period**: Minimize impact of brief logging interruption
-3. **Monitor after migration**: Verify logs are flowing correctly
-4. **Keep backups**: Maintain Terraform state backups
+1. **Use Option A (moved blocks)**: Zero downtime, preserves all resources
+2. **Use the migration script**: `./generate-moved-blocks.sh` automates the process
+3. **Test in non-production first**: Validate the migration process
+4. **Keep backups**: Save state before migration
+5. **Monitor after**: Verify logs flowing within first hour
+
+**For production environments**: Use Option A with moved blocks
+**For dev/test environments**: Either Option A or B is fine
 
 ### Rollback Plan
 
