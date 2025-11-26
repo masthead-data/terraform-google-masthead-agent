@@ -27,14 +27,6 @@ fi
 echo -e "${GREEN}✓${NC} Successfully connected to Terraform state"
 echo ""
 
-# Check for jq (not strictly required anymore, but good to have)
-if ! command -v jq &> /dev/null; then
-    echo -e "${YELLOW}Warning: jq is not installed${NC}"
-    echo "The script will work without it, but jq is recommended for advanced state analysis"
-    echo "Install with: brew install jq (macOS) or apt-get install jq (Linux)"
-    echo ""
-fi
-
 # Output file
 OUTPUT_FILE="moved-blocks.tf"
 
@@ -61,19 +53,17 @@ cat > "$OUTPUT_FILE" << 'EOF'
 
 EOF
 
+# Get all state resources
+STATE_LIST=$(terraform state list)
+
 # Extract enabled modules from state
-# Handle both count format [0] and for_each format ["key"]
-MODULES=$(terraform state list | grep "module.masthead_agent\[")
+MODULES=$(echo "$STATE_LIST" | grep "module.masthead_agent\[" || true)
 
 if [ -z "$MODULES" ]; then
     echo -e "${RED}Error: No masthead_agent modules found in state${NC}"
     echo "This script is designed for migrating existing deployments"
     exit 1
 fi
-
-echo "Sample resources from state:"
-echo "$MODULES" | head -5
-echo ""
 
 # Check if state is already in v0.3.0 format (has logging_infrastructure)
 if echo "$MODULES" | grep -q "module.logging_infrastructure"; then
@@ -96,159 +86,292 @@ echo "Detected masthead_agent instances:"
 echo "$AGENT_KEYS" | sed 's/module.masthead_agent/  - /'
 echo ""
 
-# Detect which service modules are being used
-SERVICE_MODULES=$(echo "$MODULES" | grep -o 'module\.\(bigquery\|dataform\|dataplex\|analytics_hub\)\[0\]' | sed 's/module.//;s/\[0\]//' | sort -u)
-
-if [ -z "$SERVICE_MODULES" ]; then
-    echo -e "${RED}Error: No service modules (bigquery, dataform, dataplex, analytics_hub) found${NC}"
-    echo "Cannot generate moved blocks without detecting which modules are enabled"
-    exit 1
-fi
-
-echo "Detected service modules:"
-echo "$SERVICE_MODULES" | sed 's/^/  - /'
-echo ""
-
-# Track if we generated any blocks
+# Track generated blocks
 GENERATED=0
 
-# Generate moved blocks for each masthead_agent instance and each service module
+# Generate moved blocks for each masthead_agent instance
 for AGENT_KEY in $AGENT_KEYS; do
-    # Extract the key value (e.g., "max-ostapenko" from module.masthead_agent["max-ostapenko"])
+    # Extract the key value (e.g., "masthead-dev" from module.masthead_agent["masthead-dev"])
     KEY_VALUE=$(echo "$AGENT_KEY" | sed 's/module.masthead_agent\[\(.*\)\]/\1/')
+    # Remove quotes for use in resource keys
+    KEY_BARE=$(echo "$KEY_VALUE" | tr -d '"')
 
-    echo "Processing instance: $AGENT_KEY"
+    echo "Processing instance: $AGENT_KEY (key: $KEY_BARE)"
 
-    for MODULE_NAME in $SERVICE_MODULES; do
-        echo "  - Generating moves for $MODULE_NAME..."
+    # =========================================================================
+    # BIGQUERY MODULE
+    # =========================================================================
+    if echo "$STATE_LIST" | grep -qF "${AGENT_KEY}.module.bigquery[0]"; then
+        echo "  - Generating moves for bigquery..."
 
-        case "$MODULE_NAME" in
-            bigquery|dataform|dataplex)
-                cat >> "$OUTPUT_FILE" << EOF
+        cat >> "$OUTPUT_FILE" << EOF
 
 # ============================================================================
-# ${MODULE_NAME} module moves for ${AGENT_KEY}
+# BigQuery module moves for ${AGENT_KEY}
 # ============================================================================
 
 # Pub/Sub Topic
 moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_topic.masthead_topic
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_topic.logs_topic
+  from = ${AGENT_KEY}.module.bigquery[0].google_pubsub_topic.masthead_topic
+  to   = ${AGENT_KEY}.module.bigquery[0].module.logging_infrastructure.google_pubsub_topic.logs_topic
 }
 
 # Pub/Sub Subscription
 moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_subscription.masthead_agent_subscription
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_subscription.logs_subscription
+  from = ${AGENT_KEY}.module.bigquery[0].google_pubsub_subscription.masthead_agent_subscription
+  to   = ${AGENT_KEY}.module.bigquery[0].module.logging_infrastructure.google_pubsub_subscription.logs_subscription
 }
 
-# Pub/Sub API Enablement (moves to count-based)
+# Pub/Sub Subscriber IAM
 moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis["pubsub.googleapis.com"]
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_service.pubsub_api[0]
+  from = ${AGENT_KEY}.module.bigquery[0].google_pubsub_subscription_iam_member.masthead_subscription_subscriber
+  to   = ${AGENT_KEY}.module.bigquery[0].module.logging_infrastructure.google_pubsub_subscription_iam_member.masthead_subscription_subscriber
 }
 
-# IAM API Enablement (moves to logging_infrastructure)
+# Pub/Sub API
 moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis["iam.googleapis.com"]
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_service.monitored_project_apis[${KEY_VALUE}:"iam.googleapis.com"]
+  from = ${AGENT_KEY}.module.bigquery[0].google_project_service.required_apis["pubsub.googleapis.com"]
+  to   = ${AGENT_KEY}.module.bigquery[0].module.logging_infrastructure.google_project_service.pubsub_api[0]
 }
 
-# Logging API Enablement (moves to logging_infrastructure)
+# Log Sink (project-level)
 moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis["logging.googleapis.com"]
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_service.monitored_project_apis[${KEY_VALUE}:"logging.googleapis.com"]
+  from = ${AGENT_KEY}.module.bigquery[0].google_logging_project_sink.masthead_sink
+  to   = ${AGENT_KEY}.module.bigquery[0].module.logging_infrastructure.google_logging_project_sink.project_sinks["${KEY_BARE}"]
+}
+
+# Log Sink Writer IAM (Pub/Sub publisher)
+moved {
+  from = ${AGENT_KEY}.module.bigquery[0].google_pubsub_topic_iam_member.logging_pubsub_publisher
+  to   = ${AGENT_KEY}.module.bigquery[0].module.logging_infrastructure.google_pubsub_topic_iam_member.project_sinks_publisher["${KEY_BARE}"]
+}
+
+# IAM API
+moved {
+  from = ${AGENT_KEY}.module.bigquery[0].google_project_service.required_apis["iam.googleapis.com"]
+  to   = ${AGENT_KEY}.module.bigquery[0].module.logging_infrastructure.google_project_service.monitored_project_apis["${KEY_BARE}:iam.googleapis.com"]
+}
+
+# Logging API
+moved {
+  from = ${AGENT_KEY}.module.bigquery[0].google_project_service.required_apis["logging.googleapis.com"]
+  to   = ${AGENT_KEY}.module.bigquery[0].module.logging_infrastructure.google_project_service.monitored_project_apis["${KEY_BARE}:logging.googleapis.com"]
+}
+
+# BigQuery API
+moved {
+  from = ${AGENT_KEY}.module.bigquery[0].google_project_service.required_apis["bigquery.googleapis.com"]
+  to   = ${AGENT_KEY}.module.bigquery[0].google_project_service.bigquery_api["${KEY_BARE}"]
+}
+
+# BigQuery IAM - metadataViewer
+moved {
+  from = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_bigquery_roles["roles/bigquery.metadataViewer"]
+  to   = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_bigquery_project_roles["${KEY_BARE}-roles/bigquery.metadataViewer"]
+}
+
+# BigQuery IAM - resourceViewer
+moved {
+  from = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_bigquery_roles["roles/bigquery.resourceViewer"]
+  to   = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_bigquery_project_roles["${KEY_BARE}-roles/bigquery.resourceViewer"]
+}
+
+# Private Log Viewer IAM
+moved {
+  from = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_privatelogviewer_role[0]
+  to   = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_privatelogviewer_project_role["${KEY_BARE}"]
 }
 
 EOF
+        GENERATED=$((GENERATED + 1))
+    fi
 
-                # Check if project-level sinks exist in state
-                if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_logging_project_sink.masthead_sink" > /dev/null 2>&1; then
-                    cat >> "$OUTPUT_FILE" << EOF
-# Log Sink (project-level) - resource renamed
+    # =========================================================================
+    # DATAFORM MODULE
+    # =========================================================================
+    if echo "$STATE_LIST" | grep -qF "${AGENT_KEY}.module.dataform[0]"; then
+        echo "  - Generating moves for dataform..."
+
+        cat >> "$OUTPUT_FILE" << EOF
+
+# ============================================================================
+# Dataform module moves for ${AGENT_KEY}
+# ============================================================================
+
+# Pub/Sub Topic
 moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_logging_project_sink.masthead_sink
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_logging_project_sink.project_sinks[${KEY_VALUE}]
+  from = ${AGENT_KEY}.module.dataform[0].google_pubsub_topic.masthead_dataform_topic
+  to   = ${AGENT_KEY}.module.dataform[0].module.logging_infrastructure.google_pubsub_topic.logs_topic
+}
+
+# Pub/Sub Subscription
+moved {
+  from = ${AGENT_KEY}.module.dataform[0].google_pubsub_subscription.masthead_dataform_subscription
+  to   = ${AGENT_KEY}.module.dataform[0].module.logging_infrastructure.google_pubsub_subscription.logs_subscription
+}
+
+# Pub/Sub Subscriber IAM
+moved {
+  from = ${AGENT_KEY}.module.dataform[0].google_pubsub_subscription_iam_member.masthead_subscription_subscriber
+  to   = ${AGENT_KEY}.module.dataform[0].module.logging_infrastructure.google_pubsub_subscription_iam_member.masthead_subscription_subscriber
+}
+
+# Pub/Sub API
+moved {
+  from = ${AGENT_KEY}.module.dataform[0].google_project_service.required_apis["pubsub.googleapis.com"]
+  to   = ${AGENT_KEY}.module.dataform[0].module.logging_infrastructure.google_project_service.pubsub_api[0]
+}
+
+# Log Sink (project-level)
+moved {
+  from = ${AGENT_KEY}.module.dataform[0].google_logging_project_sink.masthead_dataform_sink
+  to   = ${AGENT_KEY}.module.dataform[0].module.logging_infrastructure.google_logging_project_sink.project_sinks["${KEY_BARE}"]
+}
+
+# Log Sink Writer IAM (Pub/Sub publisher)
+moved {
+  from = ${AGENT_KEY}.module.dataform[0].google_pubsub_topic_iam_member.logging_pubsub_publisher
+  to   = ${AGENT_KEY}.module.dataform[0].module.logging_infrastructure.google_pubsub_topic_iam_member.project_sinks_publisher["${KEY_BARE}"]
+}
+
+# Logging API
+moved {
+  from = ${AGENT_KEY}.module.dataform[0].google_project_service.required_apis["logging.googleapis.com"]
+  to   = ${AGENT_KEY}.module.dataform[0].module.logging_infrastructure.google_project_service.monitored_project_apis["${KEY_BARE}:logging.googleapis.com"]
+}
+
+# Dataform API
+moved {
+  from = ${AGENT_KEY}.module.dataform[0].google_project_service.required_apis["dataform.googleapis.com"]
+  to   = ${AGENT_KEY}.module.dataform[0].google_project_service.dataform_api["${KEY_BARE}"]
+}
+
+# Dataform IAM - viewer
+moved {
+  from = ${AGENT_KEY}.module.dataform[0].google_project_iam_member.masthead_dataform_roles["roles/dataform.viewer"]
+  to   = ${AGENT_KEY}.module.dataform[0].google_project_iam_member.masthead_dataform_project_roles["${KEY_BARE}-roles/dataform.viewer"]
 }
 
 EOF
-                fi
+        GENERATED=$((GENERATED + 1))
+    fi
 
-                # Log Sink Writer IAM - resource renamed
-                if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_topic_iam_member.logging_pubsub_publisher" > /dev/null 2>&1; then
-                    cat >> "$OUTPUT_FILE" << EOF
-# Log Sink Writer IAM (Pub/Sub publisher) - resource renamed
+    # =========================================================================
+    # DATAPLEX MODULE
+    # =========================================================================
+    if echo "$STATE_LIST" | grep -qF "${AGENT_KEY}.module.dataplex[0]"; then
+        echo "  - Generating moves for dataplex..."
+
+        cat >> "$OUTPUT_FILE" << EOF
+
+# ============================================================================
+# Dataplex module moves for ${AGENT_KEY}
+# ============================================================================
+
+# Pub/Sub Topic
 moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_topic_iam_member.logging_pubsub_publisher
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_topic_iam_member.project_sinks_publisher[${KEY_VALUE}]
+  from = ${AGENT_KEY}.module.dataplex[0].google_pubsub_topic.masthead_dataplex_topic
+  to   = ${AGENT_KEY}.module.dataplex[0].module.logging_infrastructure.google_pubsub_topic.logs_topic
+}
+
+# Pub/Sub Subscription
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_pubsub_subscription.masthead_dataplex_subscription
+  to   = ${AGENT_KEY}.module.dataplex[0].module.logging_infrastructure.google_pubsub_subscription.logs_subscription
+}
+
+# Pub/Sub Subscriber IAM
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_pubsub_subscription_iam_member.masthead_subscription_subscriber
+  to   = ${AGENT_KEY}.module.dataplex[0].module.logging_infrastructure.google_pubsub_subscription_iam_member.masthead_subscription_subscriber
+}
+
+# Pub/Sub API
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_project_service.required_apis["pubsub.googleapis.com"]
+  to   = ${AGENT_KEY}.module.dataplex[0].module.logging_infrastructure.google_project_service.pubsub_api[0]
+}
+
+# Log Sink (project-level)
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_logging_project_sink.masthead_dataplex_sink
+  to   = ${AGENT_KEY}.module.dataplex[0].module.logging_infrastructure.google_logging_project_sink.project_sinks["${KEY_BARE}"]
+}
+
+# Log Sink Writer IAM (Pub/Sub publisher)
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_pubsub_topic_iam_member.logging_pubsub_publisher
+  to   = ${AGENT_KEY}.module.dataplex[0].module.logging_infrastructure.google_pubsub_topic_iam_member.project_sinks_publisher["${KEY_BARE}"]
+}
+
+# Logging API
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_project_service.required_apis["logging.googleapis.com"]
+  to   = ${AGENT_KEY}.module.dataplex[0].module.logging_infrastructure.google_project_service.monitored_project_apis["${KEY_BARE}:logging.googleapis.com"]
+}
+
+# Dataplex API
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_project_service.required_apis["dataplex.googleapis.com"]
+  to   = ${AGENT_KEY}.module.dataplex[0].google_project_service.dataplex_apis["${KEY_BARE}:dataplex.googleapis.com"]
+}
+
+# BigQuery API (used by Dataplex)
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_project_service.required_apis["bigquery.googleapis.com"]
+  to   = ${AGENT_KEY}.module.dataplex[0].google_project_service.dataplex_apis["${KEY_BARE}:bigquery.googleapis.com"]
+}
+
+# Dataplex IAM - dataScanDataViewer (default role when editing disabled)
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_roles["roles/dataplex.dataScanDataViewer"]
+  to   = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_project_roles["${KEY_BARE}-roles/dataplex.dataScanDataViewer"]
 }
 
 EOF
-                fi
+        GENERATED=$((GENERATED + 1))
+    fi
 
-                # Subscriber IAM - resource renamed
-                cat >> "$OUTPUT_FILE" << EOF
-# Subscriber IAM - resource renamed
+    # =========================================================================
+    # ANALYTICS HUB MODULE
+    # =========================================================================
+    if echo "$STATE_LIST" | grep -qF "${AGENT_KEY}.module.analytics_hub[0]"; then
+        echo "  - Generating moves for analytics_hub..."
+
+        cat >> "$OUTPUT_FILE" << EOF
+
+# ============================================================================
+# Analytics Hub module moves for ${AGENT_KEY}
+# ============================================================================
+
+# Analytics Hub API
 moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_subscription_iam_member.masthead_subscription_subscriber
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_subscription_iam_member.masthead_subscription_subscriber
+  from = ${AGENT_KEY}.module.analytics_hub[0].google_project_service.required_apis["analyticshub.googleapis.com"]
+  to   = ${AGENT_KEY}.module.analytics_hub[0].google_project_service.analyticshub_api["${KEY_BARE}"]
+}
+
+# Custom Role for subscription viewer
+moved {
+  from = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_custom_role.analyticshub_subscription_viewer
+  to   = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_custom_role.analyticshub_subscription_viewer_project["${KEY_BARE}"]
+}
+
+# Analytics Hub IAM - viewer
+moved {
+  from = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_member.masthead_analyticshub_roles["viewer"]
+  to   = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_member.masthead_analyticshub_project_roles["${KEY_BARE}-viewer"]
+}
+
+# Analytics Hub IAM - custom subscription viewer
+moved {
+  from = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_member.masthead_analyticshub_roles["subscription_viewer"]
+  to   = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_member.masthead_analyticshub_project_roles["${KEY_BARE}-custom"]
 }
 
 EOF
+        GENERATED=$((GENERATED + 1))
+    fi
 
-                # BigQuery-specific resources
-                if [ "$MODULE_NAME" = "bigquery" ]; then
-                    # Check if old IAM resources exist
-                    if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_roles" > /dev/null 2>&1; then
-                        cat >> "$OUTPUT_FILE" << EOF
-# BigQuery IAM roles - resource renamed and key changed
-moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_roles["roles/bigquery.metadataViewer"]
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_project_roles[${KEY_VALUE}-"roles/bigquery.metadataViewer"]
-}
-
-moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_roles["roles/bigquery.resourceViewer"]
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_project_roles[${KEY_VALUE}-"roles/bigquery.resourceViewer"]
-}
-
-EOF
-                    fi
-
-                    # Private log viewer role
-                    if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_privatelogviewer_role[0]" > /dev/null 2>&1; then
-                        cat >> "$OUTPUT_FILE" << EOF
-# Private log viewer role - resource renamed
-moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_privatelogviewer_role[0]
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_privatelogviewer_project_role[${KEY_VALUE}]
-}
-
-EOF
-                    fi
-
-                    # BigQuery API
-                    if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis[\"bigquery.googleapis.com\"]" > /dev/null 2>&1; then
-                        cat >> "$OUTPUT_FILE" << EOF
-# BigQuery API - resource renamed
-moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis["bigquery.googleapis.com"]
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.bigquery_api[${KEY_VALUE}]
-}
-
-EOF
-                    fi
-                fi
-
-                GENERATED=$((GENERATED + 1))
-                ;;
-
-            analytics_hub)
-                echo "# Analytics Hub structure is different - review manually" >> "$OUTPUT_FILE"
-                echo "" >> "$OUTPUT_FILE"
-                ;;
-        esac
-    done
 done
 
 if [ $GENERATED -eq 0 ]; then
@@ -263,11 +386,11 @@ echo -e "${GREEN}Success! Generated moved blocks in: $OUTPUT_FILE${NC}"
 echo ""
 echo "Next steps:"
 echo "1. Review the generated $OUTPUT_FILE"
-echo "2. If you have multiple monitored projects, you may need to adjust the 'for_each' moved blocks"
-echo "3. Update your Terraform configuration to v0.3.0"
-echo "4. Run: terraform init -upgrade"
-echo "5. Run: terraform plan (should show moves, minimal recreations)"
-echo "6. Run: terraform apply"
-echo "7. Delete $OUTPUT_FILE once migration is complete"
+echo "2. Update your module source to v0.3.0"
+echo "3. Run: terraform init -upgrade"
+echo "4. Run: terraform plan (should show moves, minimal recreations)"
+echo "5. Run: terraform apply"
+echo "6. Delete $OUTPUT_FILE once migration is complete"
 echo ""
-echo -e "${YELLOW}Note: This script generates basic moved blocks. Complex configurations may need manual adjustment.${NC}"
+echo -e "${YELLOW}Note: If you have additional monitored_project_ids beyond the for_each key,"
+echo "you may need to manually add moved blocks for those projects.${NC}"
