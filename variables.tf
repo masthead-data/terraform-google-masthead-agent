@@ -20,6 +20,9 @@ variable "monitored_folder_ids" {
     Use this for enterprise deployments to capture logs from all projects under the folders.
     Must be used together with deployment_project_id.
     Format: Each folder ID can be "folders/123456789" or just the numeric ID.
+
+    WARNING: Do not add projects that are inside these folders to monitored_project_ids,
+    as this will cause duplicate log entries.
   EOT
   default     = []
 
@@ -50,6 +53,9 @@ variable "monitored_project_ids" {
     [OPTIONAL] Additional GCP project IDs to monitor alongside folder or integrated project.
     Creates project-level sinks and IAM bindings for these projects.
     Pub/Sub infrastructure is created in deployment_project_id (enterprise) or project_id (integrated).
+
+    WARNING: Do not include projects that are already inside a monitored_folder_ids folder,
+    as this will cause duplicate log entries.
   EOT
   default     = []
 
