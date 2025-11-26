@@ -23,10 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **🏢 Organization Mode**: Folder-level log sink support for monitoring all projects under a GCP folder
+- **🏢 Folder Mode**: Folder-level log sink support for monitoring all projects under a GCP folder
 - **🔄 Hybrid Mode**: Support for monitoring folder + additional specific projects simultaneously
 - **📦 Shared Logging Infrastructure Module**: New reusable module for Pub/Sub and logging sink management
-- **🔍 Deployment Mode Detection**: Automatic validation and mode detection (project/organization/hybrid)
+- **🔍 Deployment Mode Detection**: Automatic validation and mode detection (project/folder/hybrid)
 - **📊 Enhanced Outputs**: New outputs for `deployment_mode`, `folder_id`, and `monitored_project_ids`
 - **📝 Configuration Examples**: Added example tfvars for all three deployment modes
 - **📖 Migration Guide**: Comprehensive guide for upgrading from v0.2.x to v0.3.0
@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ⚠️ **Backward Compatible for Project Mode**: Existing single-project configurations continue to work without changes.
 
-For users migrating to organization mode, see [MIGRATION.md](./MIGRATION.md) for detailed upgrade instructions.
+For users migrating to folder mode, see [MIGRATION.md](./MIGRATION.md) for detailed upgrade instructions.
 
 ## [0.2.8] - 2025-10-27
 

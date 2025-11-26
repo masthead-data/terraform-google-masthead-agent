@@ -14,7 +14,7 @@ The module supports three deployment modes to fit different organizational struc
 
 For single-project setups. All resources (logs, Pub/Sub, IAM) are created in one project.
 
-### 🏢 Organization Mode (Folder/Multi-Project)
+### 🏢 Folder Mode (Folder/Multi-Project)
 
 For organizations using GCP folders or monitoring multiple projects. Creates centralized Pub/Sub infrastructure in a dedicated deployment project with folder-level or project-level log sinks.
 
@@ -47,7 +47,7 @@ module "masthead_agent" {
 }
 ```
 
-### Organization Mode - Folder-Level Monitoring
+### Folder Mode - Folder-Level Monitoring
 
 For organizations using GCP folders:
 
@@ -70,7 +70,7 @@ module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
   version = ">=0.3.0"
 
-  # Organization mode: folder + deployment project
+  # Folder mode: folder + deployment project
   folder_id             = var.folder_id  # e.g., "folders/123456789" or "123456789"
   deployment_project_id = var.deployment_project_id
 
@@ -79,7 +79,7 @@ module "masthead_agent" {
 
   labels = {
     environment = "production"
-    mode        = "organization"
+    mode        = "folder"
   }
 }
 ```
@@ -142,7 +142,7 @@ module "masthead_agent" {
   # PROJECT: Set project_id only
   project_id = var.project_id
 
-  # ORGANIZATION: Set folder_id + deployment_project_id
+  # FOLDER: Set folder_id + deployment_project_id
   # folder_id             = var.folder_id
   # deployment_project_id = var.deployment_project_id
 
@@ -201,7 +201,7 @@ module "masthead_agent" {
 └─────────────────────────────────────┘
 ```
 
-### Organization Mode
+### Folder Mode
 
 ```text
 ┌────────────────────────────────────────┐
@@ -259,7 +259,7 @@ module "masthead_agent" {
 - IAM bindings applied at the **project level**
 - Log sinks created at the **project level**
 
-### Organization Mode
+### Folder Mode
 
 - IAM bindings applied at the **folder level** (inherited by all child projects)
 - Log sinks created at the **folder level** with `include_children = true`
@@ -281,7 +281,7 @@ You need these permissions in the target project:
 - `iam.serviceAccounts.setIamPolicy`
 - `resourcemanager.projects.setIamPolicy`
 
-### For Organization/Hybrid Mode
+### For Folder/Hybrid Mode
 
 You need these permissions at the folder level:
 
@@ -294,7 +294,7 @@ You need these permissions at the folder level:
 See the `examples/` directory for complete configuration examples:
 
 - `project-mode.tfvars.example` - Single project setup
-- `organization-mode.tfvars.example` - Folder-level setup
+- `folder-mode.tfvars.example` - Folder-level setup
 - `hybrid-mode.tfvars.example` - Folder + additional projects
 
 ## References

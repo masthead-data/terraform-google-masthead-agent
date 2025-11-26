@@ -13,7 +13,7 @@ Successfully refactored the Masthead Terraform module to support organization-wi
 - All resources in one project
 - **No changes required for existing users**
 
-#### ✅ Organization Mode (New)
+#### ✅ Folder Mode (New)
 - Folder-level log sinks
 - Centralized Pub/Sub in deployment project
 - IAM at folder level (inherited by all child projects)
@@ -69,7 +69,7 @@ variable "folder_id" {
 
 variable "deployment_project_id" {
   type        = string
-  description = "Project where Pub/Sub is deployed (organization mode)"
+  description = "Project where Pub/Sub is deployed (folder mode)"
   default     = null
 }
 
@@ -87,7 +87,7 @@ Added intelligent locals in root `variables.tf`:
 ```hcl
 locals {
   project_mode      = var.project_id != null && var.folder_id == null
-  organization_mode = var.folder_id != null && var.deployment_project_id != null
+  folder_mode       = var.folder_id != null && var.deployment_project_id != null
   hybrid_mode       = var.folder_id != null && length(var.monitored_project_ids) > 0
 
   pubsub_project_id      = coalesce(var.deployment_project_id, var.project_id)
@@ -104,8 +104,8 @@ Added configuration validation to ensure correct mode usage:
 resource "null_resource" "validate_configuration" {
   lifecycle {
     precondition {
-      condition     = local.project_mode || local.organization_mode || local.hybrid_mode
-      error_message = "Invalid configuration. Choose project, organization, or hybrid mode."
+      condition     = local.project_mode || local.folder_mode || local.hybrid_mode
+      error_message = "Invalid configuration. Choose project, folder, or hybrid mode."
     }
   }
 }
@@ -123,7 +123,7 @@ terraform-google-masthead-agent/
 ├── MIGRATION.md                     # New migration guide
 ├── examples/
 │   ├── project-mode.tfvars.example
-│   ├── organization-mode.tfvars.example
+│   ├── folder-mode.tfvars.example
 │   └── hybrid-mode.tfvars.example
 └── modules/
     ├── logging-infrastructure/      # NEW SHARED MODULE
@@ -177,7 +177,7 @@ Single `logging-infrastructure` module handles:
 google_project_iam_member.masthead_roles["project-id"]["role-name"]
 ```
 
-### Organization Mode
+### Folder Mode
 ```hcl
 # Folder-level IAM (inherited by all children)
 google_folder_iam_member.masthead_roles["folder-id"]["role-name"]
@@ -205,7 +205,7 @@ google_project_iam_member.masthead_project_roles["project-id-role-name"]
 ### Created
 - ✅ `MIGRATION.md` - Comprehensive migration guide
 - ✅ `examples/project-mode.tfvars.example`
-- ✅ `examples/organization-mode.tfvars.example`
+- ✅ `examples/folder-mode.tfvars.example`
 - ✅ `examples/hybrid-mode.tfvars.example`
 - ✅ `modules/logging-infrastructure/README.md`
 
@@ -272,7 +272,7 @@ module "masthead_agent" {
 }
 ```
 
-### After (v0.3.0) - Organization Mode (New!)
+### After (v0.3.0) - Folder Mode (New!)
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"

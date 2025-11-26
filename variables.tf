@@ -16,7 +16,7 @@ variable "project_id" {
 variable "monitored_folder_ids" {
   type        = list(string)
   description = <<-EOT
-    [ORGANIZATION MODE] List of GCP folder IDs for folder-level log sinks.
+    [FOLDER MODE] List of GCP folder IDs for folder-level log sinks.
     Use this to capture logs from all projects under the specified folders.
     Must be used together with deployment_project_id.
     Format: Each folder ID can be "folders/123456789" or just the numeric ID.
@@ -35,7 +35,7 @@ variable "monitored_folder_ids" {
 variable "deployment_project_id" {
   type        = string
   description = <<-EOT
-    [ORGANIZATION MODE] GCP project ID where Pub/Sub topics and subscriptions will be created.
+    [FOLDER MODE] GCP project ID where Pub/Sub topics and subscriptions will be created.
     Required when using monitored_folder_ids or monitored_project_ids for centralized deployments.
     This project will host the centralized logging infrastructure.
   EOT
@@ -50,7 +50,7 @@ variable "deployment_project_id" {
 variable "monitored_project_ids" {
   type        = list(string)
   description = <<-EOT
-    [ORGANIZATION/HYBRID MODE] Additional GCP project IDs to monitor.
+    [FOLDER/HYBRID MODE] Additional GCP project IDs to monitor.
     Creates project-level sinks and IAM bindings for these projects.
     Requires deployment_project_id to specify where centralized Pub/Sub will be created.
 
@@ -68,7 +68,7 @@ variable "monitored_project_ids" {
 variable "organization_id" {
   type        = string
   description = <<-EOT
-    [ORGANIZATION MODE] GCP organization ID for organization-level custom IAM roles.
+    [FOLDER MODE] GCP organization ID for organization-level custom IAM roles.
     Required when using monitored_folder_ids to create custom roles at the organization level.
     Format: organizations/123456789 or just the numeric ID.
   EOT
@@ -143,7 +143,7 @@ locals {
   has_folders       = length(var.monitored_folder_ids) > 0
   has_projects      = length(var.monitored_project_ids) > 0
   project_mode      = var.project_id != null && !local.has_folders && var.deployment_project_id == null
-  organization_mode = var.deployment_project_id != null && (local.has_folders || local.has_projects) && var.project_id == null
+  folder_mode       = var.deployment_project_id != null && (local.has_folders || local.has_projects) && var.project_id == null
   hybrid_mode       = var.deployment_project_id != null && local.has_folders && var.project_id != null
 
   # Determine which project hosts the Pub/Sub infrastructure
@@ -172,11 +172,11 @@ locals {
 resource "null_resource" "validate_configuration" {
   lifecycle {
     precondition {
-      condition     = local.project_mode || local.organization_mode || local.hybrid_mode
+      condition     = local.project_mode || local.folder_mode || local.hybrid_mode
       error_message = <<-EOT
         Invalid configuration. Choose one of:
         1. PROJECT MODE: Set project_id only (Pub/Sub in same project)
-        2. ORGANIZATION MODE: Set deployment_project_id + monitored_folder_ids and/or monitored_project_ids
+        2. FOLDER MODE: Set deployment_project_id + monitored_folder_ids and/or monitored_project_ids
         3. HYBRID MODE: Set deployment_project_id + monitored_folder_ids + project_id (for additional project-level Pub/Sub)
       EOT
     }

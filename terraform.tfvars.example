@@ -13,8 +13,8 @@
 project_id = "YOUR_PROJECT_ID"
 
 # -----------------------------------------------------------------------------
-# OPTION 2: ORGANIZATION MODE (Multiple Folders)
-# Use this for organization-wide deployments to capture logs from multiple GCP folders
+# OPTION 2: FOLDER MODE (Multiple Folders)
+# Use this for folder-level deployments to capture logs from multiple GCP folders
 # Comment out project_id above and uncomment below:
 # -----------------------------------------------------------------------------
 # deployment_project_id = "YOUR_DEPLOYMENT_PROJECT_ID"

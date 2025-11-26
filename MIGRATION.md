@@ -11,7 +11,7 @@ This guide helps you migrate from the previous single-project architecture to th
 
 #### New Variables
 - `folder_id` - For organization/folder-level deployments
-- `deployment_project_id` - Where Pub/Sub infrastructure is created in organization mode
+- `deployment_project_id` - Where Pub/Sub infrastructure is created in folder mode
 - `monitored_project_ids` - List of additional projects to monitor
 
 ### Module Interface Changes
@@ -46,7 +46,7 @@ module "masthead_agent" {
 
 **Important**: Even in project mode, resources will be recreated because the internal module structure changed. The configuration syntax is backward compatible, but Terraform will see different resource addresses.
 
-### Path 2: Upgrade to Organization Mode (Folder-Level)
+### Path 2: Upgrade to Folder Mode (Folder-Level)
 
 If you want to move to folder-level monitoring:
 
@@ -175,7 +175,7 @@ Terraform sees these as completely different resources.
 - ✅ **Same Scope**: Sinks and IAM remain project-level
 - ⏱️ **Downtime**: ~30-60 seconds during sink recreation
 
-**Organization Mode (folder-level)**:
+**Folder Mode (folder-level)**:
 - ⚠️ **Resources**: ALL recreated (module paths + scope change)
 - 🔄 **Scope Change**: Sinks move from project → folder level
 - 🔄 **IAM Change**: Bindings move from project → folder level
@@ -267,7 +267,7 @@ If you need to rollback:
 ### Project Mode (no change needed)
 - Same as before: project-level IAM and logging permissions
 
-### Organization Mode (new requirements)
+### Folder Mode (new requirements)
 You need these **additional** permissions:
 - `resourcemanager.folders.get`
 - `resourcemanager.folders.setIamPolicy`
@@ -291,7 +291,7 @@ If you encounter issues during migration:
 ## Changelog Summary
 
 ### Added
-- Organization mode with folder-level logging
+- Folder mode with folder-level logging
 - Hybrid mode for folder + additional projects
 - Shared logging infrastructure module
 - Validation for deployment mode selection

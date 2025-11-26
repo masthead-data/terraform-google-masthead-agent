@@ -1,5 +1,5 @@
-# Organization Mode Example - Folder-Level Setup
-# Use this for organization-wide deployments to capture logs from all projects under a folder
+# Folder Mode Example - Folder-Level Setup
+# Use this for folder-level deployments to capture logs from all projects under a folder
 
 # Folder ID for folder-level log sinks (captures logs from all child projects)
 folder_id = "folders/123456789"
@@ -39,5 +39,5 @@ enable_datascan_editing      = false
 labels = {
   service     = "masthead-agent"
   environment = "production"
-  mode        = "organization"
+  mode        = "folder"
 }
