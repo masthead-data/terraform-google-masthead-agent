@@ -146,7 +146,8 @@ locals {
   hybrid_mode     = local.has_folders && var.deployment_project_id != null && var.project_id != null
 
   # Determine which project hosts the Pub/Sub infrastructure
-  pubsub_project_id = coalesce(var.deployment_project_id, var.project_id)
+  # Using try() to handle linting when both values are null (validation will catch this at runtime)
+  pubsub_project_id = try(coalesce(var.deployment_project_id, var.project_id), null)
 
   # Normalize folder IDs to include "folders/" prefix
   normalized_folder_ids = [
