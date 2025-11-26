@@ -9,10 +9,6 @@ locals {
     can(regex("^folders/", folder_id)) ? folder_id : "folders/${folder_id}"
   ]
 
-  # Determine if we're operating at folder or project level
-  is_folder_level  = length(var.monitored_folder_ids) > 0
-  is_project_level = length(var.monitored_project_ids) > 0
-
   # Common labels
   common_labels = merge(var.labels, {
     component = var.component_name
