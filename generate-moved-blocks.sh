@@ -142,43 +142,103 @@ moved {
   to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_subscription.logs_subscription
 }
 
-# Pub/Sub API Enablement
+# Pub/Sub API Enablement (moves to count-based)
 moved {
   from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis["pubsub.googleapis.com"]
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_service.pubsub_api
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_service.pubsub_api[0]
+}
+
+# IAM API Enablement (moves to logging_infrastructure)
+moved {
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis["iam.googleapis.com"]
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_service.monitored_project_apis[${KEY_VALUE}:"iam.googleapis.com"]
+}
+
+# Logging API Enablement (moves to logging_infrastructure)
+moved {
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis["logging.googleapis.com"]
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_service.monitored_project_apis[${KEY_VALUE}:"logging.googleapis.com"]
 }
 
 EOF
 
                 # Check if project-level sinks exist in state
-                # Need to escape the brackets for grep
-                ESCAPED_AGENT_KEY=$(echo "$AGENT_KEY" | sed 's/\[/\\[/g' | sed 's/\]/\\]/g')
                 if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_logging_project_sink.masthead_sink" > /dev/null 2>&1; then
                     cat >> "$OUTPUT_FILE" << EOF
-# Log Sink (project-level)
+# Log Sink (project-level) - resource renamed
 moved {
   from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_logging_project_sink.masthead_sink
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_logging_project_sink.logs_sink[${KEY_VALUE}]
-}
-
-# Log Sink Writer IAM
-moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_topic_iam_member.logging_pubsub_publisher
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_iam_member.log_writer[${KEY_VALUE}]
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_logging_project_sink.project_sinks[${KEY_VALUE}]
 }
 
 EOF
                 fi
 
-                # Subscriber IAM
-                cat >> "$OUTPUT_FILE" << EOF
-# Subscriber IAM
+                # Log Sink Writer IAM - resource renamed
+                if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_topic_iam_member.logging_pubsub_publisher" > /dev/null 2>&1; then
+                    cat >> "$OUTPUT_FILE" << EOF
+# Log Sink Writer IAM (Pub/Sub publisher) - resource renamed
 moved {
-  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_subscription_iam_member.masthead_subscription_subscriber
-  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_subscription_iam_member.subscriber
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_topic_iam_member.logging_pubsub_publisher
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_topic_iam_member.project_sinks_publisher[${KEY_VALUE}]
 }
 
 EOF
+                fi
+
+                # Subscriber IAM - resource renamed
+                cat >> "$OUTPUT_FILE" << EOF
+# Subscriber IAM - resource renamed
+moved {
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_subscription_iam_member.masthead_subscription_subscriber
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_subscription_iam_member.masthead_subscription_subscriber
+}
+
+EOF
+
+                # BigQuery-specific resources
+                if [ "$MODULE_NAME" = "bigquery" ]; then
+                    # Check if old IAM resources exist
+                    if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_roles" > /dev/null 2>&1; then
+                        cat >> "$OUTPUT_FILE" << EOF
+# BigQuery IAM roles - resource renamed and key changed
+moved {
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_roles["roles/bigquery.metadataViewer"]
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_project_roles[${KEY_VALUE}-"roles/bigquery.metadataViewer"]
+}
+
+moved {
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_roles["roles/bigquery.resourceViewer"]
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_bigquery_project_roles[${KEY_VALUE}-"roles/bigquery.resourceViewer"]
+}
+
+EOF
+                    fi
+
+                    # Private log viewer role
+                    if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_privatelogviewer_role[0]" > /dev/null 2>&1; then
+                        cat >> "$OUTPUT_FILE" << EOF
+# Private log viewer role - resource renamed
+moved {
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_privatelogviewer_role[0]
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_iam_member.masthead_privatelogviewer_project_role[${KEY_VALUE}]
+}
+
+EOF
+                    fi
+
+                    # BigQuery API
+                    if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis[\"bigquery.googleapis.com\"]" > /dev/null 2>&1; then
+                        cat >> "$OUTPUT_FILE" << EOF
+# BigQuery API - resource renamed
+moved {
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis["bigquery.googleapis.com"]
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.bigquery_api[${KEY_VALUE}]
+}
+
+EOF
+                    fi
+                fi
 
                 GENERATED=$((GENERATED + 1))
                 ;;
