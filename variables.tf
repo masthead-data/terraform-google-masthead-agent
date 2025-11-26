@@ -155,11 +155,6 @@ locals {
     can(regex("^folders/", folder_id)) ? folder_id : "folders/${folder_id}"
   ]
 
-  # Normalize organization ID to include "organizations/" prefix
-  normalized_organization_id = var.organization_id != null ? (
-    can(regex("^organizations/", var.organization_id)) ? var.organization_id : "organizations/${var.organization_id}"
-  ) : null
-
   # Extract numeric organization ID for IAM custom roles
   numeric_organization_id = var.organization_id != null ? (
     can(regex("^organizations/", var.organization_id)) ? split("/", var.organization_id)[1] : var.organization_id
