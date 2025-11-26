@@ -62,94 +62,131 @@ cat > "$OUTPUT_FILE" << 'EOF'
 EOF
 
 # Extract enabled modules from state
-MODULES=$(terraform state list | grep "module.masthead_agent\[0\].module" | sed 's/\[.*//g' | sed 's/\..*//g' | sort -u)
+# Handle both count format [0] and for_each format ["key"]
+MODULES=$(terraform state list | grep "module.masthead_agent\[")
 
 if [ -z "$MODULES" ]; then
     echo -e "${RED}Error: No masthead_agent modules found in state${NC}"
-    echo "This script is designed for migrating existing v0.2.x deployments"
+    echo "This script is designed for migrating existing deployments"
     exit 1
 fi
 
-echo "Detected modules in state:"
-echo "$MODULES" | sed 's/module.masthead_agent\[0\].module.//g'
+echo "Sample resources from state:"
+echo "$MODULES" | head -5
+echo ""
+
+# Check if state is already in v0.3.0 format (has logging_infrastructure)
+if echo "$MODULES" | grep -q "module.logging_infrastructure"; then
+    echo -e "${GREEN}✓ Your state appears to already be in v0.3.0 format!${NC}"
+    echo ""
+    echo "Detected logging_infrastructure module, which indicates you're already using v0.3.0."
+    echo "No migration needed - your resources are already in the correct structure."
+    exit 0
+fi
+
+# Detect the masthead_agent keys being used (for_each keys or count index)
+AGENT_KEYS=$(echo "$MODULES" | grep -o 'module.masthead_agent\[[^]]*\]' | sort -u)
+
+if [ -z "$AGENT_KEYS" ]; then
+    echo -e "${RED}Error: Could not detect masthead_agent module keys${NC}"
+    exit 1
+fi
+
+echo "Detected masthead_agent instances:"
+echo "$AGENT_KEYS" | sed 's/module.masthead_agent/  - /'
+echo ""
+
+# Detect which service modules are being used
+SERVICE_MODULES=$(echo "$MODULES" | grep -o 'module\.\(bigquery\|dataform\|dataplex\|analytics_hub\)\[0\]' | sed 's/module.//;s/\[0\]//' | sort -u)
+
+if [ -z "$SERVICE_MODULES" ]; then
+    echo -e "${RED}Error: No service modules (bigquery, dataform, dataplex, analytics_hub) found${NC}"
+    echo "Cannot generate moved blocks without detecting which modules are enabled"
+    exit 1
+fi
+
+echo "Detected service modules:"
+echo "$SERVICE_MODULES" | sed 's/^/  - /'
 echo ""
 
 # Track if we generated any blocks
 GENERATED=0
 
-# Generate moved blocks for each module
-for MODULE_PATH in $MODULES; do
-    MODULE_NAME=$(echo "$MODULE_PATH" | sed 's/module.masthead_agent\[0\].module.//g')
+# Generate moved blocks for each masthead_agent instance and each service module
+for AGENT_KEY in $AGENT_KEYS; do
+    # Extract the key value (e.g., "max-ostapenko" from module.masthead_agent["max-ostapenko"])
+    KEY_VALUE=$(echo "$AGENT_KEY" | sed 's/module.masthead_agent\[\(.*\)\]/\1/')
 
-    echo "Processing module: $MODULE_NAME"
+    echo "Processing instance: $AGENT_KEY"
 
-    # Skip if it's already the new structure (contains logging_infrastructure)
-    if echo "$MODULE_NAME" | grep -q "logging_infrastructure"; then
-        continue
-    fi
+    for MODULE_NAME in $SERVICE_MODULES; do
+        echo "  - Generating moves for $MODULE_NAME..."
 
-    case "$MODULE_NAME" in
-        bigquery|dataform|dataplex)
-            cat >> "$OUTPUT_FILE" << EOF
+        case "$MODULE_NAME" in
+            bigquery|dataform|dataplex)
+                cat >> "$OUTPUT_FILE" << EOF
 
 # ============================================================================
-# ${MODULE_NAME} module moves
+# ${MODULE_NAME} module moves for ${AGENT_KEY}
 # ============================================================================
 
 # Pub/Sub Topic
 moved {
-  from = module.masthead_agent[0].module.${MODULE_NAME}.google_pubsub_topic.logs_topic
-  to   = module.masthead_agent[0].module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_topic.logs_topic
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_topic.masthead_topic
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_topic.logs_topic
 }
 
 # Pub/Sub Subscription
 moved {
-  from = module.masthead_agent[0].module.${MODULE_NAME}.google_pubsub_subscription.logs_subscription
-  to   = module.masthead_agent[0].module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_subscription.logs_subscription
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_subscription.masthead_agent_subscription
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_subscription.logs_subscription
 }
 
 # Pub/Sub API Enablement
 moved {
-  from = module.masthead_agent[0].module.${MODULE_NAME}.google_project_service.pubsub_api
-  to   = module.masthead_agent[0].module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_service.pubsub_api
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_project_service.required_apis["pubsub.googleapis.com"]
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_service.pubsub_api
 }
 
-# Log Sink Writer IAM (for each monitored project)
-# Note: These will need manual adjustment if you have multiple projects
+EOF
+
+                # Check if project-level sinks exist in state
+                if terraform state list | grep -q "${AGENT_KEY}.module.${MODULE_NAME}\[0\].google_logging_project_sink.masthead_sink"; then
+                    cat >> "$OUTPUT_FILE" << EOF
+# Log Sink (project-level)
 moved {
-  from = module.masthead_agent[0].module.${MODULE_NAME}.google_project_iam_member.log_writer
-  to   = module.masthead_agent[0].module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_iam_member.log_writer
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_logging_project_sink.masthead_sink
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_logging_project_sink.logs_sink[${KEY_VALUE}]
 }
 
+# Log Sink Writer IAM
+moved {
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_topic_iam_member.logging_pubsub_publisher
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_project_iam_member.log_writer[${KEY_VALUE}]
+}
+
+EOF
+                fi
+
+                # Subscriber IAM
+                cat >> "$OUTPUT_FILE" << EOF
 # Subscriber IAM
 moved {
-  from = module.masthead_agent[0].module.${MODULE_NAME}.google_pubsub_subscription_iam_member.subscriber
-  to   = module.masthead_agent[0].module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_subscription_iam_member.subscriber
+  from = ${AGENT_KEY}.module.${MODULE_NAME}[0].google_pubsub_subscription_iam_member.masthead_subscription_subscriber
+  to   = ${AGENT_KEY}.module.${MODULE_NAME}[0].module.logging_infrastructure.google_pubsub_subscription_iam_member.subscriber
 }
 
 EOF
 
-            # Add module-specific resources based on what's in state
-            if terraform state list | grep -q "module.masthead_agent\[0\].module.${MODULE_NAME}.google_logging_project_sink"; then
-                cat >> "$OUTPUT_FILE" << EOF
-# Log Sinks (project-level)
-moved {
-  from = module.masthead_agent[0].module.${MODULE_NAME}.google_logging_project_sink.logs_sink
-  to   = module.masthead_agent[0].module.${MODULE_NAME}[0].module.logging_infrastructure.google_logging_project_sink.logs_sink
-}
+                GENERATED=$((GENERATED + 1))
+                ;;
 
-EOF
-            fi
-
-            GENERATED=$((GENERATED + 1))
-            ;;
-
-        analytics_hub)
-            # Analytics Hub doesn't use logging_infrastructure, just convert to indexed
-            echo "# Analytics Hub uses different structure - manual review recommended" >> "$OUTPUT_FILE"
-            echo "" >> "$OUTPUT_FILE"
-            ;;
-    esac
+            analytics_hub)
+                echo "# Analytics Hub structure is different - review manually" >> "$OUTPUT_FILE"
+                echo "" >> "$OUTPUT_FILE"
+                ;;
+        esac
+    done
 done
 
 if [ $GENERATED -eq 0 ]; then
