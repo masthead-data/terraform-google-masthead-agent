@@ -140,11 +140,11 @@ variable "labels" {
 
 # Validation: Ensure correct mode is selected
 locals {
-  has_folders       = length(var.monitored_folder_ids) > 0
-  has_projects      = length(var.monitored_project_ids) > 0
-  project_mode      = var.project_id != null && !local.has_folders && var.deployment_project_id == null
-  folder_mode       = var.deployment_project_id != null && (local.has_folders || local.has_projects) && var.project_id == null
-  hybrid_mode       = var.deployment_project_id != null && local.has_folders && var.project_id != null
+  has_folders  = length(var.monitored_folder_ids) > 0
+  has_projects = length(var.monitored_project_ids) > 0
+  project_mode = var.project_id != null && !local.has_folders && var.deployment_project_id == null
+  folder_mode  = var.deployment_project_id != null && (local.has_folders || local.has_projects) && var.project_id == null
+  hybrid_mode  = var.deployment_project_id != null && local.has_folders && var.project_id != null
 
   # Determine which project hosts the Pub/Sub infrastructure
   # Using try() to handle linting when both values are null (validation will catch this at runtime)
