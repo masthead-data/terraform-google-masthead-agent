@@ -18,14 +18,20 @@ output "pubsub_subscription_name" {
   value       = google_pubsub_subscription.logs_subscription.name
 }
 
-output "folder_sink_id" {
-  description = "The ID of the folder-level logging sink (if created)"
-  value       = length(google_logging_folder_sink.folder_sink) > 0 ? google_logging_folder_sink.folder_sink[0].id : null
+output "folder_sink_ids" {
+  description = "Map of folder IDs to their logging sink IDs"
+  value = {
+    for folder_id, sink in google_logging_folder_sink.folder_sinks :
+    folder_id => sink.id
+  }
 }
 
-output "folder_sink_writer_identity" {
-  description = "The writer identity of the folder-level logging sink (if created)"
-  value       = length(google_logging_folder_sink.folder_sink) > 0 ? google_logging_folder_sink.folder_sink[0].writer_identity : null
+output "folder_sink_writer_identities" {
+  description = "Map of folder IDs to their logging sink writer identities"
+  value = {
+    for folder_id, sink in google_logging_folder_sink.folder_sinks :
+    folder_id => sink.writer_identity
+  }
 }
 
 output "project_sink_ids" {

@@ -26,8 +26,11 @@ locals {
 )
 EOT
 
-  # Projects where IAM bindings need to be applied
-  iam_target_projects = var.folder_id != null ? [] : var.monitored_project_ids
+  # Determine if we're operating at folder or project level
+  has_folders = length(var.monitored_folder_ids) > 0
+
+  # Projects where IAM bindings need to be applied (only when not using folders)
+  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
 
   # Determine roles based on editing permissions
   dataplex_roles = var.enable_datascan_editing ? toset([
@@ -60,7 +63,7 @@ module "logging_infrastructure" {
   source = "../logging-infrastructure"
 
   pubsub_project_id        = var.pubsub_project_id
-  folder_id                = var.folder_id
+  monitored_folder_ids     = var.monitored_folder_ids
   monitored_project_ids    = var.monitored_project_ids
   component_name           = "dataplex"
   topic_name               = local.resource_names.topic
@@ -74,10 +77,20 @@ module "logging_infrastructure" {
 
 # IAM: Grant Masthead service account required Dataplex roles at folder level
 resource "google_folder_iam_member" "masthead_dataplex_folder_roles" {
-  for_each = var.folder_id != null ? local.dataplex_roles : toset([])
+  for_each = {
+    for pair in flatten([
+      for folder_id in var.monitored_folder_ids : [
+        for role in local.dataplex_roles : {
+          folder_id = folder_id
+          role      = role
+          key       = "${folder_id}-${role}"
+        }
+      ]
+    ]) : pair.key => pair
+  }
 
-  folder = var.folder_id
-  role   = each.value
+  folder = each.value.folder_id
+  role   = each.value.role
   member = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
 }
 

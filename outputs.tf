@@ -52,9 +52,9 @@ output "pubsub_project_id" {
   value       = local.pubsub_project_id
 }
 
-output "folder_id" {
-  description = "The GCP folder ID being monitored (if applicable)"
-  value       = local.normalized_folder_id
+output "monitored_folder_ids" {
+  description = "The GCP folder IDs being monitored (if applicable)"
+  value       = local.normalized_folder_ids
 }
 
 output "monitored_project_ids" {

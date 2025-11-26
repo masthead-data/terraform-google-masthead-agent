@@ -2,8 +2,11 @@
 # Supports both folder-level (enterprise) and project-level (integrated) configurations
 
 locals {
-  # Projects where IAM bindings need to be applied
-  iam_target_projects = var.folder_id != null ? [] : var.monitored_project_ids
+  # Determine if we're operating at folder or project level
+  has_folders = length(var.monitored_folder_ids) > 0
+
+  # Projects where IAM bindings need to be applied (only when not using folders)
+  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
 }
 
 # Enable Analytics Hub API in monitored projects
@@ -19,7 +22,7 @@ resource "google_project_service" "analyticshub_api" {
 
 # Custom role for Analytics Hub subscription viewing at folder level
 resource "google_organization_iam_custom_role" "analyticshub_subscription_viewer_folder" {
-  count = var.folder_id != null && var.organization_id != null ? 1 : 0
+  count = local.has_folders && var.organization_id != null ? 1 : 0
 
   org_id      = var.organization_id
   role_id     = "analyticsHubSubscriptionViewer"
@@ -33,7 +36,7 @@ resource "google_organization_iam_custom_role" "analyticshub_subscription_viewer
 
 # Custom role for Analytics Hub subscription viewing at project level
 resource "google_project_iam_custom_role" "analyticshub_subscription_viewer_project" {
-  for_each = var.folder_id == null ? toset(local.iam_target_projects) : toset([])
+  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
 
   project     = each.value
   role_id     = "analyticsHubSubscriptionViewer"
@@ -47,20 +50,28 @@ resource "google_project_iam_custom_role" "analyticshub_subscription_viewer_proj
 
 # IAM: Grant Masthead service account Analytics Hub roles at folder level
 resource "google_folder_iam_member" "masthead_analyticshub_folder_roles" {
-  for_each = var.folder_id != null ? toset([
-    "roles/analyticshub.viewer"
-  ]) : toset([])
+  for_each = {
+    for pair in flatten([
+      for folder_id in var.monitored_folder_ids : [
+        for role in ["roles/analyticshub.viewer"] : {
+          folder_id = folder_id
+          role      = role
+          key       = "${folder_id}-${role}"
+        }
+      ]
+    ]) : pair.key => pair
+  }
 
-  folder = var.folder_id
-  role   = each.value
+  folder = each.value.folder_id
+  role   = each.value.role
   member = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
 }
 
 # IAM: Grant custom role at folder level
 resource "google_folder_iam_member" "masthead_analyticshub_folder_custom_role" {
-  count = var.folder_id != null && var.organization_id != null ? 1 : 0
+  for_each = local.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
 
-  folder = var.folder_id
+  folder = each.value
   role   = google_organization_iam_custom_role.analyticshub_subscription_viewer_folder[0].id
   member = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
 }

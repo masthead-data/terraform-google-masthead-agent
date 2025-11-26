@@ -16,7 +16,7 @@ module "bigquery" {
 
   # Infrastructure configuration
   pubsub_project_id     = local.pubsub_project_id
-  folder_id             = var.folder_id
+  monitored_folder_ids  = local.normalized_folder_ids
   monitored_project_ids = local.all_monitored_projects
 
   # Service account and permissions
@@ -35,7 +35,7 @@ module "dataform" {
 
   # Infrastructure configuration
   pubsub_project_id     = local.pubsub_project_id
-  folder_id             = var.folder_id
+  monitored_folder_ids  = local.normalized_folder_ids
   monitored_project_ids = local.all_monitored_projects
 
   # Service account
@@ -53,7 +53,7 @@ module "dataplex" {
 
   # Infrastructure configuration
   pubsub_project_id     = local.pubsub_project_id
-  folder_id             = var.folder_id
+  monitored_folder_ids  = local.normalized_folder_ids
   monitored_project_ids = local.all_monitored_projects
 
   # Service account and permissions
@@ -71,7 +71,7 @@ module "analytics_hub" {
   source = "./modules/analytics-hub"
 
   # Infrastructure configuration
-  folder_id             = var.folder_id
+  monitored_folder_ids  = local.normalized_folder_ids
   organization_id       = local.numeric_organization_id
   monitored_project_ids = local.all_monitored_projects
 

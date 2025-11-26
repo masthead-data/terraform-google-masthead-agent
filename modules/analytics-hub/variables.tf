@@ -1,7 +1,7 @@
-variable "folder_id" {
-  type        = string
-  description = "GCP folder ID for folder-level IAM (optional, for enterprise mode)"
-  default     = null
+variable "monitored_folder_ids" {
+  type        = list(string)
+  description = "List of GCP folder IDs for folder-level IAM (optional, for enterprise mode)"
+  default     = []
 }
 
 variable "organization_id" {

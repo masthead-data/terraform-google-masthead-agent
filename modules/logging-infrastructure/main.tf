@@ -3,13 +3,14 @@
 # Supports both folder-level and project-level configurations
 
 locals {
-  # Normalize folder ID format
-  normalized_folder_id = var.folder_id != null ? (
-    can(regex("^folders/", var.folder_id)) ? var.folder_id : "folders/${var.folder_id}"
-  ) : null
+  # Normalize folder ID format - ensure all have "folders/" prefix
+  normalized_folder_ids = [
+    for folder_id in var.monitored_folder_ids :
+    can(regex("^folders/", folder_id)) ? folder_id : "folders/${folder_id}"
+  ]
 
   # Determine if we're operating at folder or project level
-  is_folder_level  = var.folder_id != null
+  is_folder_level  = length(var.monitored_folder_ids) > 0
   is_project_level = length(var.monitored_project_ids) > 0
 
   # Common labels
@@ -71,11 +72,11 @@ resource "google_pubsub_subscription" "logs_subscription" {
   }
 }
 
-# Create folder-level logging sink (if folder_id provided)
-resource "google_logging_folder_sink" "folder_sink" {
-  count = local.is_folder_level ? 1 : 0
+# Create folder-level logging sinks (for each monitored folder)
+resource "google_logging_folder_sink" "folder_sinks" {
+  for_each = toset(local.normalized_folder_ids)
 
-  folder      = local.normalized_folder_id
+  folder      = each.value
   name        = var.sink_name
   description = "Masthead Agent log sink for ${var.component_name} at folder level"
   destination = "pubsub.googleapis.com/${google_pubsub_topic.logs_topic.id}"
@@ -100,14 +101,14 @@ resource "google_logging_project_sink" "project_sinks" {
   unique_writer_identity = true
 }
 
-# Grant folder sink writer identity permission to publish to Pub/Sub topic
-resource "google_pubsub_topic_iam_member" "folder_sink_publisher" {
-  count = local.is_folder_level ? 1 : 0
+# Grant folder sink writer identities permission to publish to Pub/Sub topic
+resource "google_pubsub_topic_iam_member" "folder_sinks_publisher" {
+  for_each = google_logging_folder_sink.folder_sinks
 
   project = var.pubsub_project_id
   topic   = google_pubsub_topic.logs_topic.name
   role    = "roles/pubsub.publisher"
-  member  = google_logging_folder_sink.folder_sink[0].writer_identity
+  member  = each.value.writer_identity
 }
 
 # Grant project sink writer identities permission to publish to Pub/Sub topic

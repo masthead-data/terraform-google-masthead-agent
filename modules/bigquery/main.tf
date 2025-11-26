@@ -29,8 +29,11 @@ locals {
 )
 EOT
 
-  # Projects where IAM bindings need to be applied
-  iam_target_projects = var.folder_id != null ? [] : var.monitored_project_ids
+  # Determine if we're operating at folder or project level
+  has_folders = length(var.monitored_folder_ids) > 0
+
+  # Projects where IAM bindings need to be applied (only when not using folders)
+  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
 }
 
 # Enable BigQuery API in monitored projects
@@ -49,7 +52,7 @@ module "logging_infrastructure" {
   source = "../logging-infrastructure"
 
   pubsub_project_id        = var.pubsub_project_id
-  folder_id                = var.folder_id
+  monitored_folder_ids     = var.monitored_folder_ids
   monitored_project_ids    = var.monitored_project_ids
   component_name           = "bigquery"
   topic_name               = local.resource_names.topic
@@ -63,13 +66,20 @@ module "logging_infrastructure" {
 
 # IAM: Grant Masthead service account required BigQuery roles at folder level
 resource "google_folder_iam_member" "masthead_bigquery_folder_roles" {
-  for_each = var.folder_id != null ? toset([
-    "roles/bigquery.metadataViewer",
-    "roles/bigquery.resourceViewer"
-  ]) : toset([])
+  for_each = {
+    for pair in flatten([
+      for folder_id in var.monitored_folder_ids : [
+        for role in ["roles/bigquery.metadataViewer", "roles/bigquery.resourceViewer"] : {
+          folder_id = folder_id
+          role      = role
+          key       = "${folder_id}-${role}"
+        }
+      ]
+    ]) : pair.key => pair
+  }
 
-  folder = var.folder_id
-  role   = each.value
+  folder = each.value.folder_id
+  role   = each.value.role
   member = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
 }
 
@@ -94,16 +104,16 @@ resource "google_project_iam_member" "masthead_bigquery_project_roles" {
 
 # IAM: Grant Masthead retro service account Private Log Viewer role at folder level
 resource "google_folder_iam_member" "masthead_privatelogviewer_folder_role" {
-  count = var.enable_privatelogviewer_role && var.folder_id != null ? 1 : 0
+  for_each = var.enable_privatelogviewer_role ? toset(var.monitored_folder_ids) : toset([])
 
-  folder = var.folder_id
+  folder = each.value
   role   = "roles/logging.privateLogViewer"
   member = "serviceAccount:${var.masthead_service_accounts.retro_sa}"
 }
 
 # IAM: Grant Masthead retro service account Private Log Viewer role at project level
 resource "google_project_iam_member" "masthead_privatelogviewer_project_role" {
-  for_each = var.enable_privatelogviewer_role && var.folder_id == null ? toset(local.iam_target_projects) : toset([])
+  for_each = var.enable_privatelogviewer_role && !local.has_folders ? toset(local.iam_target_projects) : toset([])
 
   project = each.value
   role    = "roles/logging.privateLogViewer"

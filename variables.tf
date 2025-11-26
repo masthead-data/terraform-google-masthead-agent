@@ -13,19 +13,19 @@ variable "project_id" {
   }
 }
 
-variable "folder_id" {
-  type        = string
+variable "monitored_folder_ids" {
+  type        = list(string)
   description = <<-EOT
-    [ENTERPRISE MODE] GCP folder ID for folder-level log sinks.
-    Use this for enterprise deployments to capture logs from all projects under the folder.
+    [ENTERPRISE MODE] List of GCP folder IDs for folder-level log sinks.
+    Use this for enterprise deployments to capture logs from all projects under the folders.
     Must be used together with deployment_project_id.
-    Format: folders/123456789 or just the numeric ID.
+    Format: Each folder ID can be "folders/123456789" or just the numeric ID.
   EOT
-  default     = null
+  default     = []
 
   validation {
-    condition     = var.folder_id == null || can(regex("^(folders/)?[0-9]+$", var.folder_id))
-    error_message = "Folder ID must be numeric or in format 'folders/123456789'."
+    condition     = alltrue([for f in var.monitored_folder_ids : can(regex("^(folders/)?[0-9]+$", f))])
+    error_message = "Each folder ID must be numeric or in format 'folders/123456789'."
   }
 }
 
@@ -134,17 +134,19 @@ variable "labels" {
 
 # Validation: Ensure correct mode is selected
 locals {
-  integrated_mode = var.project_id != null && var.folder_id == null && var.deployment_project_id == null
-  enterprise_mode = var.folder_id != null && var.deployment_project_id != null && var.project_id == null
-  hybrid_mode     = var.folder_id != null && var.deployment_project_id != null && var.project_id != null
+  has_folders     = length(var.monitored_folder_ids) > 0
+  integrated_mode = var.project_id != null && !local.has_folders && var.deployment_project_id == null
+  enterprise_mode = local.has_folders && var.deployment_project_id != null && var.project_id == null
+  hybrid_mode     = local.has_folders && var.deployment_project_id != null && var.project_id != null
 
   # Determine which project hosts the Pub/Sub infrastructure
   pubsub_project_id = coalesce(var.deployment_project_id, var.project_id)
 
-  # Normalize folder ID to include "folders/" prefix
-  normalized_folder_id = var.folder_id != null ? (
-    can(regex("^folders/", var.folder_id)) ? var.folder_id : "folders/${var.folder_id}"
-  ) : null
+  # Normalize folder IDs to include "folders/" prefix
+  normalized_folder_ids = [
+    for folder_id in var.monitored_folder_ids :
+    can(regex("^folders/", folder_id)) ? folder_id : "folders/${folder_id}"
+  ]
 
   # Normalize organization ID to include "organizations/" prefix
   normalized_organization_id = var.organization_id != null ? (
@@ -171,8 +173,8 @@ resource "null_resource" "validate_configuration" {
       error_message = <<-EOT
         Invalid configuration. Choose one of:
         1. INTEGRATED MODE: Set project_id only
-        2. ENTERPRISE MODE: Set folder_id + deployment_project_id only
-        3. HYBRID MODE: Set folder_id + deployment_project_id + monitored_project_ids
+        2. ENTERPRISE MODE: Set monitored_folder_ids + deployment_project_id only
+        3. HYBRID MODE: Set monitored_folder_ids + deployment_project_id + monitored_project_ids
       EOT
     }
 
