@@ -151,7 +151,9 @@ moved {
 EOF
 
                 # Check if project-level sinks exist in state
-                if terraform state list | grep -q "${AGENT_KEY}.module.${MODULE_NAME}\[0\].google_logging_project_sink.masthead_sink"; then
+                # Need to escape the brackets for grep
+                ESCAPED_AGENT_KEY=$(echo "$AGENT_KEY" | sed 's/\[/\\[/g' | sed 's/\]/\\]/g')
+                if terraform state list | grep -F "${AGENT_KEY}.module.${MODULE_NAME}[0].google_logging_project_sink.masthead_sink" > /dev/null 2>&1; then
                     cat >> "$OUTPUT_FILE" << EOF
 # Log Sink (project-level)
 moved {
