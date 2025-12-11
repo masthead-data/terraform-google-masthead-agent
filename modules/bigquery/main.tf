@@ -123,13 +123,13 @@ resource "google_project_iam_member" "masthead_privatelogviewer_role" {
 
 # Create Custom Role for BigQuery
 resource "google_project_iam_custom_role" "masthead_bigquery_custom_role" {
-  role_id     = "mastheadBigQueryCustomRole"
-  title       = "Masthead BigQuery Custom Role"
-  description = "Custom role for Masthead BigQuery agent"
+  role_id = "mastheadBigQueryCustomRole"
+  title   = "Masthead BigQuery Custom Role"
   permissions = [
     "bigquery.datasets.listSharedDatasetUsage"
   ]
-  project = var.project_id
+  project     = var.project_id
+  description = "Custom role for Masthead BigQuery agent"
 }
 
 # Grant Masthead service account the custom role

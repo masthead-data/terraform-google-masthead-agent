@@ -13,14 +13,13 @@ resource "google_project_service" "required_apis" {
 
 # Custom role for Analytics Hub subscription viewing
 resource "google_project_iam_custom_role" "masthead_analyticshub_custom_role" {
-  project     = var.project_id
-  role_id     = "analyticsHubSubscriptionViewer"
-  title       = "Masthead Analytics Hub Custom Role"
-  description = "Custom role to Masthead Analytics Hub integration"
-
+  role_id = "mastheadAnalyticsHubCustomRole"
+  title   = "Masthead Analytics Hub Custom Role"
   permissions = [
     "analyticshub.listings.viewSubscriptions"
   ]
+  project     = var.project_id
+  description = "Custom role to Masthead Analytics Hub integration"
 }
 
 # Grant Masthead service account required Analytics Hub roles
