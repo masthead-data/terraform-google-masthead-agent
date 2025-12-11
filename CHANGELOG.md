@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **BigQuery Custom Role**: Added custom IAM role `MastheadBigQueryCustomRole` with permission `bigquery.datasets.listSharedDatasetUsage`
+- **Dataplex Catalog Viewer**: Added `roles/dataplex.catalogViewer` permission to Dataplex service account
+
 ### Changed
 
 ### Deprecated
