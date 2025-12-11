@@ -129,7 +129,7 @@ resource "google_project_iam_custom_role" "masthead_bigquery_custom_role" {
   permissions = [
     "bigquery.datasets.listSharedDatasetUsage"
   ]
-  project     = var.project_id
+  project = var.project_id
 }
 
 # Grant Masthead service account the custom role
