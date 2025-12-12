@@ -19,8 +19,6 @@ jobs:
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.7
 
       - name: Terraform Check
         run: |
@@ -30,8 +28,6 @@ jobs:
 
       - name: Install TFLint
         uses: terraform-linters/setup-tflint@v6
-        with:
-          tflint_version: latest
 
       - name: Run TFLint
         run: |
