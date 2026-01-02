@@ -46,3 +46,105 @@ output "project_id" {
   description = "The GCP project ID where resources were created"
   value       = var.project_id
 }
+
+output "vpc_service_controls_config" {
+  description = "VPC Service Controls configuration for allowing Masthead access to customer resources"
+  value = {
+    ingress_policies = {
+      description = "Ingress policies to allow Masthead service accounts to access customer resources"
+      identities = [
+        "serviceAccount:masthead-data@masthead-prod.iam.gserviceaccount.com",
+        "serviceAccount:masthead-dataform@masthead-prod.iam.gserviceaccount.com",
+        "serviceAccount:masthead-dataplex@masthead-prod.iam.gserviceaccount.com",
+        "serviceAccount:retro-data@masthead-prod.iam.gserviceaccount.com",
+      ]
+      source_projects = [
+        "431544431936", # masthead-prod
+        "136172083896", # masthead-prod-uk
+      ]
+      target_resources = ["*"]
+      operations = {
+        bigquery = {
+          service_name = "bigquery.googleapis.com"
+          methods = [
+            "DatasetService.GetDataset",
+            "DatasetService.ListDatasets",
+            "JobService.GetJob",
+            "ModelService.ListModels",
+            "ProjectService.ListProjects",
+            "ReservationService.GetBiReservation",
+            "ReservationService.GetCapacityCommitment",
+            "ReservationService.GetReservation",
+            "ReservationService.GetReservationGroup",
+            "ReservationService.ListAssignments",
+            "ReservationService.ListCapacityCommitments",
+            "ReservationService.ListReservationGroups",
+            "ReservationService.ListReservations",
+            "ReservationService.SearchAllAssignments",
+            "RoutineService.GetRoutine",
+            "RoutineService.ListRoutines",
+            "TableService.GetTable",
+            "TableService.ListTables",
+          ]
+          permissions = [
+            "bigquery.capacityCommitments.list",
+            "bigquery.datasets.get",
+            "bigquery.jobs.get",
+            "bigquery.jobs.list",
+            "bigquery.jobs.listAll",
+            "bigquery.models.getMetadata",
+            "bigquery.models.list",
+            "bigquery.reservationAssignments.list",
+            "bigquery.reservations.list",
+            "bigquery.routines.get",
+            "bigquery.routines.list",
+            "bigquery.tables.get",
+            "bigquery.tables.getIamPolicy",
+            "bigquery.tables.list",
+          ]
+        }
+        logging = {
+          service_name = "logging.googleapis.com"
+          methods      = ["LoggingServiceV2.ListLogEntries"]
+        }
+        pubsub = {
+          service_name = "pubsub.googleapis.com"
+          methods = [
+            "Publisher.GetTopic",
+            "Publisher.ListTopics",
+            "Publisher.ListTopicSubscriptions",
+            "IAMPolicy.GetIamPolicy",
+            "IAMPolicy.TestIamPermissions",
+            "Subscriber.Acknowledge",
+            "Subscriber.ModifyAckDeadline",
+            "Subscriber.Pull",
+            "Subscriber.StreamingPull",
+          ]
+        }
+        analyticshub = {
+          service_name = "analyticshub.googleapis.com"
+          methods      = ["*"]
+        }
+        dataplex = {
+          service_name = "dataplex.googleapis.com"
+          methods      = ["*"]
+        }
+      }
+    }
+    egress_policies = {
+      description = "Egress policies to allow Masthead to create BigQuery jobs in customer projects"
+      identities  = ["serviceAccount:masthead-data@masthead-prod.iam.gserviceaccount.com"]
+      target_projects = [
+        "136172083896", # masthead-prod-uk
+        "431544431936", # masthead-prod
+      ]
+      operations = {
+        bigquery = {
+          service_name = "bigquery.googleapis.com"
+          permissions  = ["bigquery.jobs.create"]
+        }
+      }
+    }
+    reference_documentation = "https://cloud.google.com/vpc-service-controls/docs/supported-method-restrictions"
+  }
+}
