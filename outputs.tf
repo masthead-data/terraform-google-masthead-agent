@@ -53,10 +53,10 @@ output "vpc_service_controls_config" {
     ingress_policies = {
       description = "Ingress policies to allow Masthead service accounts to access customer resources"
       identities = [
-        "serviceAccount:masthead-data@masthead-prod.iam.gserviceaccount.com",
-        "serviceAccount:masthead-dataform@masthead-prod.iam.gserviceaccount.com",
-        "serviceAccount:masthead-dataplex@masthead-prod.iam.gserviceaccount.com",
-        "serviceAccount:retro-data@masthead-prod.iam.gserviceaccount.com",
+        "serviceAccount:${var.masthead_service_accounts.bigquery_sa}",
+        "serviceAccount:${var.masthead_service_accounts.dataform_sa}",
+        "serviceAccount:${var.masthead_service_accounts.dataplex_sa}",
+        "serviceAccount:${var.masthead_service_accounts.retro_sa}",
       ]
       source_projects = [
         "431544431936", # masthead-prod
