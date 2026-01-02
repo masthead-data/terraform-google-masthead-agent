@@ -135,8 +135,8 @@ output "vpc_service_controls_config" {
       description = "Egress policies to allow Masthead to create BigQuery jobs in customer projects"
       identities  = ["serviceAccount:masthead-data@masthead-prod.iam.gserviceaccount.com"]
       target_projects = [
-        "136172083896", # masthead-prod-uk
         "431544431936", # masthead-prod
+        "136172083896", # masthead-prod-uk
       ]
       operations = {
         bigquery = {
