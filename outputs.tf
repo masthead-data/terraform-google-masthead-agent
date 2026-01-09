@@ -48,7 +48,7 @@ output "project_id" {
 }
 
 output "vpc_service_controls_config" {
-  description = "VPC Service Controls configuration for allowing Masthead access to customer resources"
+  description = "Informational VPC Service Controls configuration for allowing Masthead access to customer resources; use this output as a reference and manually apply or update your VPC Service Controls perimeters accordingly"
   value = {
     ingress_policies = {
       description = "Ingress policies to allow Masthead service accounts to access customer resources"
