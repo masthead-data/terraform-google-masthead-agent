@@ -32,12 +32,15 @@ EOT
   # Projects where IAM bindings need to be applied (only when not using folders)
   iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
 
-  # Determine roles based on editing permissions
-  dataplex_roles = var.enable_datascan_editing ? toset([
+# Grant Masthead service account required Dataplex roles
+resource "google_project_iam_member" "masthead_dataplex_roles" {
+  for_each = var.enable_datascan_editing ? toset([
+    "roles/dataplex.dataProductsViewer",
     "roles/dataplex.dataScanEditor",
     "roles/bigquery.jobUser",
     "roles/dataplex.storageDataReader"
     ]) : toset([
+    "roles/dataplex.dataProductsViewer",
     "roles/dataplex.dataScanDataViewer"
   ])
 }

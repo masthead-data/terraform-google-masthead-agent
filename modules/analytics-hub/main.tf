@@ -21,21 +21,22 @@ resource "google_project_service" "analyticshub_api" {
 }
 
 # Custom role for Analytics Hub subscription viewing at folder level
-resource "google_organization_iam_custom_role" "analyticshub_subscription_viewer_folder" {
+resource "google_organization_iam_custom_role" "analyticshub_custom_role_folder" {
   count = local.has_folders && var.organization_id != null ? 1 : 0
 
   org_id      = var.organization_id
   role_id     = "analyticsHubSubscriptionViewer"
   title       = "Analytics Hub Subscription Viewer"
   description = "Custom role to view subscriptions for Analytics Hub listings"
-
   permissions = [
     "analyticshub.listings.viewSubscriptions"
   ]
+  project     = var.project_id
+  description = "Custom role to Masthead Analytics Hub integration"
 }
 
 # Custom role for Analytics Hub subscription viewing at project level
-resource "google_project_iam_custom_role" "analyticshub_subscription_viewer_project" {
+resource "google_project_iam_custom_role" "analyticshub_custom_role_project" {
   for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
 
   project     = each.value
@@ -72,7 +73,7 @@ resource "google_folder_iam_member" "masthead_analyticshub_folder_custom_role" {
   for_each = local.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
 
   folder = each.value
-  role   = google_organization_iam_custom_role.analyticshub_subscription_viewer_folder[0].id
+  role   = google_organization_iam_custom_role.analyticshub_custom_role_folder[0].id
   member = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
 }
 
@@ -89,7 +90,7 @@ resource "google_project_iam_member" "masthead_analyticshub_project_roles" {
         },
         {
           project_id = project_id
-          role       = google_project_iam_custom_role.analyticshub_subscription_viewer_project[project_id].id
+          role       = google_project_iam_custom_role.analyticshub_custom_role_project[project_id].id
           key        = "${project_id}-custom"
         }
       ]

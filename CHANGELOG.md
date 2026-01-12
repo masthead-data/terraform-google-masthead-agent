@@ -50,6 +50,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For users migrating to folder mode, see [MIGRATION.md](./MIGRATION.md) for detailed upgrade instructions.
 
+## [0.2.10] - 2026-01-12
+
+### Changed
+
+- **Dataplex IAM Role Update**: Changed from `roles/dataplex.catalogViewer` to `roles/dataplex.dataProductsViewer` to apply the minimum required permissions.
+
+## [0.2.9] - 2025-12-12
+
+### Added
+
+- **Masthead BigQuery Custom Role**: Added custom IAM role `Masthead BigQuery Custom Role` with permission `bigquery.datasets.listSharedDatasetUsage`
+- **Dataplex Catalog Viewer**: Added `roles/dataplex.catalogViewer` role to Dataplex service account
+
+### Changed
+
+- Renamed Analytics Hub custom role to `mastheadAnalyticsHubCustomRole` for clarity
+
 ## [0.2.8] - 2025-10-27
 
 ### Added
@@ -185,7 +202,9 @@ module "masthead_agent" {
 - Dataplex monitoring
 
 [Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.3.0...HEAD
-[0.3.0]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.8...v0.3.0
+[0.3.0]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.10...v0.3.0
+[0.2.10]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.9...v0.2.10
+[0.2.9]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.5...v0.2.6
