@@ -74,7 +74,7 @@ resource "google_logging_folder_sink" "folder_sinks" {
 
   folder      = each.value
   name        = var.sink_name
-  description = "Masthead Agent log sink for ${var.component_name} at folder level"
+  description = "Masthead Agent log sink for ${var.component_name}"
   destination = "pubsub.googleapis.com/${google_pubsub_topic.logs_topic.id}"
 
   filter = var.log_filter
@@ -89,7 +89,7 @@ resource "google_logging_project_sink" "project_sinks" {
 
   project     = each.value
   name        = var.sink_name
-  description = "Masthead Agent log sink for ${var.component_name} at project level"
+  description = "Masthead Agent log sink for ${var.component_name}"
   destination = "pubsub.googleapis.com/${google_pubsub_topic.logs_topic.id}"
 
   filter = var.log_filter

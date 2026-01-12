@@ -25,8 +25,8 @@ resource "google_organization_iam_custom_role" "analyticshub_custom_role_folder"
   count = local.has_folders && var.organization_id != null ? 1 : 0
 
   org_id      = var.organization_id
-  role_id     = "analyticsHubSubscriptionViewer"
-  title       = "Analytics Hub Subscription Viewer"
+  role_id     = "mastheadAnalyticsHubCustomRole"
+  title       = "Masthead Analytics Hub Custom Role"
   description = "Custom role for Masthead Analytics Hub integration"
   permissions = [
     "analyticshub.listings.viewSubscriptions"
@@ -38,9 +38,9 @@ resource "google_project_iam_custom_role" "analyticshub_custom_role_project" {
   for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
 
   project     = each.value
-  role_id     = "analyticsHubSubscriptionViewer"
-  title       = "Analytics Hub Subscription Viewer"
-  description = "Custom role to view subscriptions for Analytics Hub listings"
+  role_id     = "mastheadAnalyticsHubCustomRole"
+  title       = "Masthead Analytics Hub Custom Role"
+  description = "Custom role to Masthead Analytics Hub integration"
 
   permissions = [
     "analyticshub.listings.viewSubscriptions"
