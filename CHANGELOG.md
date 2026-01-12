@@ -19,12 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.2.10] - 2026-01-12
+
+### Changed
+
+- **Dataplex IAM Role Update**: Changed from `roles/dataplex.catalogViewer` to `roles/dataplex.dataProductsViewer` to apply the minimum required permissions.
+
 ## [0.2.9] - 2025-12-12
 
 ### Added
 
 - **Masthead BigQuery Custom Role**: Added custom IAM role `Masthead BigQuery Custom Role` with permission `bigquery.datasets.listSharedDatasetUsage`
-- **Dataplex Catalog Viewer**: Added `roles/dataplex.catalogViewer` role to Dataplex service account
+- **Dataplex Catalog Viewer**: Added `roles/dataplex.dataProductsViewer` role to Dataplex service account
 
 ### Changed
 
