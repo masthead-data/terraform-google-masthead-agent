@@ -31,7 +31,7 @@ output "dataplex" {
 output "analytics_hub" {
   description = "Analytics Hub module outputs"
   value = var.enable_modules.analytics_hub ? {
-    analyticshub_subscription_viewer_custom_role_id = module.analytics_hub[0].analyticshub_subscription_viewer_custom_role_id
+    analyticshub_custom_role_id = module.analytics_hub[0].analyticshub_custom_role_id
   } : null
 }
 
@@ -60,6 +60,16 @@ output "monitored_folder_ids" {
 output "monitored_project_ids" {
   description = "List of project IDs being monitored directly"
   value       = local.all_monitored_projects
+}
+
+output "deployment_project_id" {
+  description = "The GCP project ID where Masthead agent is deployed"
+  value       = local.pubsub_project_id
+}
+
+output "organization_id" {
+  description = "The GCP organization ID being monitored (if applicable)"
+  value       = local.numeric_organization_id
 }
 
 output "vpc_service_controls_config" {

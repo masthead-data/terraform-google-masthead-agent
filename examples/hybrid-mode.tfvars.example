@@ -2,7 +2,7 @@
 # Use this to monitor a folder plus specific additional projects
 
 # Folder ID for folder-level log sinks (captures logs from all child projects)
-folder_id = "folders/123456789"
+monitored_folder_ids = ["folders/123456789"]
 
 # Organization ID for organization-level custom IAM roles (required for Analytics Hub)
 organization_id = "organizations/123456789"

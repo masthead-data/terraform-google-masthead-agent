@@ -1,6 +1,7 @@
 # Logging Infrastructure Module
 
 This module creates the shared logging infrastructure for Masthead Agent, including:
+
 - Pub/Sub topics and subscriptions
 - Logging sinks (folder-level or project-level)
 - IAM bindings for log delivery
@@ -21,7 +22,7 @@ module "bigquery_logging" {
   source = "./modules/logging-infrastructure"
 
   pubsub_project_id       = "my-deployment-project"
-  folder_id               = "folders/123456789"
+  monitored_folder_ids    = ["folders/123456789"] # or ["123456789"]
   component_name          = "bigquery"
   topic_name              = "masthead-topic"
   subscription_name       = "masthead-agent-subscription"
@@ -55,7 +56,7 @@ module "bigquery_logging" {
   source = "./modules/logging-infrastructure"
 
   pubsub_project_id       = "my-deployment-project"
-  folder_id               = "folders/123456789"
+  monitored_folder_ids    = ["folders/123456789"] # or ["123456789"]
   monitored_project_ids   = ["special-project-1", "special-project-2"]
   component_name          = "bigquery"
   topic_name              = "masthead-topic"

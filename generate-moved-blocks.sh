@@ -350,10 +350,10 @@ moved {
   to   = ${AGENT_KEY}.module.analytics_hub[0].google_project_service.analyticshub_api["${KEY_BARE}"]
 }
 
-# Custom Role for subscription viewer
+# Custom Role for Analytics Hub
 moved {
-  from = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_custom_role.analyticshub_subscription_viewer
-  to   = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_custom_role.analyticshub_subscription_viewer_project["${KEY_BARE}"]
+  from = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_custom_role.masthead_analyticshub_custom_role
+  to   = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_custom_role.analyticshub_custom_role_project["${KEY_BARE}"]
 }
 
 # Analytics Hub IAM - viewer

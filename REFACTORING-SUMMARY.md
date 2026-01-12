@@ -9,16 +9,19 @@ Successfully refactored the Masthead Terraform module to support organization-wi
 ### 1. New Deployment Modes
 
 #### ✅ Project Mode (Existing - Backward Compatible)
+
 - Single project setup
 - All resources in one project
 - **No changes required for existing users**
 
 #### ✅ Folder Mode (New)
+
 - Folder-level log sinks
 - Centralized Pub/Sub in deployment project
 - IAM at folder level (inherited by all child projects)
 
 #### ✅ Hybrid Mode (New)
+
 - Folder-level + additional specific projects
 - Mixed IAM bindings (folder + project level)
 - Maximum flexibility
@@ -26,14 +29,17 @@ Successfully refactored the Masthead Terraform module to support organization-wi
 ### 2. Architecture Changes
 
 #### New Module: `logging-infrastructure`
+
 Location: `modules/logging-infrastructure/`
 
 **Purpose**: Shared logging infrastructure for all service modules
+
 - Creates Pub/Sub topics and subscriptions
 - Manages folder-level or project-level log sinks
 - Handles writer identity IAM bindings
 
 **Benefits**:
+
 - Code reuse across BigQuery, Dataform, and Dataplex modules
 - Consistent logging infrastructure
 - Easier maintenance
@@ -41,30 +47,34 @@ Location: `modules/logging-infrastructure/`
 #### Refactored Service Modules
 
 **BigQuery** (`modules/bigquery/`):
+
 - Uses shared logging infrastructure module
 - Supports folder and project-level IAM
 - Conditional IAM binding based on deployment mode
 
 **Dataform** (`modules/dataform/`):
+
 - Uses shared logging infrastructure module
 - Folder/project IAM support
 - Simplified configuration
 
 **Dataplex** (`modules/dataplex/`):
+
 - Uses shared logging infrastructure module
 - Conditional roles based on `enable_datascan_editing`
 - Folder/project IAM support
 
 **Analytics Hub** (`modules/analytics-hub/`):
+
 - No changes (IAM only, no logging)
 
 ### 3. New Variables
 
 ```hcl
-variable "folder_id" {
-  type        = string
-  description = "GCP folder ID for organization-wide deployments"
-  default     = null
+variable "monitored_folder_ids" {
+  type        = list(string)
+  description = "GCP folder IDs for organization-wide deployments"
+  default     = []
 }
 
 variable "deployment_project_id" {
@@ -113,7 +123,7 @@ resource "null_resource" "validate_configuration" {
 
 ## File Structure
 
-```
+```filetree
 terraform-google-masthead-agent/
 ├── main.tf                          # Root module (updated)
 ├── variables.tf                     # New variables + validation logic
@@ -151,7 +161,9 @@ terraform-google-masthead-agent/
 ## Code Reuse Strategy
 
 ### Before (Duplicated)
+
 Each module had its own:
+
 - Pub/Sub topic creation
 - Pub/Sub subscription creation
 - Logging sink creation
@@ -161,7 +173,9 @@ Each module had its own:
 **Result**: ~150 lines of duplicated code per module
 
 ### After (Shared)
+
 Single `logging-infrastructure` module handles:
+
 - Pub/Sub infrastructure
 - Folder or project-level sinks
 - All IAM bindings for log delivery
@@ -172,18 +186,21 @@ Single `logging-infrastructure` module handles:
 ## IAM Strategy
 
 ### Project Mode
+
 ```hcl
 # Project-level IAM
 google_project_iam_member.masthead_roles["project-id"]["role-name"]
 ```
 
 ### Folder Mode
+
 ```hcl
 # Folder-level IAM (inherited by all children)
 google_folder_iam_member.masthead_roles["folder-id"]["role-name"]
 ```
 
 ### Hybrid Mode
+
 ```hcl
 # Folder-level IAM
 google_folder_iam_member.masthead_folder_roles["role-name"]
@@ -203,6 +220,7 @@ google_project_iam_member.masthead_project_roles["project-id-role-name"]
 ## Documentation
 
 ### Created
+
 - ✅ `MIGRATION.md` - Comprehensive migration guide
 - ✅ `examples/project-mode.tfvars.example`
 - ✅ `examples/folder-mode.tfvars.example`
@@ -210,6 +228,7 @@ google_project_iam_member.masthead_project_roles["project-id-role-name"]
 - ✅ `modules/logging-infrastructure/README.md`
 
 ### Updated
+
 - ✅ `README.md` - Complete rewrite with architecture diagrams
 - ✅ `CHANGELOG.md` - v0.3.0 entry with breaking changes
 - ✅ All module `variables.tf` files
@@ -253,6 +272,7 @@ google_project_iam_member.masthead_project_roles["project-id-role-name"]
 ## Example Usage Comparison
 
 ### Before (v0.2.x)
+
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
@@ -263,6 +283,7 @@ module "masthead_agent" {
 ```
 
 ### After (v0.3.0) - Project Mode (Same!)
+
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
@@ -273,12 +294,13 @@ module "masthead_agent" {
 ```
 
 ### After (v0.3.0) - Folder Mode (New!)
+
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
   version = "0.3.0"
 
-  folder_id             = "folders/123456789"
+  monitored_folder_ids  = ["folders/123456789"]
   deployment_project_id = "central-logging"
 }
 ```

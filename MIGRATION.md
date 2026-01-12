@@ -7,9 +7,11 @@ This guide helps you migrate from the previous single-project architecture to th
 ### Variable Changes
 
 #### Renamed Variables
+
 - `project_id` is now **optional** and only used in **Project Mode**
 
 #### New Variables
+
 - `folder_id` - For organization/folder-level deployments
 - `deployment_project_id` - Where Pub/Sub infrastructure is created in folder mode
 - `monitored_project_ids` - List of additional projects to monitor
@@ -17,6 +19,7 @@ This guide helps you migrate from the previous single-project architecture to th
 ### Module Interface Changes
 
 All service modules (BigQuery, Dataform, Dataplex) now use:
+
 - `pubsub_project_id` instead of `project_id`
 - `folder_id` (optional)
 - `monitored_project_ids` (optional)
@@ -51,6 +54,7 @@ module "masthead_agent" {
 If you want to move to folder-level monitoring:
 
 #### Before (v0.2.x)
+
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
@@ -68,13 +72,14 @@ module "masthead_agent" {
 ```
 
 #### After (v0.3.0)
+
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
   version = ">=0.3.0"
 
-  # Remove project_id, add folder_id and deployment_project_id
-  folder_id             = "folders/123456789"  # Your folder ID
+  # Remove project_id, add monitored_folder_ids and deployment_project_id
+  monitored_folder_ids             = ["folders/123456789"] or ["123456789"] # Your folder IDs
   deployment_project_id = "my-data-project"    # Use same project ID
   organization_id       = "123456789"          # Required for Analytics Hub
 
@@ -92,15 +97,17 @@ module "masthead_agent" {
 #### Migration Steps
 
 1. **Backup your Terraform state**
+
    ```bash
    terraform state pull > backup-state.json
    ```
 
 2. **Update your configuration**
-   - Replace `project_id` with `folder_id` and `deployment_project_id`
+   - Replace `project_id` with `monitored_folder_ids` and `deployment_project_id`
    - Update version constraint to `>=0.3.0`
 
 3. **Plan the changes**
+
    ```bash
    terraform plan -out=migration.tfplan
    ```
@@ -111,11 +118,13 @@ module "masthead_agent" {
    - Even resources in the same project will be recreated due to module path changes
 
 4. **Review the plan**
+
    ```bash
    terraform show migration.tfplan | grep -E "(# module|will be created|will be destroyed)"
    ```
 
 5. **Apply during maintenance window**
+
    ```bash
    terraform apply migration.tfplan
    ```
@@ -134,13 +143,13 @@ module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
   version = ">=0.3.0"
 
-  folder_id              = "folders/123456789"
-  deployment_project_id  = "central-logging-project"
-  organization_id        = "123456789"  # Required for Analytics Hub
+  monitored_folder_ids              = ["folders/123456789"]
   monitored_project_ids  = [
     "special-project-1",
     "external-project-2"
   ]
+  deployment_project_id  = "central-logging-project"
+  organization_id        = "123456789"  # Required for Analytics Hub
 
   enable_modules = {
     bigquery      = true
@@ -158,10 +167,13 @@ module "masthead_agent" {
 **Critical**: Due to the internal module restructuring in v0.3.0, **all resources will be recreated** regardless of your migration path:
 
 #### Why Resources Are Recreated
+
 The module structure changed from:
+
 - `module.bigquery.google_pubsub_topic.logs_topic`
 
 To:
+
 - `module.bigquery[0].module.logging_infrastructure.google_pubsub_topic.logs_topic`
 
 Terraform sees these as completely different resources.
@@ -169,6 +181,7 @@ Terraform sees these as completely different resources.
 #### What Gets Recreated
 
 **Project Mode (same configuration)**:
+
 - ✅ **Configuration**: Unchanged, backward compatible
 - ⚠️ **Resources**: ALL recreated (new module paths)
 - ✅ **Same Project**: Pub/Sub topics/subscriptions in same project
@@ -176,6 +189,7 @@ Terraform sees these as completely different resources.
 - ⏱️ **Downtime**: ~30-60 seconds during sink recreation
 
 **Folder Mode (folder-level)**:
+
 - ⚠️ **Resources**: ALL recreated (module paths + scope change)
 - 🔄 **Scope Change**: Sinks move from project → folder level
 - 🔄 **IAM Change**: Bindings move from project → folder level
@@ -199,7 +213,7 @@ terraform state pull > backup-state.json
 cat moved-blocks.tf
 
 # 4. Update your configuration to v0.3.0
-# (Keep same variables for project mode, or add folder_id for organization)
+# (Keep same variables for project mode, or add monitored_folder_ids for organization)
 
 # 5. Upgrade Terraform providers
 terraform init -upgrade
@@ -251,6 +265,7 @@ If you prefer a clean slate or have simple dev/test environments:
 If you need to rollback:
 
 1. Restore your Terraform state backup
+
    ```bash
    terraform state push backup-state.json
    ```
@@ -258,6 +273,7 @@ If you need to rollback:
 2. Revert your configuration to use `project_id`
 
 3. Pin to the old version
+
    ```hcl
    version = "0.2.8"
    ```
@@ -265,10 +281,13 @@ If you need to rollback:
 ## Required Permissions for Migration
 
 ### Project Mode (no change needed)
+
 - Same as before: project-level IAM and logging permissions
 
 ### Folder Mode (new requirements)
+
 You need these **additional** permissions:
+
 - `resourcemanager.folders.get`
 - `resourcemanager.folders.setIamPolicy`
 - `logging.sinks.create` (at folder level)
@@ -277,13 +296,14 @@ You need these **additional** permissions:
 ## Compatibility Matrix
 
 | Version | Single Project | Folder-Level | Hybrid Mode |
-|---------|---------------|--------------|-------------|
-| 0.2.x   | ✅            | ❌           | ❌          |
-| 0.3.0+  | ✅            | ✅           | ✅          |
+|---------|----------------|--------------|-------------|
+| 0.2.x   | ✅             | ❌           | ❌          |
+| 0.3.0+  | ✅             | ✅           | ✅          |
 
 ## Support
 
 If you encounter issues during migration:
+
 1. Check the [examples/](../examples/) directory for reference configurations
 2. Review the updated [README.md](../README.md)
 3. Contact Masthead Data support
@@ -291,23 +311,28 @@ If you encounter issues during migration:
 ## Changelog Summary
 
 ### Added
+
 - Folder mode with folder-level logging
 - Hybrid mode for folder + additional projects
 - Shared logging infrastructure module
 - Validation for deployment mode selection
-- New outputs: `deployment_mode`, `folder_id`, `monitored_project_ids`
+- New outputs: `deployment_mode`, `monitored_folder_ids`, `monitored_project_ids`, `deployment_project_id`
 
 ### Changed
+
 - `project_id` is now optional (required for project mode only)
 - All service modules refactored to use shared infrastructure
 - IAM bindings now support both folder and project levels
 - Output structure changed for `logging_sink_id` and `logging_sink_writer_identity`
 
 ### Deprecated
+
 - None (backward compatible for project mode)
 
 ### Removed
+
 - None
 
 ### Fixed
+
 - None

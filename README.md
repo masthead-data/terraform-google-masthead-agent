@@ -71,8 +71,9 @@ module "masthead_agent" {
   version = ">=0.3.0"
 
   # Folder mode: folder + deployment project
-  folder_id             = var.folder_id  # e.g., "folders/123456789" or "123456789"
+  monitored_folder_ids             = var.monitored_folder_ids  # e.g., ["folders/123456789"] or ["123456789"]
   deployment_project_id = var.deployment_project_id
+  organization_id               = "123456789"  # Required for Analytics Hub deployed at folder level
 
   enable_apis                  = true
   enable_privatelogviewer_role = true
@@ -108,12 +109,13 @@ module "masthead_agent" {
   version = ">=0.3.0"
 
   # Hybrid mode: folder + additional projects
-  folder_id              = var.folder_id
-  deployment_project_id  = var.deployment_project_id
+  monitored_folder_ids              = var.monitored_folder_ids  # e.g., ["folders/123456789"] or ["123456789"]
   monitored_project_ids  = [
     "special-project-1",
     "external-data-project"
   ]
+  deployment_project_id  = var.deployment_project_id
+  organization_id        = "123456789"  # Required for Analytics Hub deployed at folder level
 
   enable_modules = {
     bigquery      = true
@@ -143,13 +145,18 @@ module "masthead_agent" {
   project_id = var.project_id
 
   # FOLDER: Set folder_id + deployment_project_id
-  # folder_id             = var.folder_id
+  # monitored_folder_ids             = var.monitored_folder_ids  # e.g., ["folders/123456789"] or ["123456789"]
   # deployment_project_id = var.deployment_project_id
+  # organization_id        = "123456789"  # Required for Analytics Hub deployed at folder level
 
   # HYBRID: Set folder_id + deployment_project_id + monitored_project_ids
-  # folder_id             = var.folder_id
+  # monitored_folder_ids             = var.monitored_folder_ids  # e.g., ["folders/123456789"] or ["123456789"]
+  # monitored_project_ids  = [
+  #   "project-1",
+  #   "project-2"
+  # ]
   # deployment_project_id = var.deployment_project_id
-  # monitored_project_ids = ["project-1", "project-2"]
+  # organization_id        = "123456789"  # Required for Analytics Hub deployed at folder level
 
   # Module configuration
   enable_modules = {

@@ -27,12 +27,10 @@ resource "google_organization_iam_custom_role" "analyticshub_custom_role_folder"
   org_id      = var.organization_id
   role_id     = "analyticsHubSubscriptionViewer"
   title       = "Analytics Hub Subscription Viewer"
-  description = "Custom role to view subscriptions for Analytics Hub listings"
+  description = "Custom role for Masthead Analytics Hub integration"
   permissions = [
     "analyticshub.listings.viewSubscriptions"
   ]
-  project     = var.project_id
-  description = "Custom role to Masthead Analytics Hub integration"
 }
 
 # Custom role for Analytics Hub subscription viewing at project level
