@@ -170,7 +170,8 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.9...HEAD
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.10...HEAD
+[0.2.10]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.7...v0.2.8
 [0.2.7]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.6...v0.2.7
