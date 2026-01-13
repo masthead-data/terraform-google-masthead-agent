@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 -->
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -18,6 +19,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+## [0.3.0] - 2025-11-30
+
+### Added
+
+- **🏢 Folder Mode**: Folder-level log sink support for monitoring all projects under a GCP folder
+- **🔄 Hybrid Mode**: Support for monitoring folder + additional specific projects simultaneously
+- **📦 Shared Logging Infrastructure Module**: New reusable module for Pub/Sub and logging sink management
+- **🔍 Deployment Mode Detection**: Automatic validation and mode detection (project/folder/hybrid)
+- **📊 Enhanced Outputs**: New outputs for `deployment_mode`, `folder_id`, and `monitored_project_ids`
+- **📝 Configuration Examples**: Added example tfvars for all three deployment modes
+- **📖 Migration Guide**: Comprehensive guide for upgrading from v0.2.x to v0.3.0
+- **BigQuery Folder Viewer**: Added `roles/resourcemanager.folderViewer` role for BigQuery service account on monitored folders to enable folder resource discovery
+
+### Changed
+
+- **⚙️ Variable Structure**: `project_id` is now optional and used only for project mode
+- **🏗️ Architecture**: All service modules (BigQuery, Dataform, Dataplex) refactored to use shared infrastructure
+- **🔐 IAM Flexibility**: IAM bindings now support both folder-level and project-level assignments
+- **📤 Output Structure**: `logging_sink_id` and `logging_sink_writer_identity` now return different formats based on mode
+- **📚 Documentation**: Completely rewritten README with architecture diagrams and mode explanations
+
+### Fixed
+
+- Proper handling of folder ID formats (supports both `folders/123` and `123`)
+- Correct resource naming and label propagation across all modules
+
+### Breaking Changes
+
+⚠️ **Backward Compatible for Project Mode**: Existing single-project configurations continue to work without changes.
+
+For users migrating to folder mode, see [MIGRATION.md](./MIGRATION.md) for detailed upgrade instructions.
 
 ## [0.2.10] - 2026-01-12
 
@@ -170,7 +203,8 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.10...HEAD
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.10...v0.3.0
 [0.2.10]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.7...v0.2.8

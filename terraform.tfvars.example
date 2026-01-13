@@ -1,10 +1,49 @@
 # Example terraform.tfvars file
 # Copy this file to terraform.tfvars and customize the values
 
-# Required: Your GCP project ID
+# =============================================================================
+# DEPLOYMENT MODE SELECTION
+# =============================================================================
+# Choose ONE of the following deployment modes:
+
+# -----------------------------------------------------------------------------
+# OPTION 1: PROJECT MODE (Single Project)
+# Use this for smaller deployments or single-project setups
+# -----------------------------------------------------------------------------
 project_id = "YOUR_PROJECT_ID"
 
-# Optional: Enable/disable specific modules (all enabled by default)
+# -----------------------------------------------------------------------------
+# OPTION 2: FOLDER MODE (Multiple Folders)
+# Use this for folder-level deployments to capture logs from multiple GCP folders
+# Comment out project_id above and uncomment below:
+# -----------------------------------------------------------------------------
+# deployment_project_id = "YOUR_DEPLOYMENT_PROJECT_ID"
+# monitored_folder_ids = [
+#   "folders/123456789",  # Folder 1
+#   "folders/987654321",  # Folder 2
+# ]
+# organization_id = "organizations/111111111"  # Required for custom roles
+
+# -----------------------------------------------------------------------------
+# OPTION 3: HYBRID MODE (Folders + Additional Projects)
+# Use this when you need folder-level monitoring PLUS specific additional projects
+# Comment out project_id above and uncomment below:
+# -----------------------------------------------------------------------------
+# deployment_project_id = "YOUR_DEPLOYMENT_PROJECT_ID"
+# monitored_folder_ids = [
+#   "folders/123456789",
+# ]
+# monitored_project_ids = [
+#   "additional-project-1",
+#   "additional-project-2",
+# ]
+# organization_id = "organizations/111111111"
+
+# =============================================================================
+# OPTIONAL SETTINGS
+# =============================================================================
+
+# Enable/disable specific modules (all enabled by default)
 # enable_modules = {
 #   bigquery      = true
 #   dataform      = true
@@ -12,13 +51,13 @@ project_id = "YOUR_PROJECT_ID"
 #   analytics_hub = true
 # }
 
-# Optional: Enable required Google Cloud APIs (enabled by default)
+# Enable required Google Cloud APIs (enabled by default)
 # enable_apis = true
 
-# Optional: Enable Private Log Viewer role (enabled by default)
+# Enable Private Log Viewer role (enabled by default)
 # enable_privatelogviewer_role = true
 
-# Optional: Add custom labels to all resources
+# Add custom labels to all resources
 # labels = {
 #   environment = "production"
 #   team        = "data"
