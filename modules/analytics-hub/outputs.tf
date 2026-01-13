@@ -1,5 +1,5 @@
 output "analyticshub_custom_role_id" {
-  description = "ID of the custom Analytics Hub Subscription Viewer role"
+  description = "ID of the custom Analytics Hub role"
   value = local.has_folders ? (
     length(google_organization_iam_custom_role.analyticshub_custom_role_folder) > 0 ?
     google_organization_iam_custom_role.analyticshub_custom_role_folder[0].id : null

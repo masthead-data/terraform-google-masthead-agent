@@ -322,10 +322,34 @@ moved {
   to   = ${AGENT_KEY}.module.dataplex[0].google_project_service.dataplex_apis["${KEY_BARE}:bigquery.googleapis.com"]
 }
 
+# Dataplex IAM - dataProductsViewer
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_roles["roles/dataplex.dataProductsViewer"]
+  to   = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_project_roles["${KEY_BARE}-roles/dataplex.dataProductsViewer"]
+}
+
 # Dataplex IAM - dataScanDataViewer (default role when editing disabled)
 moved {
   from = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_roles["roles/dataplex.dataScanDataViewer"]
   to   = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_project_roles["${KEY_BARE}-roles/dataplex.dataScanDataViewer"]
+}
+
+# Dataplex IAM - dataScanEditor (when editing enabled)
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_roles["roles/dataplex.dataScanEditor"]
+  to   = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_project_roles["${KEY_BARE}-roles/dataplex.dataScanEditor"]
+}
+
+# Dataplex IAM - bigquery.jobUser (when editing enabled)
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_roles["roles/bigquery.jobUser"]
+  to   = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_project_roles["${KEY_BARE}-roles/bigquery.jobUser"]
+}
+
+# Dataplex IAM - storageDataReader (when editing enabled)
+moved {
+  from = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_roles["roles/dataplex.storageDataReader"]
+  to   = ${AGENT_KEY}.module.dataplex[0].google_project_iam_member.masthead_dataplex_project_roles["${KEY_BARE}-roles/dataplex.storageDataReader"]
 }
 
 EOF
@@ -362,7 +386,7 @@ moved {
   to   = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_member.masthead_analyticshub_project_roles["${KEY_BARE}-viewer"]
 }
 
-# Analytics Hub IAM - custom subscription viewer
+# Analytics Hub IAM - custom role
 moved {
   from = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_member.masthead_analyticshub_roles["subscription_viewer"]
   to   = ${AGENT_KEY}.module.analytics_hub[0].google_project_iam_member.masthead_analyticshub_project_roles["${KEY_BARE}-custom"]

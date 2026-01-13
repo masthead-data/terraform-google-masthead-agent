@@ -35,6 +35,7 @@ EOT
   # Determine roles based on editing permissions
   dataplex_roles = var.enable_datascan_editing ? toset([
     "roles/dataplex.dataProductsViewer",
+    "roles/dataplex.dataScanDataViewer",
     "roles/dataplex.dataScanEditor",
     "roles/bigquery.jobUser",
     "roles/dataplex.storageDataReader"
