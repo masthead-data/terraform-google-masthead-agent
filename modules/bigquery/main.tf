@@ -69,7 +69,7 @@ resource "google_folder_iam_member" "masthead_bigquery_folder_roles" {
   for_each = {
     for pair in flatten([
       for folder_id in var.monitored_folder_ids : [
-        for role in ["roles/bigquery.metadataViewer", "roles/bigquery.resourceViewer"] : {
+        for role in ["roles/bigquery.metadataViewer", "roles/bigquery.resourceViewer", "roles/resourcemanager.folderViewer"] : {
           folder_id = folder_id
           role      = role
           key       = "${folder_id}-${role}"

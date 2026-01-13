@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **📊 Enhanced Outputs**: New outputs for `deployment_mode`, `folder_id`, and `monitored_project_ids`
 - **📝 Configuration Examples**: Added example tfvars for all three deployment modes
 - **📖 Migration Guide**: Comprehensive guide for upgrading from v0.2.x to v0.3.0
+- **BigQuery Folder Viewer**: Added `roles/resourcemanager.folderViewer` role for BigQuery service account on monitored folders to enable folder resource discovery
 
 ### Changed
 
