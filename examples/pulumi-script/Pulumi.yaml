@@ -1,0 +1,15 @@
+name: pulumi-google-masthead-agent
+description: A minimal Google Cloud Python Pulumi program
+runtime:
+  name: python
+  options:
+    toolchain: pip
+    virtualenv: .venv
+packages:
+  masthead-agent:
+    source: terraform-module
+    version: 0.1.8
+    parameters:
+      - masthead-data/masthead-agent/google
+      - 0.3.0
+      - masthead-agent
