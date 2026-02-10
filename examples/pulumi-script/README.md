@@ -15,7 +15,7 @@ Install Pulumi CLI:
 1. Install required Python packages:
 
     ```bash
-    pulumi package add terraform-module masthead-data/masthead-agent/google 0.3.0 masthead-agent
+    pulumi package add terraform-module masthead-data/masthead-agent/google [VERSION] masthead-agent
     ```
 
 2. Configure Masthead Agent stack - [see example](./__main__.py) for reference.
