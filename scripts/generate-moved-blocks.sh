@@ -176,6 +176,18 @@ moved {
   to   = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_bigquery_project_roles["${KEY_BARE}-roles/bigquery.resourceViewer"]
 }
 
+# BigQuery Custom Role
+moved {
+  from = ${AGENT_KEY}.module.bigquery[0].google_project_iam_custom_role.masthead_bigquery_custom_role
+  to   = ${AGENT_KEY}.module.bigquery[0].google_project_iam_custom_role.masthead_bigquery_custom_role_project["${KEY_BARE}"]
+}
+
+# BigQuery Custom Role IAM Member
+moved {
+  from = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_bigquery_custom_role_member
+  to   = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_bigquery_project_custom_role["${KEY_BARE}"]
+}
+
 # Private Log Viewer IAM
 moved {
   from = ${AGENT_KEY}.module.bigquery[0].google_project_iam_member.masthead_privatelogviewer_role[0]
