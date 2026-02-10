@@ -1,5 +1,5 @@
-# BigQuery module - handles logging and IAM for BigQuery monitoring
-# Note: Provider is configured at the root level
+# BigQuery Module - IAM and Logging for Masthead Agent
+# Supports both folder-level (organization) and project-level (project) configurations
 
 locals {
   resource_names = {
@@ -12,61 +12,9 @@ locals {
   common_labels = merge(var.labels, {
     component = "bigquery"
   })
-}
 
-# Enable required Google Cloud APIs (optional)
-resource "google_project_service" "required_apis" {
-  for_each = var.enable_apis ? toset([
-    "pubsub.googleapis.com",
-    "iam.googleapis.com",
-    "logging.googleapis.com",
-    "bigquery.googleapis.com"
-  ]) : toset([])
-
-  project = var.project_id
-  service = each.value
-
-  disable_on_destroy         = false
-  disable_dependent_services = false
-}
-
-# Create Pub/Sub topic for BigQuery audit logs
-resource "google_pubsub_topic" "masthead_topic" {
-  depends_on = [google_project_service.required_apis]
-
-  project = var.project_id
-  name    = local.resource_names.topic
-
-  labels = local.common_labels
-}
-
-# Create Pub/Sub subscription for the agent to consume messages
-resource "google_pubsub_subscription" "masthead_agent_subscription" {
-  project                    = var.project_id
-  name                       = local.resource_names.subscription
-  topic                      = google_pubsub_topic.masthead_topic.id
-  message_retention_duration = "86400s" # 24 hours
-  ack_deadline_seconds       = 60
-
-  labels = local.common_labels
-
-  # Prevent subscription from expiring
-  expiration_policy {
-    ttl = ""
-  }
-}
-
-# Create logging sink to capture BigQuery audit logs
-resource "google_logging_project_sink" "masthead_sink" {
-  depends_on = [google_project_service.required_apis]
-
-  project     = var.project_id
-  name        = local.resource_names.sink
-  description = "Masthead Agent log sink for BigQuery audit logs"
-  destination = "pubsub.googleapis.com/${google_pubsub_topic.masthead_topic.id}"
-
-  # Enhanced filter for comprehensive BigQuery monitoring
-  filter = <<-EOT
+  # Log filter for BigQuery monitoring
+  bigquery_log_filter = <<-EOT
 (
   protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows" OR
   protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.ReadRows" OR
@@ -81,60 +29,137 @@ resource "google_logging_project_sink" "masthead_sink" {
 )
 EOT
 
-  unique_writer_identity = true
+  # Determine if we're operating at folder or project level
+  has_folders = length(var.monitored_folder_ids) > 0
+
+  # Projects where IAM bindings need to be applied (only when not using folders)
+  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
 }
 
-# Grant Cloud Logging service account permission to publish to Pub/Sub topic
-resource "google_pubsub_topic_iam_member" "logging_pubsub_publisher" {
-  project = var.project_id
-  topic   = google_pubsub_topic.masthead_topic.name
-  role    = "roles/pubsub.publisher"
-  member  = google_logging_project_sink.masthead_sink.writer_identity
+# Enable BigQuery API in monitored projects
+resource "google_project_service" "bigquery_api" {
+  for_each = var.enable_apis ? toset(var.monitored_project_ids) : toset([])
+
+  project = each.value
+  service = "bigquery.googleapis.com"
+
+  disable_on_destroy         = false
+  disable_dependent_services = false
 }
 
-# Grant Masthead service account subscriber role on the subscription
-resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscriber" {
-  project      = var.project_id
-  subscription = google_pubsub_subscription.masthead_agent_subscription.name
-  role         = "roles/pubsub.subscriber"
-  member       = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
+# Shared Logging Infrastructure (Pub/Sub + Sinks)
+module "logging_infrastructure" {
+  source = "../logging-infrastructure"
+
+  pubsub_project_id        = var.pubsub_project_id
+  monitored_folder_ids     = var.monitored_folder_ids
+  monitored_project_ids    = var.monitored_project_ids
+  component_name           = "bigquery"
+  topic_name               = local.resource_names.topic
+  subscription_name        = local.resource_names.subscription
+  sink_name                = local.resource_names.sink
+  log_filter               = local.bigquery_log_filter
+  masthead_service_account = var.masthead_service_accounts.bigquery_sa
+  enable_apis              = var.enable_apis
+  labels                   = local.common_labels
 }
 
-# Grant Masthead service account required BigQuery roles
-resource "google_project_iam_member" "masthead_bigquery_roles" {
-  for_each = toset([
-    "roles/bigquery.metadataViewer",
-    "roles/bigquery.resourceViewer"
-  ])
+# IAM: Grant Masthead service account required BigQuery roles at folder level
+resource "google_folder_iam_member" "masthead_bigquery_folder_roles" {
+  for_each = {
+    for pair in flatten([
+      for folder_id in var.monitored_folder_ids : [
+        for role in ["roles/bigquery.metadataViewer", "roles/bigquery.resourceViewer", "roles/resourcemanager.folderViewer"] : {
+          folder_id = folder_id
+          role      = role
+          key       = "${folder_id}-${role}"
+        }
+      ]
+    ]) : pair.key => pair
+  }
 
-  project = var.project_id
-  role    = each.value
+  folder = each.value.folder_id
+  role   = each.value.role
+  member = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
+}
+
+# IAM: Grant Masthead service account required BigQuery roles at project level
+resource "google_project_iam_member" "masthead_bigquery_project_roles" {
+  for_each = {
+    for pair in flatten([
+      for project_id in local.iam_target_projects : [
+        for role in ["roles/bigquery.metadataViewer", "roles/bigquery.resourceViewer"] : {
+          project_id = project_id
+          role       = role
+          key        = "${project_id}-${role}"
+        }
+      ]
+    ]) : pair.key => pair
+  }
+
+  project = each.value.project_id
+  role    = each.value.role
   member  = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
 }
 
-# Grant Masthead retro service account Private Log Viewer role (optional)
-resource "google_project_iam_member" "masthead_privatelogviewer_role" {
-  count = var.enable_privatelogviewer_role ? 1 : 0
+# IAM: Grant Masthead retro service account Private Log Viewer role at folder level
+resource "google_folder_iam_member" "masthead_privatelogviewer_folder_role" {
+  for_each = var.enable_privatelogviewer_role ? toset(var.monitored_folder_ids) : toset([])
 
-  project = var.project_id
+  folder = each.value
+  role   = "roles/logging.privateLogViewer"
+  member = "serviceAccount:${var.masthead_service_accounts.retro_sa}"
+}
+
+# IAM: Grant Masthead retro service account Private Log Viewer role at project level
+resource "google_project_iam_member" "masthead_privatelogviewer_project_role" {
+  for_each = var.enable_privatelogviewer_role && !local.has_folders ? toset(local.iam_target_projects) : toset([])
+
+  project = each.value
   role    = "roles/logging.privateLogViewer"
   member  = "serviceAccount:${var.masthead_service_accounts.retro_sa}"
 }
 
-# Create Custom Role for BigQuery
-resource "google_project_iam_custom_role" "masthead_bigquery_custom_role" {
-  role_id = "mastheadBigQueryCustomRole"
-  title   = "Masthead BigQuery Custom Role"
+# Custom role for BigQuery shared dataset usage at organization level
+resource "google_organization_iam_custom_role" "masthead_bigquery_custom_role_folder" {
+  count = local.has_folders && var.organization_id != null ? 1 : 0
+
+  org_id      = var.organization_id
+  role_id     = "mastheadBigQueryCustomRole"
+  title       = "Masthead BigQuery Custom Role"
+  description = "Custom role for Masthead BigQuery agent"
   permissions = [
     "bigquery.datasets.listSharedDatasetUsage"
   ]
-  project     = var.project_id
-  description = "Custom role for Masthead BigQuery agent"
 }
 
-# Grant Masthead service account the custom role
-resource "google_project_iam_member" "masthead_bigquery_custom_role_member" {
-  project = var.project_id
-  role    = google_project_iam_custom_role.masthead_bigquery_custom_role.id
+# Custom role for BigQuery shared dataset usage at project level
+resource "google_project_iam_custom_role" "masthead_bigquery_custom_role_project" {
+  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
+
+  project     = each.value
+  role_id     = "mastheadBigQueryCustomRole"
+  title       = "Masthead BigQuery Custom Role"
+  description = "Custom role for Masthead BigQuery agent"
+  permissions = [
+    "bigquery.datasets.listSharedDatasetUsage"
+  ]
+}
+
+# IAM: Grant custom role at folder level
+resource "google_folder_iam_member" "masthead_bigquery_folder_custom_role" {
+  for_each = local.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
+
+  folder = each.value
+  role   = google_organization_iam_custom_role.masthead_bigquery_custom_role_folder[0].id
+  member = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
+}
+
+# IAM: Grant custom role at project level
+resource "google_project_iam_member" "masthead_bigquery_project_custom_role" {
+  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
+
+  project = each.value
+  role    = google_project_iam_custom_role.masthead_bigquery_custom_role_project[each.value].id
   member  = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
 }

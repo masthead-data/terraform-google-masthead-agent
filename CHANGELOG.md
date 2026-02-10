@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 -->
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -18,6 +19,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+## [0.3.0] - 2026-02-10
+
+### Added
+
+- Folder-level log sink support for monitoring all projects under a GCP folder
+- Support for monitoring folders + projects simultaneously
+- BigQuery Folder Viewer: Added `roles/resourcemanager.folderViewer` role for BigQuery service account on monitored folders to enable folder resource discovery
+
+### Changed
+
+- `project_id` is now optional and used only for project mode
+- All service modules (BigQuery, Dataform, Dataplex) refactored to use a PubSub topic shared across the organization
+- IAM bindings now support both folder-level and project-level assignments
+- Output Structure: `logging_sink_id` and `logging_sink_writer_identity` now return different formats based on mode
+
+### Breaking Changes
+
+⚠️ **Backward Compatible for Project Mode**: Existing single-project configurations continue to work without changes.
+
+For users migrating to folder mode, see [MIGRATION_0.3.0.md](./MIGRATION_0.3.0.md) for detailed upgrade instructions.
 
 ## [0.2.10] - 2026-01-12
 
@@ -170,7 +192,8 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.10...HEAD
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.10...v0.3.0
 [0.2.10]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.8...v0.2.9
 [0.2.8]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.7...v0.2.8

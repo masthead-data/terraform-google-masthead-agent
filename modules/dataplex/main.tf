@@ -1,5 +1,5 @@
-# Dataplex module - handles logging and IAM for Dataplex monitoring
-# Note: Provider is configured at the root level
+# Dataplex Module - IAM and Logging for Masthead Agent
+# Supports both folder-level (organization) and project-level (project) configurations
 
 locals {
   resource_names = {
@@ -12,61 +12,9 @@ locals {
   common_labels = merge(var.labels, {
     component = "dataplex"
   })
-}
 
-# Enable required Google Cloud APIs (optional)
-resource "google_project_service" "required_apis" {
-  for_each = var.enable_apis ? toset([
-    "pubsub.googleapis.com",
-    "logging.googleapis.com",
-    "dataplex.googleapis.com",
-    "bigquery.googleapis.com"
-  ]) : toset([])
-
-  project = var.project_id
-  service = each.value
-
-  disable_on_destroy         = false
-  disable_dependent_services = false
-}
-
-# Create Pub/Sub topic for Dataplex audit logs
-resource "google_pubsub_topic" "masthead_dataplex_topic" {
-  depends_on = [google_project_service.required_apis]
-
-  project = var.project_id
-  name    = local.resource_names.topic
-
-  labels = local.common_labels
-}
-
-# Create Pub/Sub subscription for the agent to consume messages
-resource "google_pubsub_subscription" "masthead_dataplex_subscription" {
-  project                    = var.project_id
-  name                       = local.resource_names.subscription
-  topic                      = google_pubsub_topic.masthead_dataplex_topic.id
-  message_retention_duration = "86400s" # 24 hours
-  ack_deadline_seconds       = 60
-
-  labels = local.common_labels
-
-  # Prevent subscription from expiring
-  expiration_policy {
-    ttl = ""
-  }
-}
-
-# Create logging sink to capture Dataplex audit logs
-resource "google_logging_project_sink" "masthead_dataplex_sink" {
-  depends_on = [google_project_service.required_apis]
-
-  project     = var.project_id
-  name        = local.resource_names.sink
-  description = "Masthead Dataplex log sink for audit logs"
-  destination = "pubsub.googleapis.com/${google_pubsub_topic.masthead_dataplex_topic.id}"
-
-  # Enhanced filter for comprehensive Dataplex monitoring
-  filter = <<-EOT
+  # Log filter for Dataplex monitoring
+  dataplex_log_filter = <<-EOT
 (
   jsonPayload.@type="type.googleapis.com/google.cloud.dataplex.v1.DataScanEvent" OR
   protoPayload.methodName="google.cloud.dataplex.v1.DataScanService.CreateDataScan" OR
@@ -78,29 +26,16 @@ resource "google_logging_project_sink" "masthead_dataplex_sink" {
 )
 EOT
 
-  unique_writer_identity = true
-}
+  # Determine if we're operating at folder or project level
+  has_folders = length(var.monitored_folder_ids) > 0
 
-# Grant Cloud Logging service account permission to publish to Pub/Sub topic
-resource "google_pubsub_topic_iam_member" "logging_pubsub_publisher" {
-  project = var.project_id
-  topic   = google_pubsub_topic.masthead_dataplex_topic.name
-  role    = "roles/pubsub.publisher"
-  member  = google_logging_project_sink.masthead_dataplex_sink.writer_identity
-}
+  # Projects where IAM bindings need to be applied (only when not using folders)
+  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
 
-# Grant Masthead service account subscriber role on the subscription
-resource "google_pubsub_subscription_iam_member" "masthead_subscription_subscriber" {
-  project      = var.project_id
-  subscription = google_pubsub_subscription.masthead_dataplex_subscription.name
-  role         = "roles/pubsub.subscriber"
-  member       = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
-}
-
-# Grant Masthead service account required Dataplex roles
-resource "google_project_iam_member" "masthead_dataplex_roles" {
-  for_each = var.enable_datascan_editing ? toset([
+  # Determine roles based on editing permissions
+  dataplex_roles = var.enable_datascan_editing ? toset([
     "roles/dataplex.dataProductsViewer",
+    "roles/dataplex.dataScanDataViewer",
     "roles/dataplex.dataScanEditor",
     "roles/bigquery.jobUser",
     "roles/dataplex.storageDataReader"
@@ -108,8 +43,75 @@ resource "google_project_iam_member" "masthead_dataplex_roles" {
     "roles/dataplex.dataProductsViewer",
     "roles/dataplex.dataScanDataViewer"
   ])
+}
 
-  project = var.project_id
-  role    = each.value
+# Enable Dataplex and BigQuery APIs in monitored projects
+resource "google_project_service" "dataplex_apis" {
+  for_each = var.enable_apis ? toset(flatten([
+    for project_id in var.monitored_project_ids : [
+      "${project_id}:dataplex.googleapis.com",
+      "${project_id}:bigquery.googleapis.com"
+    ]
+  ])) : toset([])
+
+  project = split(":", each.value)[0]
+  service = split(":", each.value)[1]
+
+  disable_on_destroy         = false
+  disable_dependent_services = false
+}
+
+# Shared Logging Infrastructure (Pub/Sub + Sinks)
+module "logging_infrastructure" {
+  source = "../logging-infrastructure"
+
+  pubsub_project_id        = var.pubsub_project_id
+  monitored_folder_ids     = var.monitored_folder_ids
+  monitored_project_ids    = var.monitored_project_ids
+  component_name           = "dataplex"
+  topic_name               = local.resource_names.topic
+  subscription_name        = local.resource_names.subscription
+  sink_name                = local.resource_names.sink
+  log_filter               = local.dataplex_log_filter
+  masthead_service_account = var.masthead_service_accounts.dataplex_sa
+  enable_apis              = var.enable_apis
+  labels                   = local.common_labels
+}
+
+# IAM: Grant Masthead service account required Dataplex roles at folder level
+resource "google_folder_iam_member" "masthead_dataplex_folder_roles" {
+  for_each = {
+    for pair in flatten([
+      for folder_id in var.monitored_folder_ids : [
+        for role in local.dataplex_roles : {
+          folder_id = folder_id
+          role      = role
+          key       = "${folder_id}-${role}"
+        }
+      ]
+    ]) : pair.key => pair
+  }
+
+  folder = each.value.folder_id
+  role   = each.value.role
+  member = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
+}
+
+# IAM: Grant Masthead service account required Dataplex roles at project level
+resource "google_project_iam_member" "masthead_dataplex_project_roles" {
+  for_each = {
+    for pair in flatten([
+      for project_id in local.iam_target_projects : [
+        for role in local.dataplex_roles : {
+          project_id = project_id
+          role       = role
+          key        = "${project_id}-${role}"
+        }
+      ]
+    ]) : pair.key => pair
+  }
+
+  project = each.value.project_id
+  role    = each.value.role
   member  = "serviceAccount:${var.masthead_service_accounts.dataplex_sa}"
 }

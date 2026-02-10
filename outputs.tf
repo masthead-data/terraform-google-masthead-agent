@@ -31,7 +31,7 @@ output "dataplex" {
 output "analytics_hub" {
   description = "Analytics Hub module outputs"
   value = var.enable_modules.analytics_hub ? {
-    analyticshub_subscription_viewer_custom_role_id = module.analytics_hub[0].analyticshub_subscription_viewer_custom_role_id
+    analyticshub_custom_role_id = module.analytics_hub[0].analyticshub_custom_role_id
   } : null
 }
 
@@ -42,9 +42,34 @@ output "enabled_modules" {
   ]
 }
 
-output "project_id" {
-  description = "The GCP project ID where resources were created"
-  value       = var.project_id
+output "deployment_mode" {
+  description = "Deployment mode (project or organization)"
+  value       = local.project_mode ? "project" : "organization"
+}
+
+output "pubsub_project_id" {
+  description = "The GCP project ID where Pub/Sub resources are deployed"
+  value       = local.pubsub_project_id
+}
+
+output "monitored_folder_ids" {
+  description = "The GCP folder IDs being monitored (if applicable)"
+  value       = local.normalized_folder_ids
+}
+
+output "monitored_project_ids" {
+  description = "List of project IDs being monitored directly"
+  value       = local.all_monitored_projects
+}
+
+output "deployment_project_id" {
+  description = "The GCP project ID where Masthead agent is deployed"
+  value       = local.pubsub_project_id
+}
+
+output "organization_id" {
+  description = "The GCP organization ID being monitored (if applicable)"
+  value       = local.numeric_organization_id
 }
 
 output "vpc_service_controls_config" {

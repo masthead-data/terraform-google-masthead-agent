@@ -1,6 +1,19 @@
-variable "project_id" {
+variable "monitored_folder_ids" {
+  type        = list(string)
+  description = "List of GCP folder IDs for folder-level IAM (optional, for folder mode)"
+  default     = []
+}
+
+variable "organization_id" {
   type        = string
-  description = "GCP project ID where resources will be created"
+  description = "GCP organization ID for organization-level custom roles (required for folder mode)"
+  default     = null
+}
+
+variable "monitored_project_ids" {
+  type        = list(string)
+  description = "List of GCP project IDs to monitor (for project mode or hybrid mode)"
+  default     = []
 }
 
 variable "masthead_service_accounts" {

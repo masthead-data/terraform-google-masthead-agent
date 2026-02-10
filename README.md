@@ -6,72 +6,213 @@
 
 This Terraform module deploys infrastructure for Masthead Data to monitor Google Cloud services (BigQuery, Dataform, Dataplex, Analytics Hub) using Pub/Sub topics, Cloud Logging sinks, and IAM bindings.
 
-## Usage examples
+## Deployment Modes
 
-- **Basic** - this example demonstrates minimal configuration using default settings, the simplest way to get started:
+The module supports two deployment modes:
 
-  - Deploys all modules (BigQuery, Dataform, Dataplex, Analytics Hub) with defaults
-  - Uses minimal required variables
-  - No custom labeling applied
+### 📦 Project Mode
 
-    ```hcl
-    variable "project_id" {
-      type        = string
-      description = "The GCP project ID where resources will be created"
-    }
+For single-project setups. All resources (logs, Pub/Sub, IAM) are created in a monitored project.
 
-    provider "google" {
-      project = var.project_id
-    }
+**Use when:** You have a single project or a few projects to monitor.
 
-    module "masthead_agent" {
-      source  = "masthead-data/masthead-agent/google"
-      version = ">=0.2.10"
+### 🏢 Organization Mode
 
-      project_id  = var.project_id
-    }
-    ```
+For multi-project or folder-level monitoring. Creates centralized Pub/Sub infrastructure in a dedicated deployment project with folder-level and/or project-level log sinks.
 
-- **Full** - a deployment with comprehensive configuration and governance:
+**Supports:**
+- One or more GCP folders (monitors all child projects)
+- Additional individual projects (outside of folders)
+- Any combination of folders and projects
 
-  - Complete Module Suite: Enables BigQuery, Dataform, Dataplex, and Analytics Hub
-  - Production Security: Private Log Viewer role or [retrospective log export](https://docs.mastheadata.com/set-up/saas-manual-resource-creation-google-cloud-+-bigquery#export-retrospective-logs)
-  - Enterprise Governance: Comprehensive labeling for compliance and cost management
+**Use when:** You want to monitor multiple projects, use GCP folders, or need centralized log collection.
 
-    ```hcl
-    variable "project_id" {
-      type        = string
-      description = "The GCP project ID where resources will be created"
-    }
+## Usage Examples
 
-    provider "google" {
-      project = var.project_id
-    }
+### Project Mode
 
-    module "masthead_agent" {
-      source                       = "masthead-data/masthead-agent/google"
-      version                      = ">=0.2.10"
+```hcl
+module "masthead_agent" {
+  source  = "masthead-data/masthead-agent/google"
+  version = ">=0.3.0"
 
-      project_id                   = var.project_id
-      enable_apis                  = true
-      enable_privatelogviewer_role = true
-      enable_modules = {
-        bigquery      = true
-        dataform      = true
-        dataplex      = true
-        analytics_hub = true
-      }
-      labels = {
-        environment = "production"
-        team        = "data"
-        cost_center = "engineering"
-        monitoring  = true
-        module      = "masthead-agent"
-      }
-    }
-    ```
+  # Project mode: single project
+  project_id = "project-1"
+}
+```
+
+### Organization Mode
+
+```hcl
+module "masthead_agent" {
+  source  = "masthead-data/masthead-agent/google"
+  version = ">=0.3.0"
+
+  # Organization mode: folders + additional projects
+  monitored_folder_ids  = [
+    "folders/111111111",
+    "folders/222222222"
+  ]
+  monitored_project_ids = [
+    "project-1",
+    "project-2"
+  ]
+  deployment_project_id = "project-3"
+  organization_id       = "123456789"  # Required for custom IAM roles on folders
+
+  labels = {
+    environment = "production"
+  }
+}
+```
+
+### Full Configuration Example
+
+Complete configuration with all options:
+
+```hcl
+module "masthead_agent" {
+  source  = "masthead-data/masthead-agent/google"
+  version = ">=0.3.0"
+
+  # Choose ONE mode:
+
+  # PROJECT MODE: Set project_id only
+  project_id = var.project_id
+
+  # ORGANIZATION MODE: Set deployment_project_id + folders and/or projects
+  # deployment_project_id = var.deployment_project_id
+  # monitored_folder_ids  = ["folders/123456789"]  # Optional: monitor folders
+  # monitored_project_ids = ["project-1", "project-2"]  # Optional: monitor specific projects
+  # organization_id       = "123456789"  # Required when using folders
+
+  # Module configuration
+  enable_modules = {
+    bigquery      = true
+    dataform      = true
+    dataplex      = true
+    analytics_hub = true
+  }
+
+  # Optional features
+  enable_apis                  = true
+  enable_privatelogviewer_role = true  # For retrospective log export
+  enable_datascan_editing      = false # Dataplex DataScan editing permissions
+
+  # Labels for governance and cost management
+  labels = {
+    environment = "production"
+    team        = "data"
+    cost_center = "engineering"
+    monitoring  = "masthead"
+  }
+}
+```
+
+## Architecture
+
+### Project Mode
+
+```text
+┌─────────────────────────────────────┐
+│        Single GCP Project           │
+│                                     │
+│  ┌──────────────┐  ┌─────────────┐  │
+│  │ Log Sinks    │→ │   Pub/Sub   │  │
+│  │ (Project)    │  │   Topics    │  │
+│  └──────────────┘  └─────────────┘  │
+│         ↓                ↓          │
+│  ┌──────────────────────────────┐   │
+│  │       IAM Bindings           │   │
+│  └──────────────────────────────┘   │
+└─────────────────────────────────────┘
+```
+
+### Organization Mode
+
+```text
+┌────────────────────────────────────────┐
+│        GCP Folder(s) (optional)        │
+│  ┌──────────────────────────────────┐  │
+│  │  All Child Projects              │  │
+│  └──────────────────────────────────┘  │
+│              ↓                         │
+│  ┌──────────────────────────────────┐  │
+│  │  Folder-Level Log Sinks          │  │
+│  │  + IAM Bindings (inherited)      │  │
+│  └──────────────────────────────────┘  │
+└────────────────────────────────────────┘
+              ↓
+┌────────────────────────────────────────┐
+│     Additional Projects (optional)     │
+│  ┌──────────────────────────────────┐  │
+│  │  Project-Level Log Sinks         │  │
+│  │  + IAM Bindings                  │  │
+│  └──────────────────────────────────┘  │
+└────────────────────────────────────────┘
+              ↓
+┌────────────────────────────────────────┐
+│           Deployment Project           │
+│  ┌──────────────────────────────────┐  │
+│  │  Centralized Pub/Sub Topics      │  │
+│  │  + Subscriptions                 │  │
+│  └──────────────────────────────────┘  │
+└────────────────────────────────────────┘
+```
+
+## How It Works
+
+### Project Mode
+
+- IAM bindings applied at the **project level**
+- Log sinks created at the **project level**
+- All resources in one project
+
+### Organization Mode
+
+- **For folders**: IAM bindings applied at **folder level** (inherited by all child projects)
+- **For folders**: Log sinks created at **folder level**
+- **For additional projects**: IAM bindings and log sinks applied at **project level**
+- Centralized Pub/Sub in deployment project
+
+## Required GCP Permissions
+
+### For Project Mode
+
+You need these permissions in the target project:
+
+- `logging.sinks.create`
+- `pubsub.topics.create`
+- `pubsub.subscriptions.create`
+- `iam.serviceAccounts.setIamPolicy`
+- `resourcemanager.projects.setIamPolicy`
+
+### For Organization Mode
+
+**When using folders**, you need these permissions at the folder level:
+
+- `logging.sinks.create` (on folder)
+- `resourcemanager.folders.setIamPolicy` (on folder)
+
+**When using folders**, you need these permissions at the organization level:
+
+- `iam.roles.create` (on organization) - Required for creating custom IAM roles
+
+**Always required** for the deployment project:
+
+- `pubsub.topics.create`
+- `pubsub.subscriptions.create`
+- `iam.serviceAccounts.setIamPolicy`
+- `resourcemanager.projects.setIamPolicy`
+
+## Examples
+
+See the `examples/` directory for complete configuration examples:
+
+- `project-mode.tfvars.example` - Single project setup
+- `org-mode.tfvars.example` - Organization mode with folders + projects
 
 ## References
 
-- [Masthead Data Documentation](https://docs.mastheadata.com/saas-manual-resource-creation-google-cloud-+-bigquery)
+- [Masthead Data Documentation](https://docs.mastheadata.com/get-started/integrate-using-iac)
 - [Module in Terraform Registry](https://registry.terraform.io/modules/masthead-data/masthead-agent/google/latest)
