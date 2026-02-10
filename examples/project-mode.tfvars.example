@@ -1,16 +1,8 @@
-# Project Mode Example - Single Project Setup
-# Use this for smaller deployments or single-project setups
+# Project Mode Example
+# Use this for a single- or several projects integrations
 
 # Single project where all resources (logs, Pub/Sub, IAM) will be created
 project_id = "my-data-project"
-
-# Masthead service accounts (update with your values)
-masthead_service_accounts = {
-  bigquery_sa = "masthead-data@masthead-prod.iam.gserviceaccount.com"
-  dataform_sa = "masthead-dataform@masthead-prod.iam.gserviceaccount.com"
-  dataplex_sa = "masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
-  retro_sa    = "retro-data@masthead-prod.iam.gserviceaccount.com"
-}
 
 # Module configuration
 enable_modules = {

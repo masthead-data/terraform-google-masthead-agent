@@ -43,8 +43,8 @@ output "enabled_modules" {
 }
 
 output "deployment_mode" {
-  description = "Deployment mode (project, folder, or hybrid)"
-  value       = local.project_mode ? "project" : (local.hybrid_mode ? "hybrid" : "folder")
+  description = "Deployment mode (project or organization)"
+  value       = local.project_mode ? "project" : "organization"
 }
 
 output "pubsub_project_id" {

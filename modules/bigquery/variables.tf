@@ -15,6 +15,12 @@ variable "monitored_project_ids" {
   default     = []
 }
 
+variable "organization_id" {
+  type        = string
+  description = "GCP organization ID for organization-level custom IAM roles (required for folder mode)"
+  default     = null
+}
+
 variable "masthead_service_accounts" {
   type = object({
     bigquery_sa = string

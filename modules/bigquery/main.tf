@@ -120,20 +120,46 @@ resource "google_project_iam_member" "masthead_privatelogviewer_project_role" {
   member  = "serviceAccount:${var.masthead_service_accounts.retro_sa}"
 }
 
-# Create Custom Role for BigQuery
-resource "google_project_iam_custom_role" "masthead_bigquery_custom_role" {
-  role_id = "mastheadBigQueryCustomRole"
-  title   = "Masthead BigQuery Custom Role"
+# Custom role for BigQuery shared dataset usage at organization level
+resource "google_organization_iam_custom_role" "masthead_bigquery_custom_role_folder" {
+  count = local.has_folders && var.organization_id != null ? 1 : 0
+
+  org_id      = var.organization_id
+  role_id     = "mastheadBigQueryCustomRole"
+  title       = "Masthead BigQuery Custom Role"
+  description = "Custom role for Masthead BigQuery agent"
   permissions = [
     "bigquery.datasets.listSharedDatasetUsage"
   ]
-  project     = var.pubsub_project_id
-  description = "Custom role for Masthead BigQuery agent"
 }
 
-# Grant Masthead service account the custom role
-resource "google_project_iam_member" "masthead_bigquery_custom_role_member" {
-  project = var.pubsub_project_id
-  role    = google_project_iam_custom_role.masthead_bigquery_custom_role.id
+# Custom role for BigQuery shared dataset usage at project level
+resource "google_project_iam_custom_role" "masthead_bigquery_custom_role_project" {
+  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
+
+  project     = each.value
+  role_id     = "mastheadBigQueryCustomRole"
+  title       = "Masthead BigQuery Custom Role"
+  description = "Custom role for Masthead BigQuery agent"
+  permissions = [
+    "bigquery.datasets.listSharedDatasetUsage"
+  ]
+}
+
+# IAM: Grant custom role at folder level
+resource "google_folder_iam_member" "masthead_bigquery_folder_custom_role" {
+  for_each = local.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
+
+  folder = each.value
+  role   = google_organization_iam_custom_role.masthead_bigquery_custom_role_folder[0].id
+  member = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
+}
+
+# IAM: Grant custom role at project level
+resource "google_project_iam_member" "masthead_bigquery_project_custom_role" {
+  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
+
+  project = each.value
+  role    = google_project_iam_custom_role.masthead_bigquery_custom_role_project[each.value].id
   member  = "serviceAccount:${var.masthead_service_accounts.bigquery_sa}"
 }

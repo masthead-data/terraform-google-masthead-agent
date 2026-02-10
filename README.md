@@ -8,125 +8,60 @@ This Terraform module deploys infrastructure for Masthead Data to monitor Google
 
 ## Deployment Modes
 
-The module supports three deployment modes to fit different organizational structures:
+The module supports two deployment modes:
 
-### 📦 Project Mode (Single Project)
+### 📦 Project Mode
 
-For single-project setups. All resources (logs, Pub/Sub, IAM) are created in one project.
+For single-project setups. All resources (logs, Pub/Sub, IAM) are created in a monitored project.
 
-### 🏢 Folder Mode (Folder/Multi-Project)
+**Use when:** You have a single project or a few projects to monitor.
 
-For organizations using GCP folders or monitoring multiple projects. Creates centralized Pub/Sub infrastructure in a dedicated deployment project with folder-level or project-level log sinks.
+### 🏢 Organization Mode
 
-### 🔄 Hybrid Mode (Folder + Project)
+For multi-project or folder-level monitoring. Creates centralized Pub/Sub infrastructure in a dedicated deployment project with folder-level and/or project-level log sinks.
 
-Combines folder-level monitoring with project-level Pub/Sub. Useful for specific use cases requiring both configurations.
+**Supports:**
+- One or more GCP folders (monitors all child projects)
+- Additional individual projects (outside of folders)
+- Any combination of folders and projects
+
+**Use when:** You want to monitor multiple projects, use GCP folders, or need centralized log collection.
 
 ## Usage Examples
 
-### Project Mode - Single Project
-
-Simplest setup for single-project deployments:
+### Project Mode
 
 ```hcl
-variable "project_id" {
-  type        = string
-  description = "The GCP project ID where resources will be created"
-}
-
-provider "google" {
-  project = var.project_id
-}
-
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
   version = ">=0.3.0"
 
   # Project mode: single project
-  project_id = var.project_id
+  project_id = "project-1"
 }
 ```
 
-### Folder Mode - Folder-Level Monitoring
-
-For organizations using GCP folders:
+### Organization Mode
 
 ```hcl
-variable "folder_id" {
-  type        = string
-  description = "GCP folder ID to monitor"
-}
-
-variable "deployment_project_id" {
-  type        = string
-  description = "Project where Pub/Sub will be deployed"
-}
-
-provider "google" {
-  project = var.deployment_project_id
-}
-
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
   version = ">=0.3.0"
 
-  # Folder mode: folder + deployment project
-  monitored_folder_ids             = var.monitored_folder_ids  # e.g., ["folders/123456789"] or ["123456789"]
-  deployment_project_id = var.deployment_project_id
-  organization_id               = "123456789"  # Required for Analytics Hub deployed at folder level
-
-  enable_apis                  = true
-  enable_privatelogviewer_role = true
-
-  labels = {
-    environment = "production"
-    mode        = "folder"
-  }
-}
-```
-
-### Hybrid Mode - Folder + Additional Projects
-
-Monitor a folder plus specific additional projects:
-
-```hcl
-variable "folder_id" {
-  type        = string
-  description = "GCP folder ID to monitor"
-}
-
-variable "deployment_project_id" {
-  type        = string
-  description = "Project where Pub/Sub will be deployed"
-}
-
-provider "google" {
-  project = var.deployment_project_id
-}
-
-module "masthead_agent" {
-  source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.0"
-
-  # Hybrid mode: folder + additional projects
-  monitored_folder_ids              = var.monitored_folder_ids  # e.g., ["folders/123456789"] or ["123456789"]
-  monitored_project_ids  = [
-    "special-project-1",
-    "external-data-project"
+  # Organization mode: folders + additional projects
+  monitored_folder_ids  = [
+    "folders/111111111",
+    "folders/222222222"
   ]
-  deployment_project_id  = var.deployment_project_id
-  organization_id        = "123456789"  # Required for Analytics Hub deployed at folder level
-
-  enable_modules = {
-    bigquery      = true
-    dataform      = true
-    dataplex      = true
-    analytics_hub = true
-  }
+  monitored_project_ids = [
+    "project-1",
+    "project-2"
+  ]
+  deployment_project_id = "project-3"
+  organization_id       = "123456789"  # Required for custom IAM roles on folders
 
   labels = {
     environment = "production"
-    mode        = "hybrid"
   }
 }
 ```
@@ -141,22 +76,15 @@ module "masthead_agent" {
   version = ">=0.3.0"
 
   # Choose ONE mode:
-  # PROJECT: Set project_id only
+
+  # PROJECT MODE: Set project_id only
   project_id = var.project_id
 
-  # FOLDER: Set folder_id + deployment_project_id
-  # monitored_folder_ids             = var.monitored_folder_ids  # e.g., ["folders/123456789"] or ["123456789"]
+  # ORGANIZATION MODE: Set deployment_project_id + folders and/or projects
   # deployment_project_id = var.deployment_project_id
-  # organization_id        = "123456789"  # Required for Analytics Hub deployed at folder level
-
-  # HYBRID: Set folder_id + deployment_project_id + monitored_project_ids
-  # monitored_folder_ids             = var.monitored_folder_ids  # e.g., ["folders/123456789"] or ["123456789"]
-  # monitored_project_ids  = [
-  #   "project-1",
-  #   "project-2"
-  # ]
-  # deployment_project_id = var.deployment_project_id
-  # organization_id        = "123456789"  # Required for Analytics Hub deployed at folder level
+  # monitored_folder_ids  = ["folders/123456789"]  # Optional: monitor folders
+  # monitored_project_ids = ["project-1", "project-2"]  # Optional: monitor specific projects
+  # organization_id       = "123456789"  # Required when using folders
 
   # Module configuration
   enable_modules = {
@@ -170,14 +98,6 @@ module "masthead_agent" {
   enable_apis                  = true
   enable_privatelogviewer_role = true  # For retrospective log export
   enable_datascan_editing      = false # Dataplex DataScan editing permissions
-
-  # Custom service accounts (optional, uses defaults if not specified)
-  masthead_service_accounts = {
-    bigquery_sa = "masthead-data@masthead-prod.iam.gserviceaccount.com"
-    dataform_sa = "masthead-dataform@masthead-prod.iam.gserviceaccount.com"
-    dataplex_sa = "masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
-    retro_sa    = "retro-data@masthead-prod.iam.gserviceaccount.com"
-  }
 
   # Labels for governance and cost management
   labels = {
@@ -197,84 +117,63 @@ module "masthead_agent" {
 ┌─────────────────────────────────────┐
 │        Single GCP Project           │
 │                                     │
-│  ┌──────────────┐  ┌─────────────┐ │
-│  │ Log Sinks    │→ │  Pub/Sub    │ │
-│  │ (Project)    │  │  Topics     │ │
-│  └──────────────┘  └─────────────┘ │
+│  ┌──────────────┐  ┌─────────────┐  │
+│  │ Log Sinks    │→ │   Pub/Sub   │  │
+│  │ (Project)    │  │   Topics    │  │
+│  └──────────────┘  └─────────────┘  │
 │         ↓                ↓          │
-│  ┌──────────────────────────────┐  │
-│  │      IAM Bindings            │  │
-│  └──────────────────────────────┘  │
+│  ┌──────────────────────────────┐   │
+│  │       IAM Bindings           │   │
+│  └──────────────────────────────┘   │
 └─────────────────────────────────────┘
 ```
 
-### Folder Mode
+### Organization Mode
 
 ```text
 ┌────────────────────────────────────────┐
-│         GCP Folder                     │
+│        GCP Folder(s) (optional)        │
 │  ┌──────────────────────────────────┐  │
-│  │  All Child Projects (captured)   │  │
+│  │  All Child Projects              │  │
 │  └──────────────────────────────────┘  │
 │              ↓                         │
 │  ┌──────────────────────────────────┐  │
-│  │  Folder-Level Log Sink           │  │
+│  │  Folder-Level Log Sinks          │  │
+│  │  + IAM Bindings (inherited)      │  │
 │  └──────────────────────────────────┘  │
 └────────────────────────────────────────┘
               ↓
 ┌────────────────────────────────────────┐
-│    Deployment Project                  │
-│  ┌──────────────────────────────────┐  │
-│  │     Pub/Sub Topics & Subs        │  │
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
-```
-
-### Hybrid Mode
-
-```text
-┌────────────────────────────────────────┐
-│         GCP Folder                     │
-│  ┌──────────────────────────────────┐  │
-│  │  All Child Projects (captured)   │  │
-│  └──────────────────────────────────┘  │
-│              ↓                         │
-│  ┌──────────────────────────────────┐  │
-│  │  Folder-Level Log Sink           │  │
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
-              ↓
-┌────────────────────────────────────────┐
-│ Additional Projects (outside folder)   │
+│     Additional Projects (optional)     │
 │  ┌──────────────────────────────────┐  │
 │  │  Project-Level Log Sinks         │  │
+│  │  + IAM Bindings                  │  │
 │  └──────────────────────────────────┘  │
 └────────────────────────────────────────┘
               ↓
 ┌────────────────────────────────────────┐
-│    Deployment Project                  │
+│           Deployment Project           │
 │  ┌──────────────────────────────────┐  │
-│  │     Pub/Sub Topics & Subs        │  │
+│  │  Centralized Pub/Sub Topics      │  │
+│  │  + Subscriptions                 │  │
 │  └──────────────────────────────────┘  │
 └────────────────────────────────────────┘
 ```
 
-## IAM Permissions
+## How It Works
 
 ### Project Mode
 
 - IAM bindings applied at the **project level**
 - Log sinks created at the **project level**
+- All resources in one project
 
-### Folder Mode
+### Organization Mode
 
-- IAM bindings applied at the **folder level** (inherited by all child projects)
-- Log sinks created at the **folder level** with `include_children = true`
-
-### Hybrid Mode
-
-- IAM bindings applied at both **folder level** and **project level** (for additional projects)
-- Log sinks created at both **folder level** and **project level**
+- **For folders**: IAM bindings applied at **folder level** (inherited by all child projects)
+- **For folders**: Log sinks created at **folder level**
+- **For additional projects**: IAM bindings and log sinks applied at **project level**
+- Centralized Pub/Sub in deployment project
 
 ## Required GCP Permissions
 
@@ -288,23 +187,32 @@ You need these permissions in the target project:
 - `iam.serviceAccounts.setIamPolicy`
 - `resourcemanager.projects.setIamPolicy`
 
-### For Folder/Hybrid Mode
+### For Organization Mode
 
-You need these permissions at the folder level:
+**When using folders**, you need these permissions at the folder level:
 
 - `logging.sinks.create` (on folder)
 - `resourcemanager.folders.setIamPolicy` (on folder)
-- Plus project-level permissions for the deployment project (Pub/Sub)
+
+**When using folders**, you need these permissions at the organization level:
+
+- `iam.roles.create` (on organization) - Required for creating custom IAM roles
+
+**Always required** for the deployment project:
+
+- `pubsub.topics.create`
+- `pubsub.subscriptions.create`
+- `iam.serviceAccounts.setIamPolicy`
+- `resourcemanager.projects.setIamPolicy`
 
 ## Examples
 
 See the `examples/` directory for complete configuration examples:
 
 - `project-mode.tfvars.example` - Single project setup
-- `folder-mode.tfvars.example` - Folder-level setup
-- `hybrid-mode.tfvars.example` - Folder + additional projects
+- `org-mode.tfvars.example` - Organization mode with folders + projects
 
 ## References
 
-- [Masthead Data Documentation](https://docs.mastheadata.com/saas-manual-resource-creation-google-cloud-+-bigquery)
+- [Masthead Data Documentation](https://docs.mastheadata.com/get-started/integrate-using-iac)
 - [Module in Terraform Registry](https://registry.terraform.io/modules/masthead-data/masthead-agent/google/latest)

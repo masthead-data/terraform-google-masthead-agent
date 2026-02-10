@@ -16,7 +16,7 @@ variable "project_id" {
 variable "monitored_folder_ids" {
   type        = list(string)
   description = <<-EOT
-    [FOLDER MODE] List of GCP folder IDs for folder-level log sinks.
+    [ORGANIZATION MODE] List of GCP folder IDs for folder-level log sinks.
     Use this to capture logs from all projects under the specified folders.
     Must be used together with deployment_project_id.
     Format: Each folder ID can be "folders/123456789" or just the numeric ID.
@@ -35,7 +35,7 @@ variable "monitored_folder_ids" {
 variable "deployment_project_id" {
   type        = string
   description = <<-EOT
-    [FOLDER MODE] GCP project ID where Pub/Sub topics and subscriptions will be created.
+    [ORGANIZATION MODE] GCP project ID where Pub/Sub topics and subscriptions will be created.
     Required when using monitored_folder_ids or monitored_project_ids for centralized deployments.
     This project will host the centralized logging infrastructure.
   EOT
@@ -50,11 +50,11 @@ variable "deployment_project_id" {
 variable "monitored_project_ids" {
   type        = list(string)
   description = <<-EOT
-    [FOLDER/HYBRID MODE] Additional GCP project IDs to monitor.
+    [ORGANIZATION MODE] Additional GCP project IDs to monitor.
     Creates project-level sinks and IAM bindings for these projects.
     Requires deployment_project_id to specify where centralized Pub/Sub will be created.
 
-    WARNING: Do not include projects that are already inside a monitored_folder_ids folder,
+    WARNING: Do not include projects that are already inside monitored_folder_ids,
     as this will cause duplicate log entries.
   EOT
   default     = []
@@ -68,7 +68,7 @@ variable "monitored_project_ids" {
 variable "organization_id" {
   type        = string
   description = <<-EOT
-    [FOLDER MODE] GCP organization ID for organization-level custom IAM roles.
+    [ORGANIZATION MODE] GCP organization ID for organization-level custom IAM roles.
     Required when using monitored_folder_ids to create custom roles at the organization level.
     Format: organizations/123456789 or just the numeric ID.
   EOT
@@ -140,11 +140,10 @@ variable "labels" {
 
 # Validation: Ensure correct mode is selected
 locals {
-  has_folders  = length(var.monitored_folder_ids) > 0
-  has_projects = length(var.monitored_project_ids) > 0
-  project_mode = var.project_id != null && !local.has_folders && var.deployment_project_id == null
-  folder_mode  = var.deployment_project_id != null && (local.has_folders || local.has_projects) && var.project_id == null
-  hybrid_mode  = var.deployment_project_id != null && local.has_folders && var.project_id != null
+  has_folders       = length(var.monitored_folder_ids) > 0
+  has_projects      = length(var.monitored_project_ids) > 0
+  project_mode      = var.project_id != null && var.deployment_project_id == null
+  organization_mode = var.deployment_project_id != null && var.project_id == null
 
   # Determine which project hosts the Pub/Sub infrastructure
   # Using try() to handle linting when both values are null (validation will catch this at runtime)
@@ -172,18 +171,22 @@ locals {
 resource "null_resource" "validate_configuration" {
   lifecycle {
     precondition {
-      condition     = local.project_mode || local.folder_mode || local.hybrid_mode
+      condition     = local.project_mode || local.organization_mode
       error_message = <<-EOT
-        Invalid configuration. Choose one of:
-        1. PROJECT MODE: Set project_id only (Pub/Sub in same project)
-        2. FOLDER MODE: Set deployment_project_id + monitored_folder_ids and/or monitored_project_ids
-        3. HYBRID MODE: Set deployment_project_id + monitored_folder_ids + project_id (for additional project-level Pub/Sub)
+        Invalid configuration. Choose one of two modes:
+        1. PROJECT MODE: Set project_id only
+        2. ORGANIZATION MODE: Set deployment_project_id + monitored_folder_ids and/or monitored_project_ids
       EOT
     }
 
     precondition {
       condition     = local.pubsub_project_id != null
       error_message = "Either project_id or deployment_project_id must be specified."
+    }
+
+    precondition {
+      condition     = !local.has_folders || var.organization_id != null
+      error_message = "organization_id is required when using monitored_folder_ids to create organization-level custom IAM roles."
     }
   }
 }

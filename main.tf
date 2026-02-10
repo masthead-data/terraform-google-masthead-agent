@@ -22,6 +22,7 @@ module "bigquery" {
   pubsub_project_id     = local.pubsub_project_id
   monitored_folder_ids  = local.normalized_folder_ids
   monitored_project_ids = local.all_monitored_projects
+  organization_id       = local.numeric_organization_id
 
   # Service account and permissions
   masthead_service_accounts    = var.masthead_service_accounts

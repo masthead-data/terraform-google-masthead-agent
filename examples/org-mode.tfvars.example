@@ -1,12 +1,10 @@
-# Folder Mode Example - Folder-Level Setup
-# Use this for folder-level deployments to capture logs from all projects under a folder
+# Organization Mode Example
+# Use this to monitor a list of folders or/and projects.
 
 # Folder ID for folder-level log sinks (captures logs from all child projects)
 monitored_folder_ids = ["folders/123456789"]
-# OR just the numeric ID:
-# monitored_folder_ids = ["123456789"]
 
-# Organization ID for organization-level custom IAM roles (required for Analytics Hub)
+# Organization ID for organization-level custom IAM roles (required for BigQuery and Analytics Hub)
 organization_id = "organizations/123456789"
 # OR just the numeric ID:
 # organization_id = "123456789"
@@ -14,13 +12,12 @@ organization_id = "organizations/123456789"
 # Deployment project where Pub/Sub topics and subscriptions will be created
 deployment_project_id = "masthead-deployment-project"
 
-# Masthead service accounts (update with your values)
-masthead_service_accounts = {
-  bigquery_sa = "masthead-data@masthead-prod.iam.gserviceaccount.com"
-  dataform_sa = "masthead-dataform@masthead-prod.iam.gserviceaccount.com"
-  dataplex_sa = "masthead-dataplex@masthead-prod.iam.gserviceaccount.com"
-  retro_sa    = "retro-data@masthead-prod.iam.gserviceaccount.com"
-}
+# Additional projects to monitor (outside the folder or requiring explicit monitoring)
+monitored_project_ids = [
+  "special-project-1",
+  "special-project-2",
+  "external-data-project"
+]
 
 # Module configuration
 enable_modules = {
@@ -39,5 +36,5 @@ enable_datascan_editing      = false
 labels = {
   service     = "masthead-agent"
   environment = "production"
-  mode        = "folder"
+  mode        = "organization"
 }
