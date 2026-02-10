@@ -1,6 +1,13 @@
 #!/bin/bash
 # Script to generate Terraform 'moved' blocks for migrating from v0.2.x to v0.3.0
 # This helps avoid resource recreation during the module restructuring
+#
+# Usage: ./generate-moved-blocks.sh [MODULE_PREFIX]
+#   MODULE_PREFIX: The module name prefix to search for (default: masthead_agent)
+#
+# Examples:
+#   ./generate-moved-blocks.sh                    # Searches for module.masthead_agent*
+#   ./generate-moved-blocks.sh masthead_agent_us  # Searches for module.masthead_agent_us*
 
 set -e
 
@@ -10,8 +17,12 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Parse command-line arguments
+MODULE_PREFIX="${1:-masthead_agent}"
+
 echo -e "${GREEN}Terraform Masthead Agent Migration Helper${NC}"
 echo "Generating 'moved' blocks to preserve existing resources..."
+echo "Module prefix: ${MODULE_PREFIX}"
 echo ""
 
 # Check if we can access terraform state (local or remote)
@@ -57,11 +68,13 @@ EOF
 STATE_LIST=$(terraform state list)
 
 # Extract enabled modules from state
-MODULES=$(echo "$STATE_LIST" | grep "module.masthead_agent\[" || true)
+# Support both patterns: module.masthead_agent["key"] and module.masthead_agent_us
+MODULES=$(echo "$STATE_LIST" | grep "module.${MODULE_PREFIX}" || true)
 
 if [ -z "$MODULES" ]; then
-    echo -e "${RED}Error: No masthead_agent modules found in state${NC}"
+    echo -e "${RED}Error: No ${MODULE_PREFIX} modules found in state${NC}"
     echo "This script is designed for migrating existing deployments"
+    echo "Try specifying a different module prefix: $0 <module_prefix>"
     exit 1
 fi
 
@@ -74,22 +87,31 @@ if echo "$MODULES" | grep -q "module.logging_infrastructure"; then
     exit 0
 fi
 
-# Detect the masthead_agent keys being used (for_each keys or count index)
-AGENT_KEYS=$(echo "$MODULES" | grep -o 'module.masthead_agent\[[^]]*\]' | sort -u)
+# Detect the module instances
+# Support both patterns:
+# 1. module.masthead_agent["key"] - for_each pattern
+# 2. module.masthead_agent_us - individual module names
+AGENT_KEYS=$(echo "$MODULES" | grep -o "module\.${MODULE_PREFIX}[^\.]" | sed 's/\.$//' | sort -u)
 
 if [ -z "$AGENT_KEYS" ]; then
-    echo -e "${RED}Error: Could not detect masthead_agent module keys${NC}"
+    echo -e "${RED}Error: Could not detect ${MODULE_PREFIX} module instances${NC}"
     exit 1
 fi
 
-echo "Detected masthead_agent instances:"
-echo "$AGENT_KEYS" | sed 's/module.masthead_agent/  - /'
-echo ""
-
-# Track generated blocks
-GENERATED=0
-
-# Generate moved blocks for each masthead_agent instance
+echo "Detected module instances:"
+echo "$AGENT_KEYS" | sed 's/module\./  - /'
+echo ""odule instance
+for AGENT_KEY in $AGENT_KEYS; do
+    # Extract the key value for use in resource keys
+    # For module.masthead_agent["key"] -> use "key"
+    # For module.masthead_agent_us -> use "masthead_agent_us"
+    if [[ "$AGENT_KEY" =~ \[\"(.+)\"\] ]]; then
+        # for_each pattern: module.masthead_agent["masthead-dev"]
+        KEY_BARE="${BASH_REMATCH[1]}"
+    else
+        # Individual module pattern: module.masthead_agent_us
+        KEY_BARE=$(echo "$AGENT_KEY" | sed 's/module\.//')
+    fint instance
 for AGENT_KEY in $AGENT_KEYS; do
     # Extract the key value (e.g., "masthead-dev" from module.masthead_agent["masthead-dev"])
     KEY_VALUE=$(echo "$AGENT_KEY" | sed 's/module.masthead_agent\[\(.*\)\]/\1/')
@@ -428,5 +450,5 @@ echo "4. Run: terraform plan (should show moves, minimal recreations)"
 echo "5. Run: terraform apply"
 echo "6. Delete $OUTPUT_FILE once migration is complete"
 echo ""
-echo -e "${YELLOW}Note: If you have additional monitored_project_ids beyond the for_each key,"
+echo -e "${YELLOW}Note: If you have additional monitored_project_ids beyond the module key,"
 echo "you may need to manually add moved blocks for those projects.${NC}"

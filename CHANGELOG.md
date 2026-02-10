@@ -20,37 +20,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## [0.3.0] - 2025-11-30
+## [0.3.0] - 2026-02-11
 
 ### Added
 
-- **🏢 Folder Mode**: Folder-level log sink support for monitoring all projects under a GCP folder
-- **🔄 Hybrid Mode**: Support for monitoring folder + additional specific projects simultaneously
-- **📦 Shared Logging Infrastructure Module**: New reusable module for Pub/Sub and logging sink management
-- **🔍 Deployment Mode Detection**: Automatic validation and mode detection (project/folder/hybrid)
-- **📊 Enhanced Outputs**: New outputs for `deployment_mode`, `folder_id`, and `monitored_project_ids`
-- **📝 Configuration Examples**: Added example tfvars for all three deployment modes
-- **📖 Migration Guide**: Comprehensive guide for upgrading from v0.2.x to v0.3.0
-- **BigQuery Folder Viewer**: Added `roles/resourcemanager.folderViewer` role for BigQuery service account on monitored folders to enable folder resource discovery
+- Folder-level log sink support for monitoring all projects under a GCP folder
+- Support for monitoring folders + projects simultaneously
+- BigQuery Folder Viewer: Added `roles/resourcemanager.folderViewer` role for BigQuery service account on monitored folders to enable folder resource discovery
 
 ### Changed
 
-- **⚙️ Variable Structure**: `project_id` is now optional and used only for project mode
-- **🏗️ Architecture**: All service modules (BigQuery, Dataform, Dataplex) refactored to use shared infrastructure
-- **🔐 IAM Flexibility**: IAM bindings now support both folder-level and project-level assignments
-- **📤 Output Structure**: `logging_sink_id` and `logging_sink_writer_identity` now return different formats based on mode
-- **📚 Documentation**: Completely rewritten README with architecture diagrams and mode explanations
-
-### Fixed
-
-- Proper handling of folder ID formats (supports both `folders/123` and `123`)
-- Correct resource naming and label propagation across all modules
+- `project_id` is now optional and used only for project mode
+- All service modules (BigQuery, Dataform, Dataplex) refactored to use a PubSub topic shared across the organization
+- IAM bindings now support both folder-level and project-level assignments
+- Output Structure: `logging_sink_id` and `logging_sink_writer_identity` now return different formats based on mode
 
 ### Breaking Changes
 
 ⚠️ **Backward Compatible for Project Mode**: Existing single-project configurations continue to work without changes.
 
-For users migrating to folder mode, see [MIGRATION.md](./MIGRATION.md) for detailed upgrade instructions.
+For users migrating to folder mode, see [MIGRATION_0.3.0.md](./MIGRATION_0.3.0.md) for detailed upgrade instructions.
 
 ## [0.2.10] - 2026-01-12
 

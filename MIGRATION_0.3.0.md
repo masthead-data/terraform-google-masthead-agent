@@ -182,19 +182,19 @@ Terraform sees these as completely different resources.
 
 **Project Mode (same configuration)**:
 
-- ✅ **Configuration**: Unchanged, backward compatible
-- ⚠️ **Resources**: ALL recreated (new module paths)
-- ✅ **Same Project**: Pub/Sub topics/subscriptions in same project
-- ✅ **Same Scope**: Sinks and IAM remain project-level
-- ⏱️ **Downtime**: ~30-60 seconds during sink recreation
+- **Configuration**: Unchanged, backward compatible
+- **Resources**: ALL recreated (new module paths)
+- **Same Project**: Pub/Sub topics/subscriptions in same project
+- **Same Scope**: Sinks and IAM remain project-level
+- **Downtime**: ~30-60 seconds during sink recreation
 
 **Folder Mode (folder-level)**:
 
-- ⚠️ **Resources**: ALL recreated (module paths + scope change)
-- 🔄 **Scope Change**: Sinks move from project → folder level
-- 🔄 **IAM Change**: Bindings move from project → folder level
-- 🔄 **Custom Roles**: Analytics Hub role moves to organization level
-- ⏱️ **Downtime**: ~30-60 seconds during sink recreation
+- **Resources**: ALL recreated (module paths + scope change)
+- **Scope Change**: Sinks move from project → folder level
+- **IAM Change**: Bindings move from project → folder level
+- **Custom Roles**: Analytics Hub role moves to organization level
+- **Downtime**: ~30-60 seconds during sink recreation
 
 ### Migration Strategies
 
@@ -207,7 +207,7 @@ Terraform sees these as completely different resources.
 terraform state pull > backup-state.json
 
 # 2. Generate moved blocks from your current state
-./generate-moved-blocks.sh
+./scripts/generate-moved-blocks.sh [MODULE_PREFIX] # default: masthead_agent
 
 # 3. Review the generated moved-blocks.tf file
 cat moved-blocks.tf
@@ -227,6 +227,10 @@ terraform apply
 # 8. Clean up the moved blocks file
 rm moved-blocks.tf
 ```
+
+**Script Usage**:
+- `./scripts/generate-moved-blocks.sh` - Default: searches for `module.masthead_agent*`
+- Supports both `for_each` patterns (`module.masthead_agent["key"]`) and individual module names
 
 **Downtime**: Zero! Resources are preserved through Terraform moves
 **Risk**: Very low - just renames in state
@@ -252,7 +256,7 @@ If you prefer a clean slate or have simple dev/test environments:
 ### Recommendations
 
 1. **Use Option A (moved blocks)**: Zero downtime, preserves all resources
-2. **Use the migration script**: `./generate-moved-blocks.sh` automates the process
+2. **Use the migration script**: `./scripts/generate-moved-blocks.sh [module_prefix]` automates the process
 3. **Test in non-production first**: Validate the migration process
 4. **Keep backups**: Save state before migration
 5. **Monitor after**: Verify logs flowing within first hour
@@ -307,32 +311,3 @@ If you encounter issues during migration:
 1. Check the [examples/](../examples/) directory for reference configurations
 2. Review the updated [README.md](../README.md)
 3. Contact Masthead Data support
-
-## Changelog Summary
-
-### Added
-
-- Folder mode with folder-level logging
-- Hybrid mode for folder + additional projects
-- Shared logging infrastructure module
-- Validation for deployment mode selection
-- New outputs: `deployment_mode`, `monitored_folder_ids`, `monitored_project_ids`, `deployment_project_id`
-
-### Changed
-
-- `project_id` is now optional (required for project mode only)
-- All service modules refactored to use shared infrastructure
-- IAM bindings now support both folder and project levels
-- Output structure changed for `logging_sink_id` and `logging_sink_writer_identity`
-
-### Deprecated
-
-- None (backward compatible for project mode)
-
-### Removed
-
-- None
-
-### Fixed
-
-- None
