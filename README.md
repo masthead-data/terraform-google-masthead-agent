@@ -205,13 +205,6 @@ You need these permissions in the target project:
 - `iam.serviceAccounts.setIamPolicy`
 - `resourcemanager.projects.setIamPolicy`
 
-## Examples
-
-See the `examples/` directory for complete configuration examples:
-
-- `project-mode.tfvars.example` - Single project setup
-- `org-mode.tfvars.example` - Organization mode with folders + projects
-
 ## References
 
 - [Masthead Data Documentation](https://docs.mastheadata.com/get-started/integrate-using-iac)
