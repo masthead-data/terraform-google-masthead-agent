@@ -35,3 +35,5 @@ terraform.rc
 
 # TFLint cache
 .tflint.d/
+.DS_Store
+examples/pulumi-script/__pycache__/__main__.cpython-314.pyc
