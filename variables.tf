@@ -141,7 +141,6 @@ variable "labels" {
 # Validation: Ensure correct mode is selected
 locals {
   has_folders       = length(var.monitored_folder_ids) > 0
-  has_projects      = length(var.monitored_project_ids) > 0
   project_mode      = var.project_id != null && var.deployment_project_id == null
   organization_mode = var.deployment_project_id != null && var.project_id == null
 
