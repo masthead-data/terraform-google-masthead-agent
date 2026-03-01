@@ -13,6 +13,30 @@ terraform {
   }
 }
 
+# Validation check
+resource "null_resource" "validate_configuration" {
+  lifecycle {
+    precondition {
+      condition     = local.project_mode || local.organization_mode
+      error_message = <<-EOT
+        Invalid configuration. Choose one of two modes:
+        1. PROJECT MODE: Set project_id only
+        2. ORGANIZATION MODE: Set deployment_project_id + monitored_folder_ids and/or monitored_project_ids
+      EOT
+    }
+
+    precondition {
+      condition     = local.pubsub_project_id != null
+      error_message = "Either project_id or deployment_project_id must be specified."
+    }
+
+    precondition {
+      condition     = !local.has_folders || var.organization_id != null
+      error_message = "organization_id is required when using monitored_folder_ids to create organization-level custom IAM roles."
+    }
+  }
+}
+
 # BigQuery Module - Logging Infrastructure + IAM
 module "bigquery" {
   count  = var.enable_modules.bigquery ? 1 : 0
