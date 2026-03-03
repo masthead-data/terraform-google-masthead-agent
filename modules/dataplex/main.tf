@@ -33,15 +33,11 @@ EOT
   iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
 
   # Determine roles based on editing permissions
-  dataplex_roles = var.enable_datascan_editing ? toset([
+  dataplex_roles = toset([
+    "roles/bigquery.jobUser",
     "roles/dataplex.dataProductsViewer",
     "roles/dataplex.dataScanDataViewer",
-    "roles/dataplex.dataScanEditor",
-    "roles/bigquery.jobUser",
-    "roles/dataplex.storageDataReader"
-    ]) : toset([
-    "roles/dataplex.dataProductsViewer",
-    "roles/dataplex.dataScanDataViewer"
+    "roles/dataplex.dataScanEditor"
   ])
 }
 

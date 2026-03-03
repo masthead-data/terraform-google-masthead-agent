@@ -22,12 +22,6 @@ variable "masthead_service_accounts" {
   description = "Masthead service account emails"
 }
 
-variable "enable_datascan_editing" {
-  type        = bool
-  description = "Enable permissions for creating and editing Dataplex DataScans"
-  default     = false
-}
-
 variable "enable_apis" {
   type        = bool
   description = "Enable required Google Cloud APIs"

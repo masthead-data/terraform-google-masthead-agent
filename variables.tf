@@ -124,12 +124,6 @@ variable "enable_apis" {
   default     = true
 }
 
-variable "enable_datascan_editing" {
-  type        = bool
-  description = "Enable permissions for creating and editing Dataplex DataScans"
-  default     = false
-}
-
 variable "labels" {
   type        = map(string)
   description = "Labels to apply to resources"

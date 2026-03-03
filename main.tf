@@ -63,7 +63,6 @@ module "dataplex" {
 
   # Service account and permissions
   masthead_service_accounts = var.masthead_service_accounts
-  enable_datascan_editing   = var.enable_datascan_editing
 
   # Resource configuration
   enable_apis = var.enable_apis
