@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
-- `enable_datascan_editing` flag is now deprecated and unused, as Dataplex IAM roles have been unified into an unchangeable set.
+- `enable_datascan_editing` flag is now deprecated and removed, as Dataplex IAM roles have been unified into an unchangeable set.
 
 ### Removed
 
