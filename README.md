@@ -97,7 +97,6 @@ module "masthead_agent" {
   # Optional features
   enable_apis                  = true
   enable_privatelogviewer_role = true  # For retrospective log export
-  enable_datascan_editing      = false # Dataplex DataScan editing permissions
 
   # Labels for governance and cost management
   labels = {

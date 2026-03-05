@@ -15,7 +15,6 @@ enable_modules = {
 # Optional configurations
 enable_privatelogviewer_role = true
 enable_apis                  = true
-enable_datascan_editing      = false
 
 # Labels
 labels = {
