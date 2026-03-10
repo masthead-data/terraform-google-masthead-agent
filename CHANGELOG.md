@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **Dataplex IAM**: Removed `roles/dataplex.storageDataReader` role from Dataplex service account permissions
+
 ### Fixed
 
 ### Security
