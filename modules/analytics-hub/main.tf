@@ -1,14 +1,6 @@
 # Analytics Hub Module - IAM for Masthead Agent
 # Supports both folder-level (organization) and project-level (project) configurations
 
-locals {
-  # Determine if we're operating at folder or project level
-  has_folders = length(var.monitored_folder_ids) > 0
-
-  # Projects where IAM bindings need to be applied (only when not using folders)
-  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
-}
-
 # Enable Analytics Hub API in monitored projects
 resource "google_project_service" "analyticshub_api" {
   for_each = var.enable_apis ? toset(var.monitored_project_ids) : toset([])
@@ -22,7 +14,7 @@ resource "google_project_service" "analyticshub_api" {
 
 # Custom role for Analytics Hub subscription viewing at folder level
 resource "google_organization_iam_custom_role" "analyticshub_custom_role_folder" {
-  count = local.has_folders && var.organization_id != null ? 1 : 0
+  count = var.has_folders && var.organization_id != null ? 1 : 0
 
   org_id      = var.organization_id
   role_id     = "mastheadAnalyticsHubCustomRole"
@@ -35,7 +27,7 @@ resource "google_organization_iam_custom_role" "analyticshub_custom_role_folder"
 
 # Custom role for Analytics Hub subscription viewing at project level
 resource "google_project_iam_custom_role" "analyticshub_custom_role_project" {
-  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
+  for_each = !var.has_folders ? toset(var.iam_target_projects) : toset([])
 
   project     = each.value
   role_id     = "mastheadAnalyticsHubCustomRole"
@@ -68,7 +60,7 @@ resource "google_folder_iam_member" "masthead_analyticshub_folder_roles" {
 
 # IAM: Grant custom role at folder level
 resource "google_folder_iam_member" "masthead_analyticshub_folder_custom_role" {
-  for_each = local.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
+  for_each = var.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
 
   folder = each.value
   role   = google_organization_iam_custom_role.analyticshub_custom_role_folder[0].id
@@ -80,7 +72,7 @@ resource "google_project_iam_member" "masthead_analyticshub_project_roles" {
   depends_on = [google_project_service.analyticshub_api]
   for_each = {
     for pair in flatten([
-      for project_id in local.iam_target_projects : [
+      for project_id in var.iam_target_projects : [
         {
           project_id = project_id
           role       = "roles/analyticshub.viewer"

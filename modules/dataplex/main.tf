@@ -26,12 +26,6 @@ locals {
 )
 EOT
 
-  # Determine if we're operating at folder or project level
-  has_folders = length(var.monitored_folder_ids) > 0
-
-  # Projects where IAM bindings need to be applied (only when not using folders)
-  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
-
   # Determine roles based on editing permissions
   dataplex_roles = toset([
     "roles/bigquery.jobUser",
@@ -97,7 +91,7 @@ resource "google_folder_iam_member" "masthead_dataplex_folder_roles" {
 resource "google_project_iam_member" "masthead_dataplex_project_roles" {
   for_each = {
     for pair in flatten([
-      for project_id in local.iam_target_projects : [
+      for project_id in var.iam_target_projects : [
         for role in local.dataplex_roles : {
           project_id = project_id
           role       = role
