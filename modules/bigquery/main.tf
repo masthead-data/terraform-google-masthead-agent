@@ -28,12 +28,6 @@ locals {
   resource.type="bigquery_project"
 )
 EOT
-
-  # Determine if we're operating at folder or project level
-  has_folders = length(var.monitored_folder_ids) > 0
-
-  # Projects where IAM bindings need to be applied (only when not using folders)
-  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
 }
 
 # Enable BigQuery API in monitored projects
@@ -87,7 +81,7 @@ resource "google_folder_iam_member" "masthead_bigquery_folder_roles" {
 resource "google_project_iam_member" "masthead_bigquery_project_roles" {
   for_each = {
     for pair in flatten([
-      for project_id in local.iam_target_projects : [
+      for project_id in var.iam_target_projects : [
         for role in ["roles/bigquery.metadataViewer", "roles/bigquery.resourceViewer"] : {
           project_id = project_id
           role       = role
@@ -113,7 +107,7 @@ resource "google_folder_iam_member" "masthead_privatelogviewer_folder_role" {
 
 # IAM: Grant Masthead retro service account Private Log Viewer role at project level
 resource "google_project_iam_member" "masthead_privatelogviewer_project_role" {
-  for_each = var.enable_privatelogviewer_role && !local.has_folders ? toset(local.iam_target_projects) : toset([])
+  for_each = var.enable_privatelogviewer_role && !var.has_folders ? toset(var.iam_target_projects) : toset([])
 
   project = each.value
   role    = "roles/logging.privateLogViewer"
@@ -122,7 +116,7 @@ resource "google_project_iam_member" "masthead_privatelogviewer_project_role" {
 
 # Custom role for BigQuery shared dataset usage at organization level
 resource "google_organization_iam_custom_role" "masthead_bigquery_custom_role_folder" {
-  count = local.has_folders && var.organization_id != null ? 1 : 0
+  count = var.has_folders && var.organization_id != null ? 1 : 0
 
   org_id      = var.organization_id
   role_id     = "mastheadBigQueryCustomRole"
@@ -135,7 +129,7 @@ resource "google_organization_iam_custom_role" "masthead_bigquery_custom_role_fo
 
 # Custom role for BigQuery shared dataset usage at project level
 resource "google_project_iam_custom_role" "masthead_bigquery_custom_role_project" {
-  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
+  for_each = !var.has_folders ? toset(var.iam_target_projects) : toset([])
 
   project     = each.value
   role_id     = "mastheadBigQueryCustomRole"
@@ -148,7 +142,7 @@ resource "google_project_iam_custom_role" "masthead_bigquery_custom_role_project
 
 # IAM: Grant custom role at folder level
 resource "google_folder_iam_member" "masthead_bigquery_folder_custom_role" {
-  for_each = local.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
+  for_each = var.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
 
   folder = each.value
   role   = google_organization_iam_custom_role.masthead_bigquery_custom_role_folder[0].id
@@ -157,7 +151,7 @@ resource "google_folder_iam_member" "masthead_bigquery_folder_custom_role" {
 
 # IAM: Grant custom role at project level
 resource "google_project_iam_member" "masthead_bigquery_project_custom_role" {
-  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
+  for_each = !var.has_folders ? toset(var.iam_target_projects) : toset([])
 
   project = each.value
   role    = google_project_iam_custom_role.masthead_bigquery_custom_role_project[each.value].id

@@ -15,6 +15,18 @@ variable "monitored_project_ids" {
   default     = []
 }
 
+variable "has_folders" {
+  type        = bool
+  description = "Whether the deployment includes folder-level monitoring"
+  default     = false
+}
+
+variable "iam_target_projects" {
+  type        = list(string)
+  description = "List of GCP project IDs where project-level IAM bindings should be applied"
+  default     = []
+}
+
 variable "masthead_service_accounts" {
   type = object({
     dataform_sa = string

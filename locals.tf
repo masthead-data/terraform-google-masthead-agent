@@ -24,4 +24,7 @@ locals {
     var.project_id != null ? [var.project_id] : [],
     var.monitored_project_ids
   )
+
+  # Projects where IAM bindings need to be applied (only when not using folders)
+  iam_target_projects = local.has_folders ? [] : local.all_monitored_projects
 }

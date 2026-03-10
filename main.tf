@@ -46,6 +46,8 @@ module "bigquery" {
   pubsub_project_id     = local.pubsub_project_id
   monitored_folder_ids  = local.normalized_folder_ids
   monitored_project_ids = local.all_monitored_projects
+  has_folders           = local.has_folders
+  iam_target_projects   = local.iam_target_projects
   organization_id       = local.numeric_organization_id
 
   # Service account and permissions
@@ -66,6 +68,8 @@ module "dataform" {
   pubsub_project_id     = local.pubsub_project_id
   monitored_folder_ids  = local.normalized_folder_ids
   monitored_project_ids = local.all_monitored_projects
+  has_folders           = local.has_folders
+  iam_target_projects   = local.iam_target_projects
 
   # Service account
   masthead_service_accounts = var.masthead_service_accounts
@@ -84,6 +88,8 @@ module "dataplex" {
   pubsub_project_id     = local.pubsub_project_id
   monitored_folder_ids  = local.normalized_folder_ids
   monitored_project_ids = local.all_monitored_projects
+  has_folders           = local.has_folders
+  iam_target_projects   = local.iam_target_projects
 
   # Service account and permissions
   masthead_service_accounts = var.masthead_service_accounts
@@ -102,6 +108,8 @@ module "analytics_hub" {
   monitored_folder_ids  = local.normalized_folder_ids
   organization_id       = local.numeric_organization_id
   monitored_project_ids = local.all_monitored_projects
+  has_folders           = local.has_folders
+  iam_target_projects   = local.iam_target_projects
 
   # Service account
   masthead_service_accounts = var.masthead_service_accounts

@@ -20,12 +20,6 @@ locals {
   resource.type="dataform.googleapis.com/Repository"
 )
 EOT
-
-  # Determine if we're operating at folder or project level
-  has_folders = length(var.monitored_folder_ids) > 0
-
-  # Projects where IAM bindings need to be applied (only when not using folders)
-  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
 }
 
 # Enable Dataform API in monitored projects
@@ -79,7 +73,7 @@ resource "google_folder_iam_member" "masthead_dataform_folder_roles" {
 resource "google_project_iam_member" "masthead_dataform_project_roles" {
   for_each = {
     for pair in flatten([
-      for project_id in local.iam_target_projects : [
+      for project_id in var.iam_target_projects : [
         for role in ["roles/dataform.viewer"] : {
           project_id = project_id
           role       = role
