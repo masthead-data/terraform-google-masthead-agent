@@ -169,7 +169,7 @@ Required APIs per module:
 - Maintain semantic versioning (MAJOR.MINOR.PATCH)
 - Update CHANGELOG.md for all changes
 - Keep minimum Terraform version at 1.5.7+
-- Keep minimum Google provider version at 6.13.0+
+- Keep minimum Google provider version at 6.39.0+
 - Test compatibility with latest provider versions
 
 ## When Making Changes

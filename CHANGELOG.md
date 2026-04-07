@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **PII Redaction via Pub/Sub SMT**: Added opt-in `pii_redaction` variable to the BigQuery module. When enabled, a JavaScript UDF runs as a Pub/Sub message transform on the BigQuery topic and redacts email addresses from SQL query fields (`jobInsertRequest`, `jobUpdateRequest`, `jobQueryResponse`) in BigQuery audit log entries before messages are stored in the subscription backlog. A `custom_code` field allows supplying a fully custom UDF instead of the built-in email-redaction logic.
 
+### Changed
+
+- Bumped minimum Google provider version from `6.13.0` to `6.39.0` to support `message_transforms` on `google_pubsub_topic` (added in provider 6.39.0)
+
 ### Removed
 
 - **Dataplex IAM**: Removed `roles/dataplex.storageDataReader` role from Dataplex service account permissions
