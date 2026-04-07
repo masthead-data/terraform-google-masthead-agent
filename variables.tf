@@ -138,3 +138,12 @@ variable "labels" {
   }
 }
 
+variable "pii_redaction" {
+  description = "PII redaction configuration for the BigQuery module. When enabled, a JavaScript UDF runs as a Pub/Sub message transform (SMT) on the BigQuery topic and redacts email addresses from SQL query fields in audit log entries."
+  type = object({
+    enabled     = optional(bool, false)
+    custom_code = optional(string, null)
+  })
+  default = {}
+}
+

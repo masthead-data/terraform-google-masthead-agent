@@ -13,6 +13,48 @@ locals {
   common_labels = merge(var.labels, {
     component = var.component_name
   })
+
+  # Default PII redaction UDF — redacts email addresses from BigQuery SQL query fields
+  pii_udf_default_code = <<-JAVASCRIPT
+    function redactPii(message, metadata) {
+      if (!message.data) return message;
+      try {
+        var bytes = message.data;
+        var text = '';
+        for (var bi = 0; bi < bytes.length; bi++) {
+          text += String.fromCharCode(bytes[bi]);
+        }
+        var log = JSON.parse(text);
+        var emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+        var paths = [
+          ['protoPayload', 'serviceData', 'jobInsertRequest', 'resource', 'jobConfiguration', 'query', 'query'],
+          ['protoPayload', 'serviceData', 'jobUpdateRequest', 'resource', 'jobConfiguration', 'query', 'query'],
+          ['protoPayload', 'serviceData', 'jobQueryResponse', 'resource', 'jobConfiguration', 'query', 'query']
+        ];
+        for (var pi = 0; pi < paths.length; pi++) {
+          var obj = log;
+          var path = paths[pi];
+          for (var ki = 0; ki < path.length - 1; ki++) {
+            if (obj == null || typeof obj !== 'object') { obj = null; break; }
+            obj = obj[path[ki]];
+          }
+          var key = path[path.length - 1];
+          if (obj != null && typeof obj === 'object' && typeof obj[key] === 'string') {
+            obj[key] = obj[key].replace(emailRegex, '[REDACTED]');
+          }
+        }
+        var encoded = JSON.stringify(log);
+        var result = new Uint8Array(encoded.length);
+        for (var ei = 0; ei < encoded.length; ei++) {
+          result[ei] = encoded.charCodeAt(ei);
+        }
+        message.data = result;
+      } catch (e) {}
+      return message;
+    }
+  JAVASCRIPT
+
+  pii_udf_code = var.pii_redaction.custom_code != null ? var.pii_redaction.custom_code : local.pii_udf_default_code
 }
 
 # Enable Pub/Sub API in the deployment project
@@ -50,6 +92,16 @@ resource "google_pubsub_topic" "logs_topic" {
   name    = var.topic_name
 
   labels = local.common_labels
+
+  dynamic "message_transforms" {
+    for_each = var.pii_redaction.enabled ? [1] : []
+    content {
+      javascript_udf {
+        function_name = "redactPii"
+        code          = local.pii_udf_code
+      }
+    }
+  }
 }
 
 # Create Pub/Sub subscription in the deployment project

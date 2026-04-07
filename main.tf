@@ -53,8 +53,9 @@ module "bigquery" {
   enable_privatelogviewer_role = var.enable_privatelogviewer_role
 
   # Resource configuration
-  enable_apis = var.enable_apis
-  labels      = var.labels
+  enable_apis   = var.enable_apis
+  labels        = var.labels
+  pii_redaction = var.pii_redaction
 }
 
 # Dataform Module - Logging Infrastructure + IAM

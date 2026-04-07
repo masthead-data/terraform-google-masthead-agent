@@ -46,3 +46,12 @@ variable "labels" {
   description = "Labels to apply to resources"
   default     = {}
 }
+
+variable "pii_redaction" {
+  description = "PII redaction configuration using a Pub/Sub message transform (SMT) applied to the BigQuery topic. When enabled, a JavaScript UDF redacts email addresses from SQL query fields before messages are stored."
+  type = object({
+    enabled     = optional(bool, false)
+    custom_code = optional(string, null)
+  })
+  default = {}
+}
