@@ -56,3 +56,11 @@ variable "labels" {
   description = "Labels to apply to resources"
   default     = {}
 }
+
+variable "pii_redaction" {
+  description = "PII redaction configuration. Provide custom_code with a JavaScript UDF to enable a Pub/Sub message transform (SMT) on the topic. The SMT is disabled when custom_code is null."
+  type = object({
+    custom_code = optional(string, null)
+  })
+  default = {}
+}

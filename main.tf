@@ -4,7 +4,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 6.13.0"
+      version = ">= 6.39.0"
     }
     null = {
       source  = "hashicorp/null"
@@ -53,8 +53,9 @@ module "bigquery" {
   enable_privatelogviewer_role = var.enable_privatelogviewer_role
 
   # Resource configuration
-  enable_apis = var.enable_apis
-  labels      = var.labels
+  enable_apis   = var.enable_apis
+  labels        = var.labels
+  pii_redaction = var.pii_redaction
 }
 
 # Dataform Module - Logging Infrastructure + IAM

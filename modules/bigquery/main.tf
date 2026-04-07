@@ -62,6 +62,7 @@ module "logging_infrastructure" {
   masthead_service_account = var.masthead_service_accounts.bigquery_sa
   enable_apis              = var.enable_apis
   labels                   = local.common_labels
+  pii_redaction            = var.pii_redaction
 }
 
 # IAM: Grant Masthead service account required BigQuery roles at folder level

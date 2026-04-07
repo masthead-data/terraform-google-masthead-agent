@@ -6,47 +6,55 @@
 
 This Terraform module deploys infrastructure for Masthead Data to monitor Google Cloud services (BigQuery, Dataform, Dataplex, Analytics Hub) using Pub/Sub topics, Cloud Logging sinks, and IAM bindings.
 
-## Deployment Modes
-
-The module supports two deployment modes:
-
-### 📦 Project Mode
+## 📦 Project Mode
 
 For single-project setups. All resources (logs, Pub/Sub, IAM) are created in a monitored project.
 
 **Use when:** You have a single project or a few projects to monitor.
 
-### 🏢 Organization Mode
-
-For multi-project or folder-level monitoring. Creates centralized Pub/Sub infrastructure in a dedicated deployment project with folder-level and/or project-level log sinks.
-
-**Supports:**
-- One or more GCP folders (monitors all child projects)
-- Additional individual projects (outside of folders)
-- Any combination of folders and projects
-
-**Use when:** You want to monitor multiple projects, use GCP folders, or need centralized log collection.
-
-## Usage Examples
-
-### Project Mode
+### Example
 
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.0"
+  version = ">=0.3.1"
 
   # Project mode: single project
   project_id = "project-1"
 }
 ```
 
-### Organization Mode
+### Required Permissions
+
+**Target project:**
+
+- `iam.roles.create`
+- `logging.sinks.create`
+- `pubsub.subscriptions.create`
+- `pubsub.subscriptions.setIamPolicy`
+- `pubsub.topics.create`
+- `pubsub.topics.setIamPolicy`
+- `resourcemanager.projects.setIamPolicy`
+- `serviceusage.services.enable`
+
+## 🏢 Organization Mode
+
+For multi-project or folder-level monitoring. Creates centralized Pub/Sub infrastructure in a dedicated deployment project with folder-level and/or project-level log sinks.
+
+**Supports:**
+
+- One or more GCP folders (monitors all child projects)
+- Additional individual projects (outside of folders)
+- Any combination of folders and projects
+
+**Use when:** You want to monitor multiple projects, use GCP folders, or need centralized log collection.
+
+### Example
 
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.0"
+  version = ">=0.3.1"
 
   # Organization mode: folders + additional projects
   monitored_folder_ids  = [
@@ -66,144 +74,36 @@ module "masthead_agent" {
 }
 ```
 
-### Full Configuration Example
+### Required Permissions
 
-Complete configuration with all options:
+**Deployment project**:
 
-```hcl
-module "masthead_agent" {
-  source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.0"
+- `pubsub.subscriptions.create`
+- `pubsub.subscriptions.setIamPolicy`
+- `pubsub.topics.create`
+- `pubsub.topics.setIamPolicy`
+- `serviceusage.services.enable`
 
-  # Choose ONE mode:
+**Each monitored project** (when `monitored_project_ids` is set):
 
-  # PROJECT MODE: Set project_id only
-  project_id = var.project_id
+- `iam.roles.create`
+- `logging.sinks.create`
+- `resourcemanager.projects.setIamPolicy`
+- `serviceusage.services.enable`
 
-  # ORGANIZATION MODE: Set deployment_project_id + folders and/or projects
-  # deployment_project_id = var.deployment_project_id
-  # monitored_folder_ids  = ["folders/123456789"]  # Optional: monitor folders
-  # monitored_project_ids = ["project-1", "project-2"]  # Optional: monitor specific projects
-  # organization_id       = "123456789"  # Required when using folders
-
-  # Module configuration
-  enable_modules = {
-    bigquery      = true
-    dataform      = true
-    dataplex      = true
-    analytics_hub = true
-  }
-
-  # Optional features
-  enable_apis                  = true
-  enable_privatelogviewer_role = true  # For retrospective log export
-  enable_datascan_editing      = false # Dataplex DataScan editing permissions
-
-  # Labels for governance and cost management
-  labels = {
-    environment = "production"
-    team        = "data"
-    cost_center = "engineering"
-    monitoring  = "masthead"
-  }
-}
-```
-
-## Architecture
-
-### Project Mode
-
-```text
-┌─────────────────────────────────────┐
-│        Single GCP Project           │
-│                                     │
-│  ┌──────────────┐  ┌─────────────┐  │
-│  │ Log Sinks    │→ │   Pub/Sub   │  │
-│  │ (Project)    │  │   Topics    │  │
-│  └──────────────┘  └─────────────┘  │
-│         ↓                ↓          │
-│  ┌──────────────────────────────┐   │
-│  │       IAM Bindings           │   │
-│  └──────────────────────────────┘   │
-└─────────────────────────────────────┘
-```
-
-### Organization Mode
-
-```text
-┌────────────────────────────────────────┐
-│        GCP Folder(s) (optional)        │
-│  ┌──────────────────────────────────┐  │
-│  │  All Child Projects              │  │
-│  └──────────────────────────────────┘  │
-│              ↓                         │
-│  ┌──────────────────────────────────┐  │
-│  │  Folder-Level Log Sinks          │  │
-│  │  + IAM Bindings (inherited)      │  │
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
-              ↓
-┌────────────────────────────────────────┐
-│     Additional Projects (optional)     │
-│  ┌──────────────────────────────────┐  │
-│  │  Project-Level Log Sinks         │  │
-│  │  + IAM Bindings                  │  │
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
-              ↓
-┌────────────────────────────────────────┐
-│           Deployment Project           │
-│  ┌──────────────────────────────────┐  │
-│  │  Centralized Pub/Sub Topics      │  │
-│  │  + Subscriptions                 │  │
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
-```
-
-## How It Works
-
-### Project Mode
-
-- IAM bindings applied at the **project level**
-- Log sinks created at the **project level**
-- All resources in one project
-
-### Organization Mode
-
-- **For folders**: IAM bindings applied at **folder level** (inherited by all child projects)
-- **For folders**: Log sinks created at **folder level**
-- **For additional projects**: IAM bindings and log sinks applied at **project level**
-- Centralized Pub/Sub in deployment project
-
-## Required GCP Permissions
-
-### For Project Mode
-
-You need these permissions in the target project:
+**Each monitored folder**:
 
 - `logging.sinks.create`
-- `pubsub.topics.create`
-- `pubsub.subscriptions.create`
-- `iam.serviceAccounts.setIamPolicy`
-- `resourcemanager.projects.setIamPolicy`
+- `resourcemanager.folders.setIamPolicy`
 
-### For Organization Mode
+**Organization level** (when `monitored_folder_ids` is set and `organization_id` is provided):
 
-**When using folders**, you need these permissions at the folder level:
+- `iam.roles.create`
 
-- `logging.sinks.create` (on folder)
-- `resourcemanager.folders.setIamPolicy` (on folder)
+## Documentation
 
-**When using folders**, you need these permissions at the organization level:
-
-- `iam.roles.create` (on organization) - Required for creating custom IAM roles
-
-**Always required** for the deployment project:
-
-- `pubsub.topics.create`
-- `pubsub.subscriptions.create`
-- `iam.serviceAccounts.setIamPolicy`
-- `resourcemanager.projects.setIamPolicy`
+- [Configuration](docs/configuration.md)
+- [Architecture](docs/architecture.md)
 
 ## References
 

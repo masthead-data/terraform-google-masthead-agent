@@ -138,3 +138,11 @@ variable "labels" {
   }
 }
 
+variable "pii_redaction" {
+  description = "PII redaction configuration for the BigQuery module. Provide custom_code with a JavaScript UDF to enable a Pub/Sub message transform (SMT) on the BigQuery topic. The UDF runs at the topic level before messages reach the subscription backlog. The SMT is disabled when custom_code is null (default)."
+  type = object({
+    custom_code = optional(string, null)
+  })
+  default = {}
+}
+
