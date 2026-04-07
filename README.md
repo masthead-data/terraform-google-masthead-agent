@@ -68,112 +68,11 @@ module "masthead_agent" {
 
 ### Full Configuration Example
 
-Complete configuration with all options:
-
-```hcl
-module "masthead_agent" {
-  source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.1"
-
-  # Choose ONE mode:
-
-  # PROJECT MODE: Set project_id only
-  project_id = var.project_id
-
-  # ORGANIZATION MODE: Set deployment_project_id + folders and/or projects
-  # deployment_project_id = var.deployment_project_id
-  # monitored_folder_ids  = ["folders/123456789"]  # Optional: monitor folders
-  # monitored_project_ids = ["project-1", "project-2"]  # Optional: monitor specific projects
-  # organization_id       = "123456789"  # Required when using folders
-
-  # Module configuration
-  enable_modules = {
-    bigquery      = true
-    dataform      = true
-    dataplex      = true
-    analytics_hub = true
-  }
-
-  # Optional features
-  enable_apis                  = true
-  enable_privatelogviewer_role = true  # For retrospective log export
-  enable_datascan_editing      = false # Dataplex DataScan editing permissions
-
-  # Labels for governance and cost management
-  labels = {
-    environment = "production"
-    team        = "data"
-    cost_center = "engineering"
-    monitoring  = "masthead"
-  }
-}
-```
+See [docs/full-configuration.md](docs/full-configuration.md) for a complete configuration with all available options, including PII redaction.
 
 ## Architecture
 
-### Project Mode
-
-```text
-┌─────────────────────────────────────┐
-│        Single GCP Project           │
-│                                     │
-│  ┌──────────────┐  ┌─────────────┐  │
-│  │ Log Sinks    │→ │   Pub/Sub   │  │
-│  │ (Project)    │  │   Topics    │  │
-│  └──────────────┘  └─────────────┘  │
-│         ↓                ↓          │
-│  ┌──────────────────────────────┐   │
-│  │       IAM Bindings           │   │
-│  └──────────────────────────────┘   │
-└─────────────────────────────────────┘
-```
-
-### Organization Mode
-
-```text
-┌────────────────────────────────────────┐
-│        GCP Folder(s) (optional)        │
-│  ┌──────────────────────────────────┐  │
-│  │  All Child Projects              │  │
-│  └──────────────────────────────────┘  │
-│              ↓                         │
-│  ┌──────────────────────────────────┐  │
-│  │  Folder-Level Log Sinks          │  │
-│  │  + IAM Bindings (inherited)      │  │
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
-              ↓
-┌────────────────────────────────────────┐
-│     Additional Projects (optional)     │
-│  ┌──────────────────────────────────┐  │
-│  │  Project-Level Log Sinks         │  │
-│  │  + IAM Bindings                  │  │
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
-              ↓
-┌────────────────────────────────────────┐
-│           Deployment Project           │
-│  ┌──────────────────────────────────┐  │
-│  │  Centralized Pub/Sub Topics      │  │
-│  │  + Subscriptions                 │  │
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
-```
-
-## How It Works
-
-### Project Mode
-
-- IAM bindings applied at the **project level**
-- Log sinks created at the **project level**
-- All resources in one project
-
-### Organization Mode
-
-- **For folders**: IAM bindings applied at **folder level** (inherited by all child projects)
-- **For folders**: Log sinks created at **folder level**
-- **For additional projects**: IAM bindings and log sinks applied at **project level**
-- Centralized Pub/Sub in deployment project
+See [docs/architecture.md](docs/architecture.md) for diagrams and details.
 
 ## Required GCP Permissions
 
