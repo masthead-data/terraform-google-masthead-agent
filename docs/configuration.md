@@ -55,48 +55,48 @@ The BigQuery module supports opt-in PII redaction via a [Pub/Sub message transfo
 
 The SMT is disabled by default. It is enabled only when `pii_redaction.custom_code` is set.
 
-### Email address redaction (starter template)
+### PII redaction starter template
 
-The following UDF redacts email addresses from BigQuery audit log SQL query fields (`jobInsertRequest`, `jobUpdateRequest`, `jobQueryResponse`). Copy and customise as needed.
+The following UDF redacts PII patterns from BigQuery audit log SQL query fields. Copy and customise as needed.
 
 ```hcl
 pii_redaction = {
   custom_code = <<-JAVASCRIPT
     function redactPii(message, metadata) {
-      if (!message.data) return message;
       try {
-        var bytes = message.data;
-        var text = '';
-        for (var bi = 0; bi < bytes.length; bi++) {
-          text += String.fromCharCode(bytes[bi]);
-        }
-        var log = JSON.parse(text);
-        var emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
-        var paths = [
-          ['protoPayload', 'serviceData', 'jobInsertRequest', 'resource', 'jobConfiguration', 'query', 'query'],
-          ['protoPayload', 'serviceData', 'jobUpdateRequest', 'resource', 'jobConfiguration', 'query', 'query'],
-          ['protoPayload', 'serviceData', 'jobQueryResponse', 'resource', 'jobConfiguration', 'query', 'query']
-        ];
-        for (var pi = 0; pi < paths.length; pi++) {
-          var obj = log;
-          var path = paths[pi];
-          for (var ki = 0; ki < path.length - 1; ki++) {
-            if (obj == null || typeof obj !== 'object') { obj = null; break; }
-            obj = obj[path[ki]];
+        var data = JSON.parse(message.data);
+
+        function safeGet(obj, keys) {
+          var current = obj;
+          for (var i = 0; i < keys.length; i++) {
+            if (current == null || typeof current !== "object") return null;
+            current = current[keys[i]];
           }
-          var key = path[path.length - 1];
-          if (obj != null && typeof obj === 'object' && typeof obj[key] === 'string') {
-            obj[key] = obj[key].replace(emailRegex, '[REDACTED]');
-          }
+          return current != null ? current : null;
         }
-        var encoded = JSON.stringify(log);
-        var result = new Uint8Array(encoded.length);
-        for (var ei = 0; ei < encoded.length; ei++) {
-          result[ei] = encoded.charCodeAt(ei);
+
+        function maskText(text) {
+          if (!text) return text;
+          text = text.replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, "[EMAIL_ADDRESS]");
+
+          // Add more regex patterns for other PII types as needed
+
+          return text;
         }
-        message.data = result;
-      } catch (e) {}
-      return message;
+
+        function maskFields(config) {
+          if (config == null) return;
+          if (typeof config.query === "string") config.query = maskText(config.query);
+        }
+
+        maskFields(safeGet(data, ["protoPayload", "metadata", "jobChange", "job", "jobConfig", "queryConfig"]));
+        maskFields(safeGet(data, ["protoPayload", "metadata", "jobInsertion", "job", "jobConfig", "queryConfig"]));
+
+        message.data = JSON.stringify(data);
+        return message;
+      } catch (e) {
+        return message;
+      }
     }
   JAVASCRIPT
 }
