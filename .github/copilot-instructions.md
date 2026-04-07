@@ -20,6 +20,7 @@ This is a Terraform module that deploys infrastructure for Masthead Data to moni
 ### File Organization
 - Each module should have: `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`, and `README.md`
 - Root level should have: `main.tf`, `variables.tf`, `outputs.tf`, and `README.md`
+- Extended documentation lives in `docs/`: `docs/configuration.md` (full config reference + optional features) and `docs/architecture.md` (diagrams)
 - Keep related resources together in logical blocks with comments
 
 ### Variable Conventions
@@ -132,6 +133,30 @@ locals {
   })
 }
 ```
+
+### Opt-in Features via `custom_code`
+For features that require user-supplied logic (e.g., Pub/Sub message transforms), use a `custom_code` field in an object variable rather than an `enabled` boolean. Enable the underlying resource only when the value is non-null:
+```hcl
+# Variable shape
+variable "pii_redaction" {
+  type = object({
+    custom_code = optional(string, null)
+  })
+  default = {}
+}
+
+# Conditional dynamic block
+dynamic "message_transforms" {
+  for_each = var.pii_redaction.custom_code != null ? [1] : []
+  content {
+    javascript_udf {
+      function_name = "redactPii"
+      code          = var.pii_redaction.custom_code
+    }
+  }
+}
+```
+The UDF function name must match what the resource expects (e.g., `"redactPii"` for `google_pubsub_topic.message_transforms`).
 
 ### API Enablement
 ```hcl
