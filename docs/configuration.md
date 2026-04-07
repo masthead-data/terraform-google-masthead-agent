@@ -51,7 +51,7 @@ module "masthead_agent" {
 
 ## PII Redaction
 
-The BigQuery module supports opt-in PII redaction via a [Pub/Sub message transform (SMT)](https://cloud.google.com/pubsub/docs/message-transforms). A JavaScript UDF runs at the **topic level**, so all subscribers receive redacted messages before they are stored in the subscription backlog.
+The BigQuery module supports opt-in PII redaction via a [Pub/Sub message transform (SMT)](https://docs.cloud.google.com/pubsub/docs/smts/smts-overview). A JavaScript UDF runs at the **topic level**, so all subscribers receive redacted messages before they are stored in the subscription backlog.
 
 The SMT is disabled by default. It is enabled only when `pii_redaction.custom_code` is set.
 
@@ -105,6 +105,6 @@ pii_redaction = {
 ### Behaviour details
 
 - Disabled by default. The SMT is enabled only when `custom_code` is provided.
-- The UDF must export a function named `redactPii(message, metadata)` matching the [Pub/Sub SMT UDF signature](https://cloud.google.com/pubsub/docs/message-transforms#javascript-udf).
+- The UDF must export a function named `redactPii(message, metadata)` matching the [Pub/Sub SMT UDF signature](https://docs.cloud.google.com/pubsub/docs/smts/udfs-overview).
 - The transform runs on the **topic**, so all subscribers automatically receive redacted messages.
 - Only applies to the BigQuery module. Other modules (Dataform, Dataplex) are unaffected.
