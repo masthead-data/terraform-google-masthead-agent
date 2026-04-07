@@ -66,14 +66,6 @@ module "masthead_agent" {
 }
 ```
 
-### Full Configuration Example
-
-See [docs/full-configuration.md](docs/full-configuration.md) for a complete configuration with all available options, including PII redaction.
-
-## Architecture
-
-See [docs/architecture.md](docs/architecture.md) for diagrams and details.
-
 ## Required GCP Permissions
 
 ### For Project Mode
@@ -103,6 +95,11 @@ You need these permissions in the target project:
 - `pubsub.subscriptions.create`
 - `iam.serviceAccounts.setIamPolicy`
 - `resourcemanager.projects.setIamPolicy`
+
+### Documentation
+
+- [Configuration](docs/configuration.md)
+- [Architecture](docs/architecture.md)
 
 ## References
 

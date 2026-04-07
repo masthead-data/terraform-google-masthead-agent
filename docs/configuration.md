@@ -1,6 +1,6 @@
-# Full Configuration Example
+# Configuration
 
-Complete configuration with all available options:
+Configuration example with all available options:
 
 ```hcl
 module "masthead_agent" {
@@ -13,10 +13,10 @@ module "masthead_agent" {
   project_id = var.project_id
 
   # ORGANIZATION MODE: Set deployment_project_id + folders and/or projects
-  # deployment_project_id = var.deployment_project_id
-  # monitored_folder_ids  = ["folders/123456789"]  # Optional: monitor folders
-  # monitored_project_ids = ["project-1", "project-2"]  # Optional: monitor specific projects
-  # organization_id       = "123456789"  # Required when using folders
+  deployment_project_id = var.deployment_project_id
+  monitored_folder_ids  = ["folders/123456789"]  # Optional: monitor folders
+  monitored_project_ids = ["project-1", "project-2"]  # Optional: monitor specific projects
+  organization_id       = "123456789"  # Required when using folders
 
   # Module configuration
   enable_modules = {
@@ -33,11 +33,11 @@ module "masthead_agent" {
 
   # PII redaction (optional) — provide a UDF to enable SMT on the BigQuery topic
   # See ## PII Redaction below for a ready-to-use email redaction example
-  # pii_redaction = {
-  #   custom_code = <<-JAVASCRIPT
-  #     function redactPii(message, metadata) { ... }
-  #   JAVASCRIPT
-  # }
+  pii_redaction = {
+    custom_code = <<-JAVASCRIPT
+      function redactPii(message, metadata) { ... }
+    JAVASCRIPT
+  }
 
   # Labels for governance and cost management
   labels = {
