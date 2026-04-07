@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script to generate Terraform 'moved' blocks for migrating from v0.2.x to v0.3.0
+# Script to generate Terraform 'moved' blocks for migrating from v0.2.x to v0.3.0+
 # This helps avoid resource recreation during the module restructuring
 #
 # Usage: ./generate-moved-blocks.sh [MODULE_PREFIX]
@@ -54,7 +54,7 @@ fi
 
 # Initialize output file
 cat > "$OUTPUT_FILE" << 'EOF'
-# Generated moved blocks for v0.2.x to v0.3.0 migration
+# Generated moved blocks for v0.2.x to v0.3.0+ migration
 # This file helps preserve existing resources during module restructuring
 #
 # After applying these moved blocks:
@@ -78,11 +78,11 @@ if [ -z "$MODULES" ]; then
     exit 1
 fi
 
-# Check if state is already in v0.3.0 format (has logging_infrastructure)
+# Check if state is already in v0.3.0+ format (has logging_infrastructure)
 if echo "$MODULES" | grep -q "module.logging_infrastructure"; then
-    echo -e "${GREEN}✓ Your state appears to already be in v0.3.0 format!${NC}"
+    echo -e "${GREEN}✓ Your state appears to already be in v0.3.0+ format!${NC}"
     echo ""
-    echo "Detected logging_infrastructure module, which indicates you're already using v0.3.0."
+    echo "Detected logging_infrastructure module, which indicates you're already using v0.3.0+."
     echo "No migration needed - your resources are already in the correct structure."
     exit 0
 fi
@@ -444,7 +444,7 @@ echo -e "${GREEN}Success! Generated moved blocks in: $OUTPUT_FILE${NC}"
 echo ""
 echo "Next steps:"
 echo "1. Review the generated $OUTPUT_FILE"
-echo "2. Update your module source to v0.3.0"
+echo "2. Update your module source to v0.3.0+"
 echo "3. Run: terraform init -upgrade"
 echo "4. Run: terraform plan (should show moves, minimal recreations)"
 echo "5. Run: terraform apply"

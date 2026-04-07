@@ -34,7 +34,7 @@ For multi-project or folder-level monitoring. Creates centralized Pub/Sub infras
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.0"
+  version = ">=0.3.1"
 
   # Project mode: single project
   project_id = "project-1"
@@ -46,7 +46,7 @@ module "masthead_agent" {
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.0"
+  version = ">=0.3.1"
 
   # Organization mode: folders + additional projects
   monitored_folder_ids  = [
@@ -73,7 +73,7 @@ Complete configuration with all options:
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.0"
+  version = ">=0.3.1"
 
   # Choose ONE mode:
 

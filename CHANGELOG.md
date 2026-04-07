@@ -16,11 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- **Dataplex IAM**: Removed `roles/dataplex.storageDataReader` role from Dataplex service account permissions
-
 ### Fixed
 
 ### Security
+
+## [0.3.1] - 2026-04-07
+
+### Added
+
+- **PII Redaction via Pub/Sub SMT**: Added opt-in `pii_redaction` variable to the BigQuery module. When enabled, a JavaScript UDF runs as a Pub/Sub message transform on the BigQuery topic and redacts email addresses from SQL query fields (`jobInsertRequest`, `jobUpdateRequest`, `jobQueryResponse`) in BigQuery audit log entries before messages are stored in the subscription backlog. A `custom_code` field allows supplying a fully custom UDF instead of the built-in email-redaction logic.
+
+### Removed
+
+- **Dataplex IAM**: Removed `roles/dataplex.storageDataReader` role from Dataplex service account permissions
 
 ## [0.3.0] - 2026-02-10
 
