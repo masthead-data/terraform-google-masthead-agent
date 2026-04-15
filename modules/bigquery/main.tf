@@ -18,6 +18,7 @@ locals {
 (
   protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows" OR
   protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.ReadRows" OR
+  protoPayload.methodName="google.cloud.bigquery.v2.JobService.GetQueryResults" OR
   protoPayload.methodName="google.cloud.bigquery.v2.JobService.InsertJob" OR
   protoPayload.methodName="google.cloud.bigquery.v2.JobService.Query" OR
   protoPayload.methodName="google.cloud.bigquery.v2.TableDataService.List" OR
