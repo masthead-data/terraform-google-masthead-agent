@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **BigQuery Log Sink**: Added missing `google.cloud.bigquery.v2.JobService.GetQueryResults` method to the BigQuery log sink filter
+
 ### Security
 
 ## [0.3.1] - 2026-04-07
