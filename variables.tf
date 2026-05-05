@@ -118,6 +118,26 @@ variable "enable_privatelogviewer_role" {
   default     = true
 }
 
+variable "create_organization_custom_roles" {
+  type        = bool
+  description = <<-EOT
+    Whether this module creates the Masthead custom IAM roles and binds them to the Masthead service account.
+    Only applies in folder/organization mode (when monitored_folder_ids is set), where the roles must be
+    created at the organization scope and the deploying principal therefore needs iam.roles.create on the org.
+    Set to false when an organization administrator will create the org-level custom roles and grant them
+    to the Masthead service account out-of-band (e.g. via gcloud or console).
+
+    In project mode (monitored_project_ids only) this flag has no effect: the module always creates the
+    project-level custom roles, since they are scoped to the deployment project and don't require org-level
+    permissions.
+
+    When false (folder mode only), the module skips both role creation and the SA binding for:
+      - mastheadBigQueryCustomRole       (permission: bigquery.datasets.listSharedDatasetUsage)
+      - mastheadAnalyticsHubCustomRole   (permission: analyticshub.listings.viewSubscriptions)
+  EOT
+  default     = true
+}
+
 variable "enable_apis" {
   type        = bool
   description = "Enable required Google Cloud APIs in all modules"

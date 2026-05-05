@@ -31,8 +31,8 @@ resource "null_resource" "validate_configuration" {
     }
 
     precondition {
-      condition     = !local.has_folders || var.organization_id != null
-      error_message = "organization_id is required when using monitored_folder_ids to create organization-level custom IAM roles."
+      condition     = !var.create_organization_custom_roles || !local.has_folders || var.organization_id != null
+      error_message = "organization_id is required when using monitored_folder_ids with create_organization_custom_roles=true. Set create_organization_custom_roles=false if the custom roles are managed externally at the organization level."
     }
   }
 }
@@ -49,8 +49,9 @@ module "bigquery" {
   organization_id       = local.numeric_organization_id
 
   # Service account and permissions
-  masthead_service_accounts    = var.masthead_service_accounts
-  enable_privatelogviewer_role = var.enable_privatelogviewer_role
+  masthead_service_accounts        = var.masthead_service_accounts
+  enable_privatelogviewer_role     = var.enable_privatelogviewer_role
+  create_organization_custom_roles = var.create_organization_custom_roles
 
   # Resource configuration
   enable_apis   = var.enable_apis
@@ -106,7 +107,8 @@ module "analytics_hub" {
   monitored_project_ids = local.all_monitored_projects
 
   # Service account
-  masthead_service_accounts = var.masthead_service_accounts
+  masthead_service_accounts        = var.masthead_service_accounts
+  create_organization_custom_roles = var.create_organization_custom_roles
 
   # Resource configuration
   enable_apis = var.enable_apis

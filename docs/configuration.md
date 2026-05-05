@@ -5,7 +5,7 @@ Configuration example with all available options:
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.1"
+  version = ">=0.4.0"
 
   # Choose ONE mode:
 
@@ -30,6 +30,7 @@ module "masthead_agent" {
   enable_apis                  = true
   enable_privatelogviewer_role = true  # For retrospective log export
   enable_datascan_editing      = false # Dataplex DataScan editing permissions
+  create_organization_custom_roles          = true  # Folder mode only: set to false if the org-level Masthead custom IAM roles are managed externally. No effect in project mode.
 
   # PII redaction (optional) — provide a UDF to enable SMT on the BigQuery topic
   # See ## PII Redaction below for a ready-to-use email redaction example

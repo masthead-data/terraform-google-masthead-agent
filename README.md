@@ -17,7 +17,7 @@ For single-project setups. All resources (logs, Pub/Sub, IAM) are created in a m
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.1"
+  version = ">=0.4.0"
 
   # Project mode: single project
   project_id = "project-1"
@@ -54,7 +54,7 @@ For multi-project or folder-level monitoring. Creates centralized Pub/Sub infras
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.1"
+  version = ">=0.4.0"
 
   # Organization mode: folders + additional projects
   monitored_folder_ids  = [
@@ -96,9 +96,55 @@ module "masthead_agent" {
 - `logging.sinks.create`
 - `resourcemanager.folders.setIamPolicy`
 
-**Organization level** (when `monitored_folder_ids` is set and `organization_id` is provided):
+**Organization level** (when `monitored_folder_ids` is set, `organization_id` is provided, and `create_organization_custom_roles = true`):
 
 - `iam.roles.create`
+
+### Externally managed custom IAM roles (folder mode only)
+
+By default the module creates two custom roles and binds them to the Masthead service account:
+
+- `mastheadBigQueryCustomRole` — `bigquery.datasets.listSharedDatasetUsage`
+- `mastheadAnalyticsHubCustomRole` — `analyticshub.listings.viewSubscriptions`
+
+In **folder mode** these roles are created at the organization scope, which requires `iam.roles.create` on the org. If your security policy forbids the deployment principal from holding that permission, set `create_organization_custom_roles = false`. The module then skips both the role definition and the SA binding for the two roles above; you are responsible for creating the roles at the organization level and granting them to the Masthead service account at folder scope.
+
+In **project mode** (`monitored_project_ids` only, no folders) the flag has no effect: the roles are project-level, scoped to the deployment project, and always created by the module.
+
+```hcl
+module "masthead_agent" {
+  source  = "masthead-data/masthead-agent/google"
+  version = ">=0.4.0"
+
+  monitored_folder_ids  = ["folders/111111111"]
+  deployment_project_id = "project-3"
+
+  create_organization_custom_roles = false  # org admin manages the custom roles manually
+}
+```
+
+Manual setup (run once, by an org admin):
+
+```bash
+gcloud iam roles create mastheadBigQueryCustomRole \
+  --organization=<ORG_ID> \
+  --title="Masthead BigQuery Custom Role" \
+  --permissions=bigquery.datasets.listSharedDatasetUsage
+
+gcloud iam roles create mastheadAnalyticsHubCustomRole \
+  --organization=<ORG_ID> \
+  --title="Masthead Analytics Hub Custom Role" \
+  --permissions=analyticshub.listings.viewSubscriptions
+
+# Grant each role to the Masthead BigQuery SA at the folder level (per monitored folder)
+gcloud resource-manager folders add-iam-policy-binding <FOLDER_ID> \
+  --member=serviceAccount:<MASTHEAD_BIGQUERY_SA> \
+  --role=organizations/<ORG_ID>/roles/mastheadBigQueryCustomRole
+
+gcloud resource-manager folders add-iam-policy-binding <FOLDER_ID> \
+  --member=serviceAccount:<MASTHEAD_BIGQUERY_SA> \
+  --role=organizations/<ORG_ID>/roles/mastheadAnalyticsHubCustomRole
+```
 
 ## Documentation
 

@@ -28,3 +28,9 @@ variable "enable_apis" {
   description = "Enable required Google Cloud APIs"
   default     = true
 }
+
+variable "create_organization_custom_roles" {
+  type        = bool
+  description = "Whether to create the org-level custom roles."
+  default     = true
+}

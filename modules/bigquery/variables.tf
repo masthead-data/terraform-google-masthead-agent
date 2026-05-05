@@ -35,6 +35,12 @@ variable "enable_privatelogviewer_role" {
   default     = true
 }
 
+variable "create_organization_custom_roles" {
+  type        = bool
+  description = "Whether to create the org-level mastheadBigQueryCustomRole and bind it to the Masthead BigQuery service account. Only applies in folder mode; in project mode the project-level custom role is always created. Set to false when the org-level role and binding are managed externally."
+  default     = true
+}
+
 variable "enable_apis" {
   type        = bool
   description = "Enable required Google Cloud APIs"
