@@ -22,7 +22,7 @@ resource "google_project_service" "analyticshub_api" {
 
 # Custom role for Analytics Hub subscription viewing at folder level
 resource "google_organization_iam_custom_role" "analyticshub_custom_role_folder" {
-  count = local.has_folders && var.organization_id != null ? 1 : 0
+  count = var.create_organization_custom_roles && local.has_folders && var.organization_id != null ? 1 : 0
 
   org_id      = var.organization_id
   role_id     = "mastheadAnalyticsHubCustomRole"
@@ -68,7 +68,7 @@ resource "google_folder_iam_member" "masthead_analyticshub_folder_roles" {
 
 # IAM: Grant custom role at folder level
 resource "google_folder_iam_member" "masthead_analyticshub_folder_custom_role" {
-  for_each = local.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
+  for_each = var.create_organization_custom_roles && local.has_folders && var.organization_id != null ? toset(var.monitored_folder_ids) : toset([])
 
   folder = each.value
   role   = google_organization_iam_custom_role.analyticshub_custom_role_folder[0].id

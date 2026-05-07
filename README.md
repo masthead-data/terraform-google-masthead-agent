@@ -17,7 +17,7 @@ For single-project setups. All resources (logs, Pub/Sub, IAM) are created in a m
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.1"
+  version = ">=0.4.0"
 
   # Project mode: single project
   project_id = "project-1"
@@ -54,7 +54,7 @@ For multi-project or folder-level monitoring. Creates centralized Pub/Sub infras
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.3.1"
+  version = ">=0.4.0"
 
   # Organization mode: folders + additional projects
   monitored_folder_ids  = [
@@ -91,12 +91,12 @@ module "masthead_agent" {
 - `resourcemanager.projects.setIamPolicy`
 - `serviceusage.services.enable`
 
-**Each monitored folder**:
+**Each monitored folder** (when `monitored_folder_ids` is set):
 
 - `logging.sinks.create`
-- `resourcemanager.folders.setIamPolicy`
+- `resourcemanager.folders.setIamPolicy` (when  `create_organization_custom_roles = true`)
 
-**Organization level** (when `monitored_folder_ids` is set and `organization_id` is provided):
+**Organization level** (when `monitored_folder_ids` is set and `create_organization_custom_roles = true`):
 
 - `iam.roles.create`
 

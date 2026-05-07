@@ -18,9 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **BigQuery Log Sink**: Added missing `google.cloud.bigquery.v2.JobService.GetQueryResults` method to the BigQuery log sink filter
-
 ### Security
+
+## [0.4.0] - 2026-05-07
+
+### Added
+
+- **`create_organization_custom_roles` variable** (default `true`): in **folder mode**, allows opting out of org-level custom IAM role management. Default behaviour is unchanged. See README → "Externally managed custom IAM roles" for the manual setup runbook.
+
+### Fixed
+
+- **BigQuery Log Sink**: Added missing `google.cloud.bigquery.v2.JobService.GetQueryResults` method to the BigQuery log sink filter
 
 ## [0.3.1] - 2026-04-07
 
@@ -208,7 +216,9 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.3.1...v0.4.0
+[0.3.1]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.10...v0.3.0
 [0.2.10]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.2.8...v0.2.9

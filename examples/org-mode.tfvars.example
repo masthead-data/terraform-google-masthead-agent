@@ -32,6 +32,9 @@ enable_privatelogviewer_role = true
 enable_apis                  = true
 enable_datascan_editing      = false
 
+# Create the organization level custom roles (relevant only for monitored folders). Set to false if the organization level custom IAM roles are managed outside of this module.
+create_organization_custom_roles = true
+
 # Labels
 labels = {
   service     = "masthead-agent"
