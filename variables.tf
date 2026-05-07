@@ -130,10 +130,6 @@ variable "create_organization_custom_roles" {
     In project mode (monitored_project_ids only) this flag has no effect: the module always creates the
     project-level custom roles, since they are scoped to the deployment project and don't require org-level
     permissions.
-
-    When false (folder mode only), the module skips both role creation and the SA binding for:
-      - mastheadBigQueryCustomRole       (permission: bigquery.datasets.listSharedDatasetUsage)
-      - mastheadAnalyticsHubCustomRole   (permission: analyticshub.listings.viewSubscriptions)
   EOT
   default     = true
 }
