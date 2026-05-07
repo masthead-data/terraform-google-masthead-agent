@@ -91,10 +91,10 @@ module "masthead_agent" {
 - `resourcemanager.projects.setIamPolicy`
 - `serviceusage.services.enable`
 
-**Each monitored folder**:
+**Each monitored folder** (when `monitored_folder_ids` is set):
 
 - `logging.sinks.create`
-- `resourcemanager.folders.setIamPolicy`
+- `resourcemanager.folders.setIamPolicy` (when  `create_organization_custom_roles = true`)
 
 **Organization level** (when `monitored_folder_ids` is set and `create_organization_custom_roles = true`):
 
