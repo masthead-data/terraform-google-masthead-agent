@@ -1,0 +1,25 @@
+# Project Mode Example
+# Use this for a single- or several projects integrations
+
+# Single project where all resources (logs, Pub/Sub, IAM) will be created
+project_id = "my-data-project"
+
+# Module configuration
+enable_modules = {
+  bigquery      = true
+  dataform      = true
+  dataplex      = true
+  analytics_hub = true
+}
+
+# Optional configurations
+enable_privatelogviewer_role = true
+enable_apis                  = true
+enable_datascan_editing      = false
+
+# Labels
+labels = {
+  service     = "masthead-agent"
+  environment = "production"
+  mode        = "project"
+}

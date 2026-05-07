@@ -1,6 +1,24 @@
-variable "project_id" {
+variable "pubsub_project_id" {
   type        = string
-  description = "GCP project ID where resources will be created"
+  description = "GCP project ID where Pub/Sub resources will be created"
+}
+
+variable "monitored_folder_ids" {
+  type        = list(string)
+  description = "List of GCP folder IDs for folder-level log sinks (optional, for folder mode)"
+  default     = []
+}
+
+variable "monitored_project_ids" {
+  type        = list(string)
+  description = "List of GCP project IDs to monitor (for project mode or hybrid mode)"
+  default     = []
+}
+
+variable "organization_id" {
+  type        = string
+  description = "GCP organization ID for organization-level custom IAM roles (required for folder mode)"
+  default     = null
 }
 
 variable "masthead_service_accounts" {
@@ -17,6 +35,12 @@ variable "enable_privatelogviewer_role" {
   default     = true
 }
 
+variable "create_organization_custom_roles" {
+  type        = bool
+  description = "Create the organization level custom roles (relevant only for monitored folders). Set to false if the organization level custom IAM roles are managed outside of this module."
+  default     = true
+}
+
 variable "enable_apis" {
   type        = bool
   description = "Enable required Google Cloud APIs"
@@ -27,4 +51,12 @@ variable "labels" {
   type        = map(string)
   description = "Labels to apply to resources"
   default     = {}
+}
+
+variable "pii_redaction" {
+  description = "PII redaction configuration. Provide custom_code with a JavaScript UDF to enable a Pub/Sub message transform (SMT) on the BigQuery topic. The SMT is disabled when custom_code is null."
+  type = object({
+    custom_code = optional(string, null)
+  })
+  default = {}
 }

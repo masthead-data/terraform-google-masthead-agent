@@ -4,48 +4,112 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 6.13.0"
+      version = ">= 6.39.0"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = ">= 3.0.0"
     }
   }
 }
 
+# Validation check
+resource "null_resource" "validate_configuration" {
+  lifecycle {
+    precondition {
+      condition     = local.project_mode || local.organization_mode
+      error_message = <<-EOT
+        Invalid configuration. Choose one of two modes:
+        1. PROJECT MODE: Set project_id only
+        2. ORGANIZATION MODE: Set deployment_project_id + monitored_folder_ids and/or monitored_project_ids
+      EOT
+    }
+
+    precondition {
+      condition     = local.pubsub_project_id != null
+      error_message = "Either project_id or deployment_project_id must be specified."
+    }
+
+    precondition {
+      condition     = !var.create_organization_custom_roles || !local.has_folders || var.organization_id != null
+      error_message = "organization_id is required when using monitored_folder_ids with create_organization_custom_roles=true."
+    }
+  }
+}
+
+# BigQuery Module - Logging Infrastructure + IAM
 module "bigquery" {
   count  = var.enable_modules.bigquery ? 1 : 0
   source = "./modules/bigquery"
 
-  project_id                   = var.project_id
-  masthead_service_accounts    = var.masthead_service_accounts
-  enable_privatelogviewer_role = var.enable_privatelogviewer_role
-  enable_apis                  = var.enable_apis
-  labels                       = var.labels
+  # Infrastructure configuration
+  pubsub_project_id     = local.pubsub_project_id
+  monitored_folder_ids  = local.normalized_folder_ids
+  monitored_project_ids = local.all_monitored_projects
+  organization_id       = local.numeric_organization_id
+
+  # Service account and permissions
+  masthead_service_accounts        = var.masthead_service_accounts
+  enable_privatelogviewer_role     = var.enable_privatelogviewer_role
+  create_organization_custom_roles = var.create_organization_custom_roles
+
+  # Resource configuration
+  enable_apis   = var.enable_apis
+  labels        = var.labels
+  pii_redaction = var.pii_redaction
 }
 
+# Dataform Module - Logging Infrastructure + IAM
 module "dataform" {
   count  = var.enable_modules.dataform ? 1 : 0
   source = "./modules/dataform"
 
-  project_id                = var.project_id
+  # Infrastructure configuration
+  pubsub_project_id     = local.pubsub_project_id
+  monitored_folder_ids  = local.normalized_folder_ids
+  monitored_project_ids = local.all_monitored_projects
+
+  # Service account
   masthead_service_accounts = var.masthead_service_accounts
-  enable_apis               = var.enable_apis
-  labels                    = var.labels
+
+  # Resource configuration
+  enable_apis = var.enable_apis
+  labels      = var.labels
 }
 
+# Dataplex Module - Logging Infrastructure + IAM
 module "dataplex" {
   count  = var.enable_modules.dataplex ? 1 : 0
   source = "./modules/dataplex"
 
-  project_id                = var.project_id
+  # Infrastructure configuration
+  pubsub_project_id     = local.pubsub_project_id
+  monitored_folder_ids  = local.normalized_folder_ids
+  monitored_project_ids = local.all_monitored_projects
+
+  # Service account and permissions
   masthead_service_accounts = var.masthead_service_accounts
-  enable_apis               = var.enable_apis
   enable_datascan_editing   = var.enable_datascan_editing
-  labels                    = var.labels
+
+  # Resource configuration
+  enable_apis = var.enable_apis
+  labels      = var.labels
 }
 
+# Analytics Hub Module - IAM only (no logging infrastructure needed)
 module "analytics_hub" {
   count  = var.enable_modules.analytics_hub ? 1 : 0
   source = "./modules/analytics-hub"
 
-  project_id                = var.project_id
-  masthead_service_accounts = var.masthead_service_accounts
-  enable_apis               = var.enable_apis
+  # Infrastructure configuration
+  monitored_folder_ids  = local.normalized_folder_ids
+  organization_id       = local.numeric_organization_id
+  monitored_project_ids = local.all_monitored_projects
+
+  # Service account
+  masthead_service_accounts        = var.masthead_service_accounts
+  create_organization_custom_roles = var.create_organization_custom_roles
+
+  # Resource configuration
+  enable_apis = var.enable_apis
 }

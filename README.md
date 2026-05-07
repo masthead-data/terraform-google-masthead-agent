@@ -6,72 +6,106 @@
 
 This Terraform module deploys infrastructure for Masthead Data to monitor Google Cloud services (BigQuery, Dataform, Dataplex, Analytics Hub) using Pub/Sub topics, Cloud Logging sinks, and IAM bindings.
 
-## Usage examples
+## 📦 Project Mode
 
-- **Basic** - this example demonstrates minimal configuration using default settings, the simplest way to get started:
+For single-project setups. All resources (logs, Pub/Sub, IAM) are created in a monitored project.
 
-  - Deploys all modules (BigQuery, Dataform, Dataplex, Analytics Hub) with defaults
-  - Uses minimal required variables
-  - No custom labeling applied
+**Use when:** You have a single project or a few projects to monitor.
 
-    ```hcl
-    variable "project_id" {
-      type        = string
-      description = "The GCP project ID where resources will be created"
-    }
+### Example
 
-    provider "google" {
-      project = var.project_id
-    }
+```hcl
+module "masthead_agent" {
+  source  = "masthead-data/masthead-agent/google"
+  version = ">=0.4.0"
 
-    module "masthead_agent" {
-      source  = "masthead-data/masthead-agent/google"
-      version = ">=0.2.10"
+  # Project mode: single project
+  project_id = "project-1"
+}
+```
 
-      project_id  = var.project_id
-    }
-    ```
+### Required Permissions
 
-- **Full** - a deployment with comprehensive configuration and governance:
+**Target project:**
 
-  - Complete Module Suite: Enables BigQuery, Dataform, Dataplex, and Analytics Hub
-  - Production Security: Private Log Viewer role or [retrospective log export](https://docs.mastheadata.com/set-up/saas-manual-resource-creation-google-cloud-+-bigquery#export-retrospective-logs)
-  - Enterprise Governance: Comprehensive labeling for compliance and cost management
+- `iam.roles.create`
+- `logging.sinks.create`
+- `pubsub.subscriptions.create`
+- `pubsub.subscriptions.setIamPolicy`
+- `pubsub.topics.create`
+- `pubsub.topics.setIamPolicy`
+- `resourcemanager.projects.setIamPolicy`
+- `serviceusage.services.enable`
 
-    ```hcl
-    variable "project_id" {
-      type        = string
-      description = "The GCP project ID where resources will be created"
-    }
+## 🏢 Organization Mode
 
-    provider "google" {
-      project = var.project_id
-    }
+For multi-project or folder-level monitoring. Creates centralized Pub/Sub infrastructure in a dedicated deployment project with folder-level and/or project-level log sinks.
 
-    module "masthead_agent" {
-      source                       = "masthead-data/masthead-agent/google"
-      version                      = ">=0.2.10"
+**Supports:**
 
-      project_id                   = var.project_id
-      enable_apis                  = true
-      enable_privatelogviewer_role = true
-      enable_modules = {
-        bigquery      = true
-        dataform      = true
-        dataplex      = true
-        analytics_hub = true
-      }
-      labels = {
-        environment = "production"
-        team        = "data"
-        cost_center = "engineering"
-        monitoring  = true
-        module      = "masthead-agent"
-      }
-    }
-    ```
+- One or more GCP folders (monitors all child projects)
+- Additional individual projects (outside of folders)
+- Any combination of folders and projects
+
+**Use when:** You want to monitor multiple projects, use GCP folders, or need centralized log collection.
+
+### Example
+
+```hcl
+module "masthead_agent" {
+  source  = "masthead-data/masthead-agent/google"
+  version = ">=0.4.0"
+
+  # Organization mode: folders + additional projects
+  monitored_folder_ids  = [
+    "folders/111111111",
+    "folders/222222222"
+  ]
+  monitored_project_ids = [
+    "project-1",
+    "project-2"
+  ]
+  deployment_project_id = "project-3"
+  organization_id       = "123456789"  # Required for custom IAM roles on folders
+
+  labels = {
+    environment = "production"
+  }
+}
+```
+
+### Required Permissions
+
+**Deployment project**:
+
+- `pubsub.subscriptions.create`
+- `pubsub.subscriptions.setIamPolicy`
+- `pubsub.topics.create`
+- `pubsub.topics.setIamPolicy`
+- `serviceusage.services.enable`
+
+**Each monitored project** (when `monitored_project_ids` is set):
+
+- `iam.roles.create`
+- `logging.sinks.create`
+- `resourcemanager.projects.setIamPolicy`
+- `serviceusage.services.enable`
+
+**Each monitored folder** (when `monitored_folder_ids` is set):
+
+- `logging.sinks.create`
+- `resourcemanager.folders.setIamPolicy` (when  `create_organization_custom_roles = true`)
+
+**Organization level** (when `monitored_folder_ids` is set and `create_organization_custom_roles = true`):
+
+- `iam.roles.create`
+
+## Documentation
+
+- [Configuration](docs/configuration.md)
+- [Architecture](docs/architecture.md)
 
 ## References
 
-- [Masthead Data Documentation](https://docs.mastheadata.com/saas-manual-resource-creation-google-cloud-+-bigquery)
+- [Masthead Data Documentation](https://docs.mastheadata.com/get-started/integrate-using-iac)
 - [Module in Terraform Registry](https://registry.terraform.io/modules/masthead-data/masthead-agent/google/latest)
