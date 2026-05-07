@@ -110,17 +110,9 @@ pii_redaction = {
 - The transform runs on the **topic**, so all subscribers automatically receive redacted messages.
 - Only applies to the BigQuery module. Other modules (Dataform, Dataplex) are unaffected.
 
+### Externally managed organization level custom IAM roles
 
-### Externally managed custom IAM roles (folder mode only)
-
-By default the module creates two custom roles and binds them to the Masthead service account:
-
-- `mastheadBigQueryCustomRole` — `bigquery.datasets.listSharedDatasetUsage`
-- `mastheadAnalyticsHubCustomRole` — `analyticshub.listings.viewSubscriptions`
-
-In **folder mode** these roles are created at the organization scope, which requires `iam.roles.create` on the org. If your security policy forbids the deployment principal from holding that permission, set `create_organization_custom_roles = false`. The module then skips both the role definition and the SA binding for the two roles above; you are responsible for creating the roles at the organization level and granting them to the Masthead service account at folder scope.
-
-In **project mode** (`monitored_project_ids` only, no folders) the flag has no effect: the roles are project-level, scoped to the deployment project, and always created by the module.
+Monitoring folders scope requires organization level custom roles. To apply such terraform configuration your Terraform pipeline must have `iam.roles.create` permission on the organization scope. If this is not the case, you can set `create_organization_custom_roles = false` to skip roles creation and the service account binding. In this case you are responsible for creating the identical roles at the organization level and granting them to the Masthead service account at folders scope.
 
 ```hcl
 module "masthead_agent" {
@@ -130,26 +122,26 @@ module "masthead_agent" {
   monitored_folder_ids  = ["folders/111111111"]
   deployment_project_id = "project-3"
 
-  create_organization_custom_roles = false  # org admin manages the custom roles manually
+  create_organization_custom_roles = false  # org admin manages the custom roles separate from this module
 }
 ```
 
-Manual setup (run once, by an org admin):
+Create roles and bind service accounts (example using gcloud):
 
 ```bash
 gcloud iam roles create mastheadCustomRole \
   --organization=<ORG_ID> \
   --title="Masthead Custom Role" \
-  --description="Permissions required by the Masthead agent (BigQuery shared dataset usage + Analytics Hub subscription viewing)" \
+  --description="Custom role required by the Masthead Data agent" \
   --permissions=bigquery.datasets.listSharedDatasetUsage,analyticshub.listings.viewSubscriptions
 
-# Grant the role to the Masthead BigQuery SA at the folder level (per monitored folder)
+# Run per each monitored folder
 gcloud resource-manager folders add-iam-policy-binding <FOLDER_ID> \
-  --member=serviceAccount:<MASTHEAD_BIGQUERY_SA> \
+  --member=serviceAccount:<MASTHEAD_SA> \
   --role=organizations/<ORG_ID>/roles/mastheadCustomRole
 ```
 
-Or, equivalently, as a standalone Terraform configuration. The module does not reference the role names when `create_organization_custom_roles = false`, so the two permissions can be combined into a single custom role for simpler administration. Apply this once with an org-admin principal that holds `iam.roles.create`; afterwards your main configuration can run with `create_organization_custom_roles = false` under a more restricted principal.
+Or, equivalently, as a standalone Terraform configuration:
 
 ```hcl
 variable "organization_id" {
@@ -162,9 +154,9 @@ variable "folder_ids" {
   description = "Folders where the Masthead service account should receive the custom role. Each entry can be 'folders/123456789' or just the numeric ID."
 }
 
-variable "masthead_bigquery_sa" {
+variable "masthead_sa" {
   type        = string
-  description = "Email of the Masthead BigQuery service account that the custom role is granted to."
+  description = "Email of the Masthead service account that the custom role is granted to."
   default     = "masthead-data@masthead-prod.iam.gserviceaccount.com"
 }
 
@@ -190,7 +182,7 @@ resource "google_folder_iam_member" "masthead_custom_role" {
 
   folder = each.value
   role   = google_organization_iam_custom_role.masthead.id
-  member = "serviceAccount:${var.masthead_bigquery_sa}"
+  member = "serviceAccount:${var.masthead_sa}"
 }
 ```
 
@@ -203,4 +195,3 @@ folder_ids = [
   "folders/222222222",
 ]
 ```
-
