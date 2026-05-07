@@ -31,6 +31,6 @@ variable "enable_apis" {
 
 variable "create_organization_custom_roles" {
   type        = bool
-  description = "Whether to create the org-level custom roles."
+  description = "Create the organization level custom roles (relevant only for monitored folders). Set to false if the organization level custom IAM roles are managed outside of this module."
   default     = true
 }

@@ -9,9 +9,9 @@ This module sets up the necessary infrastructure for Masthead Data to monitor Bi
 - **Cloud Logging Sink**: Routes BigQuery audit logs to Pub/Sub
 - **IAM Bindings**: Grants necessary permissions to Masthead service accounts
 - **Custom IAM Role**: Grants `bigquery.datasets.listSharedDatasetUsage` permission
-  - Organization-level role for folder monitoring (requires `organization_id`); gated by `create_organization_custom_roles` (default `true`). Set to `false` to manage the org-level role and binding externally.
-  - Project-level role for project mode; always created (not affected by `create_organization_custom_roles`).
+  - Organization-level role for folder monitoring (requires `organization_id`); gated by `create_organization_custom_roles`.
+  - Project-level role for project mode.
 
 ## Requirements
 
-- **Organization Mode** with `create_organization_custom_roles = true`: `organization_id` must be provided to create the organization-level custom IAM role.
+- **Organization Mode**: `organization_id` must be provided to create the organization-level custom IAM role.

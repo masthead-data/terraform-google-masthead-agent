@@ -32,7 +32,7 @@ resource "null_resource" "validate_configuration" {
 
     precondition {
       condition     = !var.create_organization_custom_roles || !local.has_folders || var.organization_id != null
-      error_message = "organization_id is required when using monitored_folder_ids with create_organization_custom_roles=true. Set create_organization_custom_roles=false if the custom roles are managed externally at the organization level."
+      error_message = "organization_id is required when using monitored_folder_ids with create_organization_custom_roles=true."
     }
   }
 }

@@ -30,7 +30,7 @@ module "masthead_agent" {
   enable_apis                  = true
   enable_privatelogviewer_role = true  # For retrospective log export
   enable_datascan_editing      = false # Dataplex DataScan editing permissions
-  create_organization_custom_roles          = true  # Folder mode only: set to false if the org-level Masthead custom IAM roles are managed externally. No effect in project mode.
+  create_organization_custom_roles          = true  # Create the organization level custom roles (relevant only for monitored folders). Set to false if the organization level custom IAM roles are managed outside of this module.
 
   # PII redaction (optional) — provide a UDF to enable SMT on the BigQuery topic
   # See ## PII Redaction below for a ready-to-use email redaction example

@@ -32,11 +32,8 @@ enable_privatelogviewer_role = true
 enable_apis                  = true
 enable_datascan_editing      = false
 
-# Set to false if an organization administrator manages the Masthead custom IAM
-# roles (mastheadBigQueryCustomRole, mastheadAnalyticsHubCustomRole) at the org
-# level and grants them to the Masthead service account out-of-band. When false,
-# organization_id is no longer required. Default: true.
-# create_organization_custom_roles = false
+# Create the organization level custom roles (relevant only for monitored folders). Set to false if the organization level custom IAM roles are managed outside of this module.
+create_organization_custom_roles = true
 
 # Labels
 labels = {

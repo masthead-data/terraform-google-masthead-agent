@@ -96,10 +96,9 @@ module "masthead_agent" {
 - `logging.sinks.create`
 - `resourcemanager.folders.setIamPolicy`
 
-**Organization level** (when `monitored_folder_ids` is set, `organization_id` is provided, and `create_organization_custom_roles = true`):
+**Organization level** (when `monitored_folder_ids` is set and `create_organization_custom_roles = true`):
 
 - `iam.roles.create`
-
 
 ## Documentation
 

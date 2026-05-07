@@ -37,7 +37,7 @@ variable "enable_privatelogviewer_role" {
 
 variable "create_organization_custom_roles" {
   type        = bool
-  description = "Whether to create the org-level mastheadBigQueryCustomRole and bind it to the Masthead BigQuery service account. Only applies in folder mode; in project mode the project-level custom role is always created. Set to false when the org-level role and binding are managed externally."
+  description = "Create the organization level custom roles (relevant only for monitored folders). Set to false if the organization level custom IAM roles are managed outside of this module."
   default     = true
 }
 

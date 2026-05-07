@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`create_organization_custom_roles` variable** (default `true`): in **folder mode**, allows opting out of org-level custom IAM role management. When set to `false`, the module skips creation of `mastheadBigQueryCustomRole` and `mastheadAnalyticsHubCustomRole` at the organization level and their folder-scope service account bindings — use this when an org administrator manages the roles out-of-band. The flag has no effect in project mode (project-level custom roles are always created since they don't require org-level permissions). Default behaviour is unchanged. See README → "Externally managed custom IAM roles" for the manual setup runbook.
+- **`create_organization_custom_roles` variable** (default `true`): in **folder mode**, allows opting out of org-level custom IAM role management. Default behaviour is unchanged. See README → "Externally managed custom IAM roles" for the manual setup runbook.
 
 ### Fixed
 
