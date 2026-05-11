@@ -5,7 +5,7 @@ Configuration example with all available options:
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.4.0"
+  version = ">=0.4.1"
 
   # Choose ONE mode:
 
@@ -117,7 +117,7 @@ Monitoring folders scope requires organization level custom roles. To apply such
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.4.0"
+  version = ">=0.4.1"
 
   monitored_folder_ids  = ["folders/111111111"]
   deployment_project_id = "project-3"

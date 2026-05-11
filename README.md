@@ -17,7 +17,7 @@ For single-project setups. All resources (logs, Pub/Sub, IAM) are created in a m
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.4.0"
+  version = ">=0.4.1"
 
   # Project mode: single project
   project_id = "project-1"
@@ -54,7 +54,7 @@ For multi-project or folder-level monitoring. Creates centralized Pub/Sub infras
 ```hcl
 module "masthead_agent" {
   source  = "masthead-data/masthead-agent/google"
-  version = ">=0.4.0"
+  version = ">=0.4.1"
 
   # Organization mode: folders + additional projects
   monitored_folder_ids  = [
