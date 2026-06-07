@@ -7,10 +7,15 @@ This module sets up the necessary infrastructure for Masthead Data to monitor Bi
 - **Pub/Sub Topic**: Receives BigQuery audit logs
 - **Pub/Sub Subscription**: Allows Masthead agents to consume audit logs
 - **Cloud Logging Sink**: Routes BigQuery audit logs to Pub/Sub
-- **IAM Bindings**: Grants necessary permissions to Masthead service accounts
-- **Custom IAM Role**: Grants `bigquery.datasets.listSharedDatasetUsage` permission
-  - Organization-level role for folder monitoring (requires `organization_id`); gated by `create_organization_custom_roles`.
-  - Project-level role for project mode.
+- **IAM Bindings**: Grants the following roles to Masthead service accounts:
+  - `roles/bigquery.metadataViewer` — Read metadata of BigQuery resources
+  - `roles/bigquery.resourceViewer` — View BigQuery resource configurations
+  - `roles/resourcemanager.folderViewer` — View folder hierarchy _(folder mode only)_
+  - `roles/logging.privateLogViewer` — Read private log entries _(only when `enable_privatelogviewer_role = true`)_
+  - `mastheadBigQueryCustomRole` (custom) — See **Custom IAM Role** below
+- **Custom IAM Role**: Grants the following custom permissions:
+  - `bigquery.config.get` — Read BigQuery project-level configuration settings
+  - `bigquery.datasets.listSharedDatasetUsage` — List shared dataset usage across projects
 
 ## Requirements
 
