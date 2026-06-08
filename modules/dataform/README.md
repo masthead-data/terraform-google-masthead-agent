@@ -7,4 +7,5 @@ This module sets up the necessary infrastructure for Masthead Data to monitor Da
 - **Pub/Sub Topic**: Receives Dataform audit logs
 - **Pub/Sub Subscription**: Allows Masthead agents to consume audit logs
 - **Cloud Logging Sink**: Routes Dataform audit logs to Pub/Sub
-- **IAM Bindings**: Grants necessary permissions to Masthead service accounts
+- **IAM Bindings**: Grants the following predefined roles to Masthead service accounts:
+  - `roles/dataform.viewer` — Read-only access to Dataform repositories and workflow invocations
