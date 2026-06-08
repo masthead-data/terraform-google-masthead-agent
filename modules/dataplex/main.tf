@@ -37,6 +37,7 @@ EOT
     "roles/dataplex.dataProductsViewer",
     "roles/dataplex.dataScanDataViewer",
     "roles/dataplex.dataScanEditor",
+    "roles/dataplex.storageDataReader",
     "roles/bigquery.jobUser"
     ]) : toset([
     "roles/dataplex.dataProductsViewer",

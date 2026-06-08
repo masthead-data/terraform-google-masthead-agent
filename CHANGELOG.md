@@ -20,6 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.4.2] - 2026-06-08
+
+### Added
+
+- **BigQuery Custom Role**: Added `bigquery.config.get` permission to the `mastheadBigQueryCustomRole` custom IAM role (both organization-level and project-level variants) to allow reading BigQuery project-level configuration settings
+- **Dataplex IAM**: Restored `roles/dataplex.storageDataReader` to Dataplex service account permissions, gated by `enable_datascan_editing = true`, to allow editing datascans
+
 ## [0.4.1] - 2026-05-11
 
 ### Added
@@ -222,7 +229,8 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.3.0...v0.3.1

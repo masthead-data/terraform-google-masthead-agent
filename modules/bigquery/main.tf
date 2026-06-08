@@ -132,6 +132,7 @@ resource "google_organization_iam_custom_role" "masthead_bigquery_custom_role_fo
   title       = "Masthead BigQuery Custom Role"
   description = "Custom role for Masthead BigQuery agent"
   permissions = [
+    "bigquery.config.get",
     "bigquery.datasets.listSharedDatasetUsage"
   ]
 }
@@ -145,6 +146,7 @@ resource "google_project_iam_custom_role" "masthead_bigquery_custom_role_project
   title       = "Masthead BigQuery Custom Role"
   description = "Custom role for Masthead BigQuery agent"
   permissions = [
+    "bigquery.config.get",
     "bigquery.datasets.listSharedDatasetUsage"
   ]
 }
