@@ -29,8 +29,9 @@ EOT
   # Determine if we're operating at folder or project level
   has_folders = length(var.monitored_folder_ids) > 0
 
-  # Projects where IAM bindings need to be applied (only when not using folders)
-  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
+  # Explicitly listed standalone projects always need project-level IAM bindings,
+  # independent of whether folders are also monitored (they live outside the folders).
+  iam_target_projects = var.monitored_project_ids
 
   # Determine roles based on editing permissions
   dataplex_roles = var.enable_datascan_editing ? toset([
