@@ -5,8 +5,9 @@ locals {
   # Determine if we're operating at folder or project level
   has_folders = length(var.monitored_folder_ids) > 0
 
-  # Projects where IAM bindings need to be applied (only when not using folders)
-  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
+  # Explicitly listed standalone projects always need project-level IAM bindings,
+  # independent of whether folders are also monitored (they live outside the folders).
+  iam_target_projects = var.monitored_project_ids
 }
 
 # Enable Analytics Hub API in monitored projects
@@ -35,7 +36,7 @@ resource "google_organization_iam_custom_role" "analyticshub_custom_role_folder"
 
 # Custom role for Analytics Hub subscription viewing at project level
 resource "google_project_iam_custom_role" "analyticshub_custom_role_project" {
-  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
+  for_each = toset(local.iam_target_projects)
 
   project     = each.value
   role_id     = "mastheadAnalyticsHubCustomRole"
