@@ -60,15 +60,10 @@ module "logging_infrastructure" {
 # IAM: Grant Masthead service account required Dataform roles at folder level
 resource "google_folder_iam_member" "masthead_dataform_folder_roles" {
   for_each = {
-    for pair in flatten([
-      for folder_id in var.monitored_folder_ids : [
-        for role in ["roles/dataform.viewer"] : {
-          folder_id = folder_id
-          role      = role
-          key       = "${folder_id}-${role}"
-        }
-      ]
-    ]) : pair.key => pair
+    for pair in setproduct(var.monitored_folder_ids, ["roles/dataform.viewer"]) : "${pair[0]}-${pair[1]}" => {
+      folder_id = pair[0]
+      role      = pair[1]
+    }
   }
 
   folder = each.value.folder_id
@@ -79,15 +74,10 @@ resource "google_folder_iam_member" "masthead_dataform_folder_roles" {
 # IAM: Grant Masthead service account required Dataform roles at project level
 resource "google_project_iam_member" "masthead_dataform_project_roles" {
   for_each = {
-    for pair in flatten([
-      for project_id in local.iam_target_projects : [
-        for role in ["roles/dataform.viewer"] : {
-          project_id = project_id
-          role       = role
-          key        = "${project_id}-${role}"
-        }
-      ]
-    ]) : pair.key => pair
+    for pair in setproduct(local.iam_target_projects, ["roles/dataform.viewer"]) : "${pair[0]}-${pair[1]}" => {
+      project_id = pair[0]
+      role       = pair[1]
+    }
   }
 
   project = each.value.project_id
