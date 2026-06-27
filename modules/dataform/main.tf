@@ -26,7 +26,7 @@ EOT
 
   # Explicitly listed standalone projects always need project-level IAM bindings,
   # independent of whether folders are also monitored (they live outside the folders).
-  iam_target_projects = var.monitored_project_ids
+  iam_target_projects = toset(var.monitored_project_ids)
 }
 
 # Enable Dataform API in monitored projects
@@ -60,7 +60,7 @@ module "logging_infrastructure" {
 # IAM: Grant Masthead service account required Dataform roles at folder level
 resource "google_folder_iam_member" "masthead_dataform_folder_roles" {
   for_each = {
-    for pair in setproduct(var.monitored_folder_ids, ["roles/dataform.viewer"]) : "${pair[0]}-${pair[1]}" => {
+    for pair in setproduct(toset(var.monitored_folder_ids), ["roles/dataform.viewer"]) : "${pair[0]}-${pair[1]}" => {
       folder_id = pair[0]
       role      = pair[1]
     }

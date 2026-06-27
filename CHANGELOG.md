@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Combinatorial Resource Generation**: Replaced nested `flatten` loops with `setproduct` for IAM member and API enablement resources across `analytics-hub`, `bigquery`, `dataform`, `dataplex`, and `logging-infrastructure` modules
+- **Combinatorial Resource Generation**: Replaced nested `flatten` loops and `split()` calls with `setproduct` map iteration and `toset()` deduplication across all modules
 
 ### Deprecated
 
