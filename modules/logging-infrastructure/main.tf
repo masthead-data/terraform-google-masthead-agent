@@ -28,12 +28,9 @@ resource "google_project_service" "pubsub_api" {
 
 # Enable IAM and Logging APIs in monitored projects (where sinks are created)
 resource "google_project_service" "monitored_project_apis" {
-  for_each = var.enable_apis ? toset(flatten([
-    for project_id in var.monitored_project_ids : [
-      "${project_id}:iam.googleapis.com",
-      "${project_id}:logging.googleapis.com"
-    ]
-  ])) : toset([])
+  for_each = var.enable_apis ? toset([
+    for pair in setproduct(var.monitored_project_ids, ["iam.googleapis.com", "logging.googleapis.com"]) : "${pair[0]}:${pair[1]}"
+  ]) : toset([])
 
   project = split(":", each.value)[0]
   service = split(":", each.value)[1]
