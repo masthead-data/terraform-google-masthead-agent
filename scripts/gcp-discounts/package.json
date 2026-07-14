@@ -1,0 +1,10 @@
+{
+  "name": "gcp-discounts-exporter",
+  "version": "1.0.0",
+  "description": "Export Google Cloud Billing custom pricing and discounts to JSON",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
