@@ -13,13 +13,13 @@ This script has **zero external dependencies** and uses native Node.js fetch.
 
 ## Usage
 
-Run the script by retrieving your gcloud access token and providing your Billing Account ID:
+Run the script by retrieving your gcloud access token:
 
 ```bash
-GCP_ACCESS_TOKEN=$(gcloud auth print-access-token) node index.js <BILLING_ACCOUNT_ID>
+GCP_ACCESS_TOKEN=$(gcloud auth print-access-token) node index.js
 ```
 
-Alternatively, you can pass the credentials as command line arguments:
+You will be interactively prompted to enter your Billing Account ID. Alternatively, you can still pass it as a command line argument (or via environment variables):
 
 ```bash
 node index.js <BILLING_ACCOUNT_ID> $(gcloud auth print-access-token)

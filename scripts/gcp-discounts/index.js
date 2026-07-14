@@ -1,15 +1,29 @@
 import fs from 'fs';
+import readline from 'readline/promises';
+import { stdin as input, stdout as output } from 'process';
 
 // Retrieve configuration from env or arguments
-const billingAccountId = process.env.BILLING_ACCOUNT_ID || process.argv[2];
+let billingAccountId = process.env.BILLING_ACCOUNT_ID || process.argv[2];
 const accessToken = process.env.GCP_ACCESS_TOKEN || process.env.ACCESS_TOKEN || process.argv[3];
 
-if (!billingAccountId || !accessToken) {
-  console.error('Error: Please provide both GCP Billing Account ID and Access Token.');
-  console.error('Usage: GCP_ACCESS_TOKEN=$(gcloud auth print-access-token) BILLING_ACCOUNT_ID=012345-6789AB-CDEF01 node index.js');
-  console.error('Alternatively: node index.js <BILLING_ACCOUNT_ID> <ACCESS_TOKEN>');
+if (!accessToken) {
+  console.error('Error: Please provide GCP Access Token.');
+  console.error('Usage: GCP_ACCESS_TOKEN=$(gcloud auth print-access-token) node index.js');
   process.exit(1);
 }
+
+if (!billingAccountId) {
+  const rl = readline.createInterface({ input, output });
+  billingAccountId = await rl.question('Please enter GCP Billing Account ID (e.g., 012345-6789AB-CDEF01): ');
+  rl.close();
+  billingAccountId = billingAccountId.trim();
+  
+  if (!billingAccountId) {
+    console.error('Error: Billing Account ID is required.');
+    process.exit(1);
+  }
+}
+
 
 // Helper for authenticated fetch requests
 async function fetchGcp(url, params = {}) {
