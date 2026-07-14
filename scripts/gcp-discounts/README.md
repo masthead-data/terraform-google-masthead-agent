@@ -11,22 +11,22 @@ It automatically filters the SKU catalog to keep only those containing **"GBQ"**
 
 This script has **zero external dependencies** and uses native Node.js fetch.
 
-## Usage
-
-Run the script by retrieving your gcloud access token:
-
-```bash
-GCP_ACCESS_TOKEN=$(gcloud auth print-access-token) node index.js
-```
-
-You will be interactively prompted to enter your Billing Account ID. Alternatively, you can still pass it as a command line argument (or via environment variables):
-
-```bash
-node index.js <BILLING_ACCOUNT_ID> $(gcloud auth print-access-token)
-```
-
 > [!IMPORTANT]
 > The authenticated principal must have the **Billing Account Viewer** (`roles/billing.viewer`) role on the target billing account.
+
+## Usage
+
+Run the script directly (it will automatically retrieve the access token via the `gcloud` CLI if you are logged in):
+
+```bash
+node index.js
+```
+
+You will be interactively prompted to enter your Billing Account ID. Alternatively, you can pass parameters via environment variables:
+
+```bash
+BILLING_ACCOUNT_ID=<BILLING_ACCOUNT_ID> GCP_ACCESS_TOKEN=<GCP_ACCESS_TOKEN> node index.js
+```
 
 ## Output Format
 

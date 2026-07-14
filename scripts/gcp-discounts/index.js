@@ -1,15 +1,21 @@
 import fs from 'fs';
 import readline from 'readline/promises';
 import { stdin as input, stdout as output } from 'process';
+import { execSync } from 'child_process';
 
-// Retrieve configuration from env or arguments
-let billingAccountId = process.env.BILLING_ACCOUNT_ID || process.argv[2];
-const accessToken = process.env.GCP_ACCESS_TOKEN || process.env.ACCESS_TOKEN || process.argv[3];
+// Retrieve configuration from environment variables
+let billingAccountId = process.env.BILLING_ACCOUNT_ID;
+let accessToken = process.env.GCP_ACCESS_TOKEN || process.env.ACCESS_TOKEN;
 
 if (!accessToken) {
-  console.error('Error: Please provide GCP Access Token.');
-  console.error('Usage: GCP_ACCESS_TOKEN=$(gcloud auth print-access-token) node index.js');
-  process.exit(1);
+  try {
+    accessToken = execSync('gcloud auth print-access-token --quiet', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+  } catch (err) {
+    console.error('Error: Please provide a GCP Access Token or ensure you are logged in via gcloud CLI.');
+    console.error('Could not retrieve access token automatically: run "gcloud auth login" or pass token manually.');
+    console.error('Usage: GCP_ACCESS_TOKEN=$(gcloud auth print-access-token) node index.js');
+    process.exit(1);
+  }
 }
 
 if (!billingAccountId) {
