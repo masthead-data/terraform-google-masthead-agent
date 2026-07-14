@@ -39,3 +39,4 @@ terraform.rc
 .DS_Store
 examples/pulumi-script/sdks/
 __pycache__/
+discounts.json
