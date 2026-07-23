@@ -48,12 +48,9 @@ EOT
 
 # Enable Dataplex and BigQuery APIs in monitored projects
 resource "google_project_service" "dataplex_apis" {
-  for_each = var.enable_apis ? toset(flatten([
-    for project_id in var.monitored_project_ids : [
-      "${project_id}:dataplex.googleapis.com",
-      "${project_id}:bigquery.googleapis.com"
-    ]
-  ])) : toset([])
+  for_each = var.enable_apis ? toset([
+    for pair in setproduct(var.monitored_project_ids, ["dataplex.googleapis.com", "bigquery.googleapis.com"]) : "${pair[0]}:${pair[1]}"
+  ]) : toset([])
 
   project = split(":", each.value)[0]
   service = split(":", each.value)[1]
@@ -82,15 +79,10 @@ module "logging_infrastructure" {
 # IAM: Grant Masthead service account required Dataplex roles at folder level
 resource "google_folder_iam_member" "masthead_dataplex_folder_roles" {
   for_each = {
-    for pair in flatten([
-      for folder_id in var.monitored_folder_ids : [
-        for role in local.dataplex_roles : {
-          folder_id = folder_id
-          role      = role
-          key       = "${folder_id}-${role}"
-        }
-      ]
-    ]) : pair.key => pair
+    for pair in setproduct(var.monitored_folder_ids, local.dataplex_roles) : "${pair[0]}-${pair[1]}" => {
+      folder_id = pair[0]
+      role      = pair[1]
+    }
   }
 
   folder = each.value.folder_id
@@ -101,15 +93,10 @@ resource "google_folder_iam_member" "masthead_dataplex_folder_roles" {
 # IAM: Grant Masthead service account required Dataplex roles at project level
 resource "google_project_iam_member" "masthead_dataplex_project_roles" {
   for_each = {
-    for pair in flatten([
-      for project_id in local.iam_target_projects : [
-        for role in local.dataplex_roles : {
-          project_id = project_id
-          role       = role
-          key        = "${project_id}-${role}"
-        }
-      ]
-    ]) : pair.key => pair
+    for pair in setproduct(local.iam_target_projects, local.dataplex_roles) : "${pair[0]}-${pair[1]}" => {
+      project_id = pair[0]
+      role       = pair[1]
+    }
   }
 
   project = each.value.project_id
