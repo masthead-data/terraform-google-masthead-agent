@@ -48,15 +48,16 @@ EOT
 
 # Enable Dataplex and BigQuery APIs in monitored projects
 resource "google_project_service" "dataplex_apis" {
-  for_each = var.enable_apis ? toset(flatten([
-    for project_id in var.monitored_project_ids : [
-      "${project_id}:dataplex.googleapis.com",
-      "${project_id}:bigquery.googleapis.com"
-    ]
-  ])) : toset([])
+  for_each = var.enable_apis ? {
+    for pair in setproduct(toset(var.monitored_project_ids), ["dataplex.googleapis.com", "bigquery.googleapis.com"]) :
+    "${pair[0]}:${pair[1]}" => {
+      project = pair[0]
+      service = pair[1]
+    }
+  } : {}
 
-  project = split(":", each.value)[0]
-  service = split(":", each.value)[1]
+  project = each.value.project
+  service = each.value.service
 
   disable_on_destroy         = false
   disable_dependent_services = false
