@@ -22,7 +22,8 @@ locals {
   protoPayload.methodName="google.cloud.bigquery.v2.JobService.InsertJob" OR
   protoPayload.methodName="google.cloud.bigquery.v2.JobService.Query" OR
   protoPayload.methodName="google.cloud.bigquery.v2.TableDataService.List" OR
-  protoPayload.methodName="google.cloud.bigquery.v2.TableService.InsertTable"
+  protoPayload.methodName="google.cloud.bigquery.v2.TableService.InsertTable" OR
+  protoPayload.methodName="google.cloud.bigquery.v2.TableService.DeleteTable"
 ) AND (
   resource.type="bigquery_table" OR
   resource.type="bigquery_dataset" OR
