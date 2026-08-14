@@ -51,15 +51,10 @@ resource "google_project_iam_custom_role" "analyticshub_custom_role_project" {
 # IAM: Grant Masthead service account Analytics Hub roles at folder level
 resource "google_folder_iam_member" "masthead_analyticshub_folder_roles" {
   for_each = {
-    for pair in flatten([
-      for folder_id in var.monitored_folder_ids : [
-        for role in ["roles/analyticshub.viewer"] : {
-          folder_id = folder_id
-          role      = role
-          key       = "${folder_id}-${role}"
-        }
-      ]
-    ]) : pair.key => pair
+    for pair in setproduct(var.monitored_folder_ids, ["roles/analyticshub.viewer"]) : "${pair[0]}-${pair[1]}" => {
+      folder_id = pair[0]
+      role      = pair[1]
+    }
   }
 
   folder = each.value.folder_id
@@ -80,20 +75,10 @@ resource "google_folder_iam_member" "masthead_analyticshub_folder_custom_role" {
 resource "google_project_iam_member" "masthead_analyticshub_project_roles" {
   depends_on = [google_project_service.analyticshub_api]
   for_each = {
-    for pair in flatten([
-      for project_id in local.iam_target_projects : [
-        {
-          project_id = project_id
-          role       = "roles/analyticshub.viewer"
-          key        = "${project_id}-viewer"
-        },
-        {
-          project_id = project_id
-          role       = google_project_iam_custom_role.analyticshub_custom_role_project[project_id].id
-          key        = "${project_id}-custom"
-        }
-      ]
-    ]) : pair.key => pair
+    for pair in setproduct(local.iam_target_projects, ["viewer", "custom"]) : "${pair[0]}-${pair[1]}" => {
+      project_id = pair[0]
+      role       = pair[1] == "viewer" ? "roles/analyticshub.viewer" : google_project_iam_custom_role.analyticshub_custom_role_project[pair[0]].id
+    }
   }
 
   project = each.value.project_id
