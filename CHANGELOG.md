@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Combinatorial Resource Generation**: Replaced nested `flatten` loops and `split()` calls with `setproduct` map iteration and `toset()` deduplication across all modules
+
 ### Deprecated
 
 ### Removed
@@ -20,12 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## [0.4.2] - 2026-06-08
+## [0.4.2] - 2026-06-15
 
 ### Added
 
 - **BigQuery Custom Role**: Added `bigquery.config.get` permission to the `mastheadBigQueryCustomRole` custom IAM role (both organization-level and project-level variants) to allow reading BigQuery project-level configuration settings
 - **Dataplex IAM**: Restored `roles/dataplex.storageDataReader` to Dataplex service account permissions, gated by `enable_datascan_editing = true`, to allow editing datascans
+
+### Fixed
+
+- **Mixed folder + project deployments**: Project-level IAM bindings for projects listed in `monitored_project_ids` were silently skipped whenever any `monitored_folder_ids` were also set. The modules treated folder and project monitoring as mutually exclusive (`iam_target_projects = local.has_folders ? [] : var.monitored_project_ids`), so standalone projects outside the monitored folders lost their grants on apply — including Private Log Viewer (`roles/logging.privateLogViewer`) for the retro service account and BigQuery `metadataViewer`/`resourceViewer` (INFORMATION_SCHEMA timelines access). Project-level IAM is now always applied to the explicitly listed `monitored_project_ids`, independent of folder monitoring, across the `bigquery`, `analytics-hub`, `dataplex`, and `dataform` modules.
 
 ## [0.4.1] - 2026-05-11
 

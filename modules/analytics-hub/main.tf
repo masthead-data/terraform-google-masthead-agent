@@ -5,8 +5,9 @@ locals {
   # Determine if we're operating at folder or project level
   has_folders = length(var.monitored_folder_ids) > 0
 
-  # Projects where IAM bindings need to be applied (only when not using folders)
-  iam_target_projects = local.has_folders ? [] : var.monitored_project_ids
+  # Explicitly listed standalone projects always need project-level IAM bindings,
+  # independent of whether folders are also monitored (they live outside the folders).
+  iam_target_projects = toset(var.monitored_project_ids)
 }
 
 # Enable Analytics Hub API in monitored projects
@@ -35,7 +36,7 @@ resource "google_organization_iam_custom_role" "analyticshub_custom_role_folder"
 
 # Custom role for Analytics Hub subscription viewing at project level
 resource "google_project_iam_custom_role" "analyticshub_custom_role_project" {
-  for_each = !local.has_folders ? toset(local.iam_target_projects) : toset([])
+  for_each = local.iam_target_projects
 
   project     = each.value
   role_id     = "mastheadAnalyticsHubCustomRole"
@@ -50,15 +51,10 @@ resource "google_project_iam_custom_role" "analyticshub_custom_role_project" {
 # IAM: Grant Masthead service account Analytics Hub roles at folder level
 resource "google_folder_iam_member" "masthead_analyticshub_folder_roles" {
   for_each = {
-    for pair in flatten([
-      for folder_id in var.monitored_folder_ids : [
-        for role in ["roles/analyticshub.viewer"] : {
-          folder_id = folder_id
-          role      = role
-          key       = "${folder_id}-${role}"
-        }
-      ]
-    ]) : pair.key => pair
+    for pair in setproduct(toset(var.monitored_folder_ids), ["roles/analyticshub.viewer"]) : "${pair[0]}-${pair[1]}" => {
+      folder_id = pair[0]
+      role      = pair[1]
+    }
   }
 
   folder = each.value.folder_id
@@ -79,20 +75,10 @@ resource "google_folder_iam_member" "masthead_analyticshub_folder_custom_role" {
 resource "google_project_iam_member" "masthead_analyticshub_project_roles" {
   depends_on = [google_project_service.analyticshub_api]
   for_each = {
-    for pair in flatten([
-      for project_id in local.iam_target_projects : [
-        {
-          project_id = project_id
-          role       = "roles/analyticshub.viewer"
-          key        = "${project_id}-viewer"
-        },
-        {
-          project_id = project_id
-          role       = google_project_iam_custom_role.analyticshub_custom_role_project[project_id].id
-          key        = "${project_id}-custom"
-        }
-      ]
-    ]) : pair.key => pair
+    for pair in setproduct(local.iam_target_projects, ["viewer", "custom"]) : "${pair[0]}-${pair[1]}" => {
+      project_id = pair[0]
+      role       = pair[1] == "viewer" ? "roles/analyticshub.viewer" : google_project_iam_custom_role.analyticshub_custom_role_project[pair[0]].id
+    }
   }
 
   project = each.value.project_id
