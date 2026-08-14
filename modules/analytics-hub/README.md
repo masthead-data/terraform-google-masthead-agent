@@ -4,10 +4,11 @@ This module sets up the necessary infrastructure for Masthead Data to monitor An
 
 ## Resources Created
 
-- **IAM Bindings**: Grants necessary permissions to Masthead service accounts
-- **Custom IAM Role**: Grants `analyticshub.listings.viewSubscriptions` permission
-  - Organization-level role for folder monitoring (requires `organization_id`); gated by `create_organization_custom_roles`.
-  - Project-level role for project mode.
+- **IAM Bindings**: Grants the following roles to Masthead service accounts:
+  - `roles/analyticshub.viewer` — Read-only access to Analytics Hub resources
+  - `mastheadAnalyticsHubCustomRole` (custom) — See **Custom IAM Role** below
+- **Custom IAM Role**: Grants the following custom permissions:
+  - `analyticshub.listings.viewSubscriptions` — View subscriptions for Analytics Hub listings
 
 ## Requirements
 

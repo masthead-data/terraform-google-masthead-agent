@@ -114,6 +114,7 @@ output "vpc_service_controls_config" {
           permissions = [
             "bigquery.capacityCommitments.list",
             "bigquery.datasets.get",
+            "bigquery.datasets.listSharedDatasetUsage",
             "bigquery.jobs.get",
             "bigquery.jobs.list",
             "bigquery.jobs.listAll",
@@ -152,6 +153,10 @@ output "vpc_service_controls_config" {
         }
         dataplex = {
           service_name = "dataplex.googleapis.com"
+          methods      = ["*"]
+        }
+        dataform = {
+          service_name = "dataform.googleapis.com"
           methods      = ["*"]
         }
       }
