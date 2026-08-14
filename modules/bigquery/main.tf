@@ -16,12 +16,14 @@ locals {
   # Log filter for BigQuery monitoring
   bigquery_log_filter = <<-EOT
 (
+  protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryRead.CreateReadSession" OR
+  protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryRead.ReadRows" OR
   protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.AppendRows" OR
-  protoPayload.methodName="google.cloud.bigquery.storage.v1.BigQueryWrite.ReadRows" OR
   protoPayload.methodName="google.cloud.bigquery.v2.JobService.GetQueryResults" OR
   protoPayload.methodName="google.cloud.bigquery.v2.JobService.InsertJob" OR
   protoPayload.methodName="google.cloud.bigquery.v2.JobService.Query" OR
   protoPayload.methodName="google.cloud.bigquery.v2.TableDataService.List" OR
+  protoPayload.methodName="google.cloud.bigquery.v2.TableService.DeleteTable" OR
   protoPayload.methodName="google.cloud.bigquery.v2.TableService.InsertTable"
 ) AND (
   resource.type="bigquery_table" OR
