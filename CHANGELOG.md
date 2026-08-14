@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **BigQuery Log Sink**: Added `google.cloud.bigquery.v2.TableService.DeleteTable` method to the BigQuery log sink filter
+
 ### Changed
 
 - **Combinatorial Resource Generation**: Replaced nested `flatten` loops and `split()` calls with `setproduct` map iteration and `toset()` deduplication across all modules
