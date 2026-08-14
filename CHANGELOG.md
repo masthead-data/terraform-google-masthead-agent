@@ -10,11 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **BigQuery Log Sink**: Added `google.cloud.bigquery.v2.TableService.DeleteTable` and `google.cloud.bigquery.storage.v1.BigQueryRead.CreateReadSession` methods to the BigQuery log sink filter
-
 ### Changed
-
-- **Combinatorial Resource Generation**: Replaced nested `flatten` loops and `split()` calls with `setproduct` map iteration and `toset()` deduplication across all modules
 
 ### Deprecated
 
@@ -22,9 +18,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **BigQuery Log Sink**: Corrected `google.cloud.bigquery.storage.v1.BigQueryRead.ReadRows` method in the BigQuery log sink filter (was incorrectly under `BigQueryWrite`)
-
 ### Security
+
+## [0.4.3] - 2026-08-14
+
+### Added
+
+- **BigQuery Log Sink**: Added `google.cloud.bigquery.v2.TableService.DeleteTable` and `google.cloud.bigquery.storage.v1.BigQueryRead.CreateReadSession` methods to the BigQuery log sink filter
+
+### Changed
+
+- **Combinatorial Resource Generation**: Replaced nested `flatten` loops and `split()` calls with `setproduct` map iteration and `toset()` deduplication across all modules
+
+### Fixed
+
+- **BigQuery Log Sink**: Corrected `google.cloud.bigquery.storage.v1.BigQueryRead.ReadRows` method in the BigQuery log sink filter (was incorrectly under `BigQueryWrite`)
 
 ## [0.4.2] - 2026-06-15
 
@@ -239,7 +247,8 @@ module "masthead_agent" {
 - Dataform integration
 - Dataplex monitoring
 
-[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/masthead-data/terraform-google-masthead-agent/compare/v0.3.1...v0.4.0
