@@ -7,7 +7,7 @@ locals {
 
   # Explicitly listed standalone projects always need project-level IAM bindings,
   # independent of whether folders are also monitored (they live outside the folders).
-  iam_target_projects = var.monitored_project_ids
+  iam_target_projects = toset(var.monitored_project_ids)
 }
 
 # Enable Analytics Hub API in monitored projects
@@ -36,7 +36,7 @@ resource "google_organization_iam_custom_role" "analyticshub_custom_role_folder"
 
 # Custom role for Analytics Hub subscription viewing at project level
 resource "google_project_iam_custom_role" "analyticshub_custom_role_project" {
-  for_each = toset(local.iam_target_projects)
+  for_each = local.iam_target_projects
 
   project     = each.value
   role_id     = "mastheadAnalyticsHubCustomRole"
@@ -51,7 +51,7 @@ resource "google_project_iam_custom_role" "analyticshub_custom_role_project" {
 # IAM: Grant Masthead service account Analytics Hub roles at folder level
 resource "google_folder_iam_member" "masthead_analyticshub_folder_roles" {
   for_each = {
-    for pair in setproduct(var.monitored_folder_ids, ["roles/analyticshub.viewer"]) : "${pair[0]}-${pair[1]}" => {
+    for pair in setproduct(toset(var.monitored_folder_ids), ["roles/analyticshub.viewer"]) : "${pair[0]}-${pair[1]}" => {
       folder_id = pair[0]
       role      = pair[1]
     }

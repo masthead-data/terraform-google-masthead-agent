@@ -31,7 +31,7 @@ EOT
 
   # Explicitly listed standalone projects always need project-level IAM bindings,
   # independent of whether folders are also monitored (they live outside the folders).
-  iam_target_projects = var.monitored_project_ids
+  iam_target_projects = toset(var.monitored_project_ids)
 
   # Determine roles based on editing permissions
   dataplex_roles = var.enable_datascan_editing ? toset([
@@ -48,12 +48,15 @@ EOT
 
 # Enable Dataplex and BigQuery APIs in monitored projects
 resource "google_project_service" "dataplex_apis" {
-  for_each = var.enable_apis ? toset([
-    for pair in setproduct(var.monitored_project_ids, ["dataplex.googleapis.com", "bigquery.googleapis.com"]) : "${pair[0]}:${pair[1]}"
-  ]) : toset([])
+  for_each = var.enable_apis ? {
+    for pair in setproduct(toset(var.monitored_project_ids), ["dataplex.googleapis.com", "bigquery.googleapis.com"]) : "${pair[0]}:${pair[1]}" => {
+      project = pair[0]
+      service = pair[1]
+    }
+  } : {}
 
-  project = split(":", each.value)[0]
-  service = split(":", each.value)[1]
+  project = each.value.project
+  service = each.value.service
 
   disable_on_destroy         = false
   disable_dependent_services = false
@@ -79,7 +82,7 @@ module "logging_infrastructure" {
 # IAM: Grant Masthead service account required Dataplex roles at folder level
 resource "google_folder_iam_member" "masthead_dataplex_folder_roles" {
   for_each = {
-    for pair in setproduct(var.monitored_folder_ids, local.dataplex_roles) : "${pair[0]}-${pair[1]}" => {
+    for pair in setproduct(toset(var.monitored_folder_ids), local.dataplex_roles) : "${pair[0]}-${pair[1]}" => {
       folder_id = pair[0]
       role      = pair[1]
     }
