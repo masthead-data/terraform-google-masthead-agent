@@ -156,7 +156,7 @@ dynamic "message_transforms" {
   }
 }
 ```
-The UDF function name must match what the resource expects (e.g., `"redactPii"` for `google_pubsub_topic.message_transforms`).
+The UDF function name must match what the resource expects (e.g., `"redactPii"` for `google_pubsub_subscription.message_transforms`).
 
 ### API Enablement
 ```hcl
