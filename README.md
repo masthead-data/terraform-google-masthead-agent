@@ -100,10 +100,15 @@ module "masthead_agent" {
 
 - `iam.roles.create`
 
+## Domain Restricted Sharing
+
+If your organization enforces `iam.allowedPolicyMemberDomains`, allow Masthead's Google Cloud customer ID `C02gzdy9v` before applying the module. See [Domain Restricted Sharing](docs/domain-restricted-sharing.md).
+
 ## Documentation
 
 - [Configuration](docs/configuration.md)
 - [Architecture](docs/architecture.md)
+- [Domain Restricted Sharing](docs/domain-restricted-sharing.md)
 
 ## References
 
