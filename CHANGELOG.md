@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Docs**: Domain Restricted Sharing section in README with Masthead's Google Cloud customer ID and an example org policy override
+
 ### Changed
 
 ### Deprecated
