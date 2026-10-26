@@ -82,12 +82,12 @@ resource "google_service_account_iam_member" "masthead_workload_user" {
   member             = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.masthead.name}/subject/${each.value.sub}"
 }
 
-output "masthead_service_accounts" {
-  value = { for k, sa in google_service_account.masthead : k => sa.email }
-}
-
-output "masthead_provider" {
-  value = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.masthead.name}"
+output "masthead_federation" {
+  description = "Federation details to share with Masthead"
+  value = {
+    provider         = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.masthead.name}"
+    service_accounts = { for k, sa in google_service_account.masthead : k => sa.email }
+  }
 }
 ```
 
@@ -112,7 +112,23 @@ The module grants the same roles as in the default setup, now to your service ac
 
 ### 3. Share the federation details with Masthead
 
-Send the `masthead_service_accounts` and `masthead_provider` outputs to Masthead. They contain no secrets.
+Send the `masthead_federation` output to Masthead. It contains no secrets:
+
+```bash
+terraform output -json masthead_federation
+```
+
+```json
+{
+  "provider": "//iam.googleapis.com/projects/123456789012/locations/global/workloadIdentityPools/masthead/providers/masthead-google",
+  "service_accounts": {
+    "bigquery_sa": "masthead-bigquery@my-project.iam.gserviceaccount.com",
+    "dataform_sa": "masthead-dataform@my-project.iam.gserviceaccount.com",
+    "dataplex_sa": "masthead-dataplex@my-project.iam.gserviceaccount.com",
+    "retro_sa": "masthead-retro@my-project.iam.gserviceaccount.com"
+  }
+}
+```
 
 ## Verify
 
