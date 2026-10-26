@@ -109,7 +109,7 @@ If your organization enforces `iam.allowedPolicyMemberDomains`, allow Masthead's
 - [Configuration](docs/configuration.md)
 - [Architecture](docs/architecture.md)
 - [Domain Restricted Sharing](docs/domain-restricted-sharing.md)
-- [Customer-owned service accounts with Workload Identity Federation](docs/workload-identity-federation.md)
+- [Customer-owned service account with Workload Identity Federation](docs/workload-identity-federation.md)
 
 ## References
 
