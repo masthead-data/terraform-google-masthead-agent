@@ -86,8 +86,6 @@ output "masthead_provider" {
 }
 ```
 
-If you delete the pool, its ID stays reserved for 30 days. Use a different `workload_identity_pool_id` to re-create it within that period.
-
 ### 2. Deploy the module with your service account
 
 Pass your service account in place of the Masthead defaults:
@@ -117,13 +115,3 @@ Send the `masthead_service_account` and `masthead_provider` outputs to Masthead.
 ## Verify
 
 After Masthead confirms the connection, BigQuery audit logs of the monitored projects show API calls by your service account.
-
-To also log each token exchange, enable [Data Access audit logs](https://cloud.google.com/logging/docs/audit/configure-data-access) for `iamcredentials.googleapis.com` and `sts.googleapis.com` in the federation project. `GenerateAccessToken` entries then show the pool principal that used your service account.
-
-## Revoke access
-
-Do any of the following:
-
-- Disable the provider: `gcloud iam workload-identity-pools providers update-oidc masthead-google --workload-identity-pool=masthead --location=global --disabled --project=PROJECT_ID --quiet`
-- Remove the `roles/iam.workloadIdentityUser` bindings from the service account.
-- Disable or delete the service account.
