@@ -23,13 +23,12 @@ Create one service account per Masthead service account. Each Masthead identity 
 ```hcl
 locals {
   # Keys match the module's `masthead_service_accounts` input.
-  # `sub` is the OIDC subject (unique ID) of the Masthead service account,
-  # `account_id` matches its name in the masthead-prod project.
+  # `sub` is the OIDC subject (unique ID) of the Masthead service account.
   masthead_identities = {
-    bigquery_sa = { sub = "110299410351654081203", account_id = "masthead-data" }
-    dataform_sa = { sub = "113640520915211463906", account_id = "masthead-dataform" }
-    dataplex_sa = { sub = "117888223789069357263", account_id = "masthead-dataplex" }
-    retro_sa    = { sub = "115289587456476335753", account_id = "retro-data" }
+    bigquery_sa = { sub = "110299410351654081203", account_id = "masthead-bigquery" } # masthead-data@masthead-prod
+    dataform_sa = { sub = "113640520915211463906", account_id = "masthead-dataform" } # masthead-dataform@masthead-prod
+    dataplex_sa = { sub = "117888223789069357263", account_id = "masthead-dataplex" } # masthead-dataplex@masthead-prod
+    retro_sa    = { sub = "115289587456476335753", account_id = "masthead-retro" }    # retro-data@masthead-prod
   }
 }
 
@@ -123,10 +122,10 @@ terraform output -json masthead_federation
 {
   "provider": "//iam.googleapis.com/projects/123456789012/locations/global/workloadIdentityPools/masthead/providers/masthead-google",
   "service_accounts": {
-    "bigquery_sa": "masthead-data@my-project.iam.gserviceaccount.com",
+    "bigquery_sa": "masthead-bigquery@my-project.iam.gserviceaccount.com",
     "dataform_sa": "masthead-dataform@my-project.iam.gserviceaccount.com",
     "dataplex_sa": "masthead-dataplex@my-project.iam.gserviceaccount.com",
-    "retro_sa": "retro-data@my-project.iam.gserviceaccount.com"
+    "retro_sa": "masthead-retro@my-project.iam.gserviceaccount.com"
   }
 }
 ```
