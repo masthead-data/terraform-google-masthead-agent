@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Docs**: Customer-owned service account setup with Workload Identity Federation (`docs/workload-identity-federation.md`) for organizations that don't allow external identities in IAM policies
 - **Docs**: Domain Restricted Sharing guide (`docs/domain-restricted-sharing.md`) with Masthead's Google Cloud customer ID and an example org policy override
 
 ### Changed
