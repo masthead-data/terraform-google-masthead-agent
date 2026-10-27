@@ -1,7 +1,7 @@
 # Temporary test of docs/workload-identity-federation.md step 1 in masthead-test-client.
 # Below the backend config, the code matches the doc except for the service
-# account and pool IDs. Step 2 (module with masthead_service_accounts) is
-# sandbox/terraform/masthead.tf. See README.md.
+# account and pool IDs. Step 2 (module with masthead_service_accounts) is not
+# part of this test. See README.md.
 
 terraform {
   required_version = ">= 1.5.7"

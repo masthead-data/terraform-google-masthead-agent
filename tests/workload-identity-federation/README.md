@@ -3,7 +3,7 @@
 Temporary test of [docs/workload-identity-federation.md](../../docs/workload-identity-federation.md) in `masthead-test-client`. Remove this folder once the module supports customer-owned service accounts.
 
 - `main.tf` is step 1 of the doc: the `masthead-wif-test` service account, and a workload identity pool and OIDC provider that trust `https://accounts.google.com` tokens from the four Masthead service accounts. Only the service account and pool IDs differ from the doc.
-- Step 2 is the Masthead integration in `sandbox/terraform/masthead.tf`, which grants the module roles to `masthead-wif-test` through `masthead_service_accounts`.
+- Step 2 (deploying the module with `masthead_service_accounts` set to `masthead-wif-test`) isn't part of this test. Until then, `masthead-wif-test` has no roles in the project and `test.sh` can't list datasets.
 
 State is in `gs://masthead-dev-tfstate/terraform-google-masthead-agent/tests/workload-identity-federation`.
 
