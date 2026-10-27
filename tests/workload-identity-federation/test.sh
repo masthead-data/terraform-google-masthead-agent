@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Simulates the Masthead backend: Google ID token for a Masthead SA -> STS
 # federated token -> short-lived token for the customer's reader SA -> BigQuery call.
+# Usage: ./test.sh [MASTHEAD_SA_EMAIL] [masthead_federation key, default bigquery_sa]
 # Run after `terraform apply`. Needs roles/iam.serviceAccountTokenCreator on the Masthead SA.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 MASTHEAD_SA="${1:-masthead-data@masthead-prod.iam.gserviceaccount.com}"
-PROJECT_ID="$(terraform output -raw reader_sa_email | sed -E 's/.*@([^.]+)\..*/\1/')"
-READER_SA="$(terraform output -raw reader_sa_email)"
-AUDIENCE="$(terraform output -raw provider_audience)"
+KEY="${2:-bigquery_sa}"
+FEDERATION="$(terraform output -json masthead_federation)"
+AUDIENCE="$(jq -er .provider <<<"${FEDERATION}")"
+READER_SA="$(jq -er --arg k "${KEY}" '.service_accounts[$k]' <<<"${FEDERATION}")"
+PROJECT_ID="$(sed -E 's/.*@([^.]+)\..*/\1/' <<<"${READER_SA}")"
 
 echo "1. ID token for ${MASTHEAD_SA}"
 ID_TOKEN="$(gcloud auth print-identity-token --quiet \
