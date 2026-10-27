@@ -50,16 +50,6 @@ resource "google_pubsub_topic" "logs_topic" {
   name    = var.topic_name
 
   labels = local.common_labels
-
-  dynamic "message_transforms" {
-    for_each = var.pii_redaction.custom_code != null ? [1] : []
-    content {
-      javascript_udf {
-        function_name = "redactPii"
-        code          = var.pii_redaction.custom_code
-      }
-    }
-  }
 }
 
 # Create Pub/Sub subscription in the deployment project
@@ -75,6 +65,16 @@ resource "google_pubsub_subscription" "logs_subscription" {
   # Prevent subscription from expiring
   expiration_policy {
     ttl = ""
+  }
+
+  dynamic "message_transforms" {
+    for_each = var.pii_redaction.custom_code != null ? [1] : []
+    content {
+      javascript_udf {
+        function_name = "redactPii"
+        code          = var.pii_redaction.custom_code
+      }
+    }
   }
 }
 
