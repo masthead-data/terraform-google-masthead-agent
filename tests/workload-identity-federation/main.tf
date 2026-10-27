@@ -34,6 +34,8 @@ variable "masthead_sa_unique_ids" {
   description = "Unique IDs (OIDC sub claim) of Masthead SAs allowed to federate"
   default = [
     "110299410351654081203", # masthead-data@masthead-prod
+    "113640520915211463906", # masthead-dataform@masthead-prod
+    "117888223789069357263", # masthead-dataplex@masthead-prod
     "115289587456476335753", # retro-data@masthead-prod
   ]
 }
@@ -50,8 +52,8 @@ resource "google_project_service" "apis" {
 }
 
 resource "google_service_account" "reader" {
-  account_id   = "masthead-reader"
-  display_name = "Masthead reader (WIF test)"
+  account_id   = "masthead-wif-test"
+  display_name = "Masthead WIF test"
 
   depends_on = [google_project_service.apis]
 }
@@ -77,7 +79,7 @@ resource "google_iam_workload_identity_pool_provider" "google" {
   attribute_mapping = {
     "google.subject" = "assertion.sub"
   }
-  attribute_condition = "assertion.sub in ${jsonencode(local.allowed_sa_unique_ids)}"
+  attribute_condition = "assertion.sub in ${jsonencode(var.masthead_sa_unique_ids)}"
 
   oidc {
     issuer_uri = "https://accounts.google.com"
@@ -90,48 +92,6 @@ resource "google_service_account_iam_member" "masthead_workload_user" {
   service_account_id = google_service_account.reader.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.masthead.name}/subject/${each.value}"
-}
-
-# Stand-in for a Masthead SA: the tester can mint its ID tokens, the real
-# masthead-prod SAs can't be impersonated by personal accounts.
-variable "testers" {
-  type        = list(string)
-  description = "Principals allowed to mint ID tokens for the stand-in SA"
-  default     = ["user:max.ostapenko@mastheadata.com"]
-}
-
-resource "google_service_account" "standin" {
-  account_id   = "masthead-standin"
-  display_name = "Masthead SA stand-in (WIF test)"
-
-  depends_on = [google_project_service.apis]
-}
-
-resource "google_service_account_iam_member" "tester_token_creator" {
-  for_each = toset(var.testers)
-
-  service_account_id = google_service_account.standin.name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = each.value
-}
-
-moved {
-  from = google_service_account_iam_member.tester_token_creator
-  to   = google_service_account_iam_member.tester_token_creator["user:max.ostapenko@mastheadata.com"]
-}
-
-locals {
-  allowed_sa_unique_ids = concat(var.masthead_sa_unique_ids, [google_service_account.standin.unique_id])
-}
-
-resource "google_service_account_iam_member" "standin_workload_user" {
-  service_account_id = google_service_account.reader.name
-  role               = "roles/iam.workloadIdentityUser"
-  member             = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.masthead.name}/subject/${google_service_account.standin.unique_id}"
-}
-
-output "standin_sa_email" {
-  value = google_service_account.standin.email
 }
 
 output "reader_sa_email" {

@@ -4,32 +4,25 @@ Temporary test of the setup in [docs/workload-identity-federation.md](../../docs
 
 It deploys to `masthead-test-client`:
 
-- `masthead-reader`: the customer-owned service account, with `roles/bigquery.metadataViewer` on the project.
-- A workload identity pool and an OIDC provider that trust `https://accounts.google.com` tokens from the Masthead service accounts and from a stand-in.
-- `masthead-standin`: stands in for a Masthead service account, because personal accounts can't impersonate the `masthead-prod` ones.
+- `masthead-wif-test`: the customer-owned service account, with `roles/bigquery.metadataViewer` on the project.
+- A workload identity pool and an OIDC provider that trust `https://accounts.google.com` tokens from the Masthead service accounts.
 
 State is in `gs://masthead-dev-tfstate/terraform-google-masthead-agent/tests/workload-identity-federation`.
 
 ## Run
 
-Add yourself to `testers` so you can mint ID tokens for the stand-in, then apply:
-
 ```bash
 terraform init
-terraform apply -var='testers=["user:max.ostapenko@mastheadata.com","user:you@mastheadata.com"]'
+terraform apply
 ```
 
-Keep existing testers in the list, or their access is removed. IAM changes can take a minute or two to propagate.
-
-Run the token exchange as the stand-in:
+Run the token exchange as a Masthead service account:
 
 ```bash
-./test.sh masthead-standin@masthead-test-client.iam.gserviceaccount.com
+./test.sh masthead-data@masthead-prod.iam.gserviceaccount.com
 ```
 
-The script gets an ID token for the stand-in, exchanges it with STS, gets an access token for `masthead-reader` and lists BigQuery datasets in the project.
-
-To test a real Masthead service account, run `./test.sh` with its email. This needs `roles/iam.serviceAccountTokenCreator` on that service account.
+The script gets an ID token for the Masthead service account, exchanges it with STS, gets an access token for `masthead-wif-test` and lists BigQuery datasets in the project. It needs `roles/iam.serviceAccountTokenCreator` on the Masthead service account.
 
 ## Clean up
 
