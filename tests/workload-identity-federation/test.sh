@@ -34,5 +34,5 @@ ACCESS_TOKEN="$(curl -sS -X POST \
   -d '{"scope":["https://www.googleapis.com/auth/cloud-platform"]}' | jq -er .accessToken)"
 
 echo "4. BigQuery datasets.list on ${PROJECT_ID} as ${READER_SA}"
-curl -sS "https://bigquery.googleapis.com/bigquery/v2/projects/${PROJECT_ID}/datasets?maxResults=5" \
+curl -fsS "https://bigquery.googleapis.com/bigquery/v2/projects/${PROJECT_ID}/datasets?maxResults=5" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" | jq '{datasets: [.datasets[]?.id], error: .error.message}'
