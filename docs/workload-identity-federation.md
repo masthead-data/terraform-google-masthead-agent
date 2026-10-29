@@ -12,7 +12,7 @@ By default, the module grants read-only roles to Masthead service accounts (`mas
 2. Masthead exchanges the token with the [Security Token Service](https://cloud.google.com/iam/docs/reference/sts/rest). The exchange succeeds only because your workload identity pool provider trusts `https://accounts.google.com` tokens whose subject is a Masthead service account ID.
 3. Masthead uses the federated token to get a short-lived (1 hour) access token for your service account.
 
-Access stops as soon as you disable the provider, the pool or the service account. API calls are recorded in your Cloud Audit Logs.
+To stop access immediately, disable or delete the service account. Disabling the provider or the pool blocks new token exchanges, but access tokens already issued stay valid until they expire (up to 1 hour). API calls are recorded in your Cloud Audit Logs.
 
 ## Setup
 
@@ -95,24 +95,7 @@ output "masthead_federation" {
 
 If you delete the pool, its ID stays reserved for 30 days. Use a different `workload_identity_pool_id` to re-create it within that period.
 
-### 2. Deploy the module with your service account
-
-Pass your service account in place of the Masthead defaults:
-
-```hcl
-module "masthead_agent" {
-  source  = "masthead-data/masthead-agent/google"
-  version = ">=0.4.3"
-
-  project_id = "project-1"
-
-  masthead_service_accounts = local.masthead_service_accounts
-}
-```
-
-The module grants the same roles as in the default setup, now to your service account.
-
-### 3. Share the federation details with Masthead
+### 2. Share the federation details with Masthead
 
 Send the `masthead_federation` output to Masthead. It contains no secrets:
 
@@ -131,6 +114,27 @@ terraform output -json masthead_federation
   }
 }
 ```
+
+Masthead confirms when the token exchange works. This doesn't require any roles on your service account yet.
+
+### 3. Deploy the module with your service account
+
+Pass your service account in place of the Masthead defaults:
+
+```hcl
+module "masthead_agent" {
+  source  = "masthead-data/masthead-agent/google"
+  version = ">=0.4.3"
+
+  project_id = "project-1"
+
+  masthead_service_accounts = local.masthead_service_accounts
+}
+```
+
+The module grants the same roles as in the default setup, now to your service account.
+
+If the module is already deployed with the default Masthead service accounts, this change removes their grants. Apply it after Masthead confirms step 2, so monitoring continues without a gap.
 
 ## Separate service accounts
 

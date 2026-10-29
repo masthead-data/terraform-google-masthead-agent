@@ -35,4 +35,4 @@ ACCESS_TOKEN="$(curl -sS -X POST \
 
 echo "4. BigQuery datasets.list on ${PROJECT_ID} as ${READER_SA}"
 curl -fsS "https://bigquery.googleapis.com/bigquery/v2/projects/${PROJECT_ID}/datasets?maxResults=5" \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}" | jq '{datasets: [.datasets[]?.id], error: .error.message}'
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" | jq '[.datasets[]?.id]'
