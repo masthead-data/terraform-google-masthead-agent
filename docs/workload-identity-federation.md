@@ -18,7 +18,7 @@ To stop access immediately, disable or delete the service account. Disabling the
 
 ### 1. Create the service account and the federation
 
-Create these resources in one of your projects, for example the deployment project in Organization Mode:
+Create these resources in one of your projects, for example the deployment project in Organization Mode. The [workload-identity-federation example](../examples/workload-identity-federation) packages the same resources as a module, including the [separate service accounts](#separate-service-accounts) option.
 
 ```hcl
 locals {

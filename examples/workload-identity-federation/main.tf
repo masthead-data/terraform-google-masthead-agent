@@ -1,33 +1,3 @@
-# Temporary test of docs/workload-identity-federation.md step 1 in masthead-test-client.
-# Below the backend config, the code matches the doc except for the service
-# account and pool IDs. Step 2 (module with masthead_service_accounts) is not
-# part of this test. See README.md.
-
-terraform {
-  required_version = ">= 1.5.7"
-
-  backend "gcs" {
-    bucket = "masthead-dev-tfstate"
-    prefix = "terraform-google-masthead-agent/tests/workload-identity-federation"
-  }
-
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = ">= 6.0"
-    }
-  }
-}
-
-variable "project_id" {
-  type    = string
-  default = "masthead-test-client"
-}
-
-provider "google" {
-  project = var.project_id
-}
-
 locals {
   # OIDC subjects (unique IDs) of Masthead service accounts.
   # Keys match the module's `masthead_service_accounts` input.
@@ -37,10 +7,17 @@ locals {
     dataplex_sa = "117888223789069357263" # masthead-dataplex@masthead-prod
     retro_sa    = "115289587456476335753" # retro-data@masthead-prod
   }
+
+  # Service account per key of `google_service_account.masthead`: one shared, or one per Masthead identity.
+  service_account_ids = var.separate_service_accounts ? {
+    for k in keys(local.masthead_subjects) : k => "${var.service_account_id}-${replace(trimsuffix(k, "_sa"), "_", "-")}"
+  } : { shared = var.service_account_id }
+
+  service_account_key = { for k in keys(local.masthead_subjects) : k => var.separate_service_accounts ? k : "shared" }
 }
 
 resource "google_project_service" "apis" {
-  for_each = toset(["iam.googleapis.com", "iamcredentials.googleapis.com", "sts.googleapis.com"])
+  for_each = var.enable_apis ? toset(["iam.googleapis.com", "iamcredentials.googleapis.com", "sts.googleapis.com"]) : toset([])
 
   project            = var.project_id
   service            = each.value
@@ -48,16 +25,18 @@ resource "google_project_service" "apis" {
 }
 
 resource "google_service_account" "masthead" {
+  for_each = local.service_account_ids
+
   project      = var.project_id
-  account_id   = "masthead-wif-test"
-  display_name = "Masthead Data"
+  account_id   = each.value
+  display_name = var.separate_service_accounts ? "Masthead Data (${each.key})" : "Masthead Data"
 
   depends_on = [google_project_service.apis]
 }
 
 resource "google_iam_workload_identity_pool" "masthead" {
   project                   = var.project_id
-  workload_identity_pool_id = "masthead-wif-test-1"
+  workload_identity_pool_id = var.pool_id
   display_name              = "Masthead Data"
 
   depends_on = [google_project_service.apis]
@@ -66,7 +45,7 @@ resource "google_iam_workload_identity_pool" "masthead" {
 resource "google_iam_workload_identity_pool_provider" "masthead" {
   project                            = var.project_id
   workload_identity_pool_id          = google_iam_workload_identity_pool.masthead.workload_identity_pool_id
-  workload_identity_pool_provider_id = "masthead-google"
+  workload_identity_pool_provider_id = var.provider_id
   display_name                       = "Masthead Data (Google)"
 
   attribute_mapping = {
@@ -82,19 +61,11 @@ resource "google_iam_workload_identity_pool_provider" "masthead" {
 resource "google_service_account_iam_member" "masthead_workload_user" {
   for_each = local.masthead_subjects
 
-  service_account_id = google_service_account.masthead.name
+  service_account_id = google_service_account.masthead[local.service_account_key[each.key]].name
   role               = "roles/iam.workloadIdentityUser"
   member             = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.masthead.name}/subject/${each.value}"
 }
 
 locals {
-  masthead_service_accounts = { for k in keys(local.masthead_subjects) : k => google_service_account.masthead.email }
-}
-
-output "masthead_federation" {
-  description = "Federation details to share with Masthead"
-  value = {
-    provider         = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.masthead.name}"
-    service_accounts = local.masthead_service_accounts
-  }
+  masthead_service_accounts = { for k, sa_key in local.service_account_key : k => google_service_account.masthead[sa_key].email }
 }
