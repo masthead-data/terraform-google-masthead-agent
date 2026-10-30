@@ -1,4 +1,6 @@
 locals {
+  pool_project_id = coalesce(var.pool_project_id, var.project_id)
+
   # OIDC subjects (unique IDs) of Masthead service accounts.
   # Keys match the module's `masthead_service_accounts` input.
   masthead_subjects = {
@@ -35,16 +37,34 @@ resource "google_service_account" "masthead" {
 }
 
 resource "google_iam_workload_identity_pool" "masthead" {
-  project                   = var.project_id
+  count = var.create_pool ? 1 : 0
+
+  project                   = local.pool_project_id
   workload_identity_pool_id = var.pool_id
   display_name              = "Masthead Data"
 
   depends_on = [google_project_service.apis]
 }
 
+data "google_iam_workload_identity_pool" "masthead" {
+  count = var.create_pool ? 0 : 1
+
+  project                   = local.pool_project_id
+  workload_identity_pool_id = var.pool_id
+}
+
+moved {
+  from = google_iam_workload_identity_pool.masthead
+  to   = google_iam_workload_identity_pool.masthead[0]
+}
+
+locals {
+  pool = var.create_pool ? google_iam_workload_identity_pool.masthead[0] : data.google_iam_workload_identity_pool.masthead[0]
+}
+
 resource "google_iam_workload_identity_pool_provider" "masthead" {
-  project                            = var.project_id
-  workload_identity_pool_id          = google_iam_workload_identity_pool.masthead.workload_identity_pool_id
+  project                            = local.pool_project_id
+  workload_identity_pool_id          = local.pool.workload_identity_pool_id
   workload_identity_pool_provider_id = var.provider_id
   display_name                       = "Masthead Data (Google)"
 
@@ -63,7 +83,7 @@ resource "google_service_account_iam_member" "masthead_workload_user" {
 
   service_account_id = google_service_account.masthead[local.service_account_key[each.key]].name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.masthead.name}/subject/${each.value}"
+  member             = "principal://iam.googleapis.com/${local.pool.name}/subject/${each.value}"
 }
 
 locals {

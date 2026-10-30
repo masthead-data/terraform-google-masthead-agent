@@ -15,10 +15,22 @@ variable "separate_service_accounts" {
   default     = false
 }
 
+variable "create_pool" {
+  type        = bool
+  description = "Create the workload identity pool. Set to false to add the Masthead provider to an existing pool with ID pool_id in pool_project_id"
+  default     = true
+}
+
 variable "pool_id" {
   type        = string
-  description = "Workload identity pool ID. A deleted pool's ID stays reserved for 30 days"
+  description = "Workload identity pool ID, created or existing. A deleted pool's ID stays reserved for 30 days"
   default     = "masthead"
+}
+
+variable "pool_project_id" {
+  type        = string
+  description = "Project of the workload identity pool and provider. Defaults to project_id"
+  default     = null
 }
 
 variable "provider_id" {
