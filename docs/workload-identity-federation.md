@@ -225,6 +225,8 @@ Data scans run SQL on metrics tables that you maintain, in a dataset in your own
 
 `quality_sa` is not an input of the module's `masthead_service_accounts`. Send it to Masthead in the `masthead_federation` output only. Without a `quality_sa` key, Masthead refuses to create data scans for your tenant.
 
+If you use VPC Service Controls, add the `quality_sa` account to the ingress identities of your perimeter yourself: the module's `vpc_service_controls_config` output doesn't list it, because it isn't a module input.
+
 ## Remove log access after the backfill
 
 `roles/logging.privateLogViewer` lets Masthead read the last 30 days of audit logs once, during onboarding. After Masthead confirms the backfill is complete, set `enable_privatelogviewer_role = false` in the module and apply.
