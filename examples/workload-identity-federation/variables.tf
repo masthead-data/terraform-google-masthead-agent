@@ -11,7 +11,7 @@ variable "service_account_id" {
 
 variable "separate_service_accounts" {
   type        = bool
-  description = "Create one service account per Masthead identity (masthead-bigquery, masthead-dataform, masthead-dataplex, masthead-retro) instead of one shared"
+  description = "Create one service account per Masthead identity (masthead-bigquery, masthead-retro, and masthead-dataform, masthead-dataplex, masthead-quality when configured) instead of one shared. Recommended for least privilege"
   default     = false
 }
 
@@ -43,4 +43,27 @@ variable "enable_apis" {
   type        = bool
   description = "Enable the IAM, IAM Credentials and Security Token Service APIs in the project"
   default     = true
+}
+
+variable "enable_dataform" {
+  type        = bool
+  description = "Create the Dataform identity (dataform_sa). Set to false if you don't use Dataform with Masthead, and set enable_modules.dataform to false in the agent module"
+  default     = true
+}
+
+variable "enable_dataplex" {
+  type        = bool
+  description = "Create the Dataplex identity (dataplex_sa). Set to false if you don't use Dataplex with Masthead, and set enable_modules.dataplex to false in the agent module"
+  default     = true
+}
+
+variable "data_scan_dataset_ids" {
+  type        = list(string)
+  description = "Datasets in your projects that hold your data scan metrics, as project.dataset, conventionally masthead_dq. Creates the data scan identity (quality_sa) with roles/bigquery.dataViewer on each. Empty disables data scans"
+  default     = []
+
+  validation {
+    condition     = alltrue([for id in var.data_scan_dataset_ids : can(regex("^[a-z][a-z0-9-]{4,28}[a-z0-9]\\.[A-Za-z0-9_]+$", id))])
+    error_message = "Each data_scan_dataset_ids entry must be in the format project.dataset."
+  }
 }

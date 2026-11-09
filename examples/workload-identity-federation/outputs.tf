@@ -1,5 +1,5 @@
 output "masthead_service_accounts" {
-  description = "Service accounts to pass to the module's masthead_service_accounts input"
+  description = "Service accounts to pass to the module's masthead_service_accounts input. A feature that is not configured is null: set the matching enable_modules entry to false"
   value       = local.masthead_service_accounts
 }
 
@@ -7,6 +7,6 @@ output "masthead_federation" {
   description = "Federation details to share with Masthead"
   value = {
     provider         = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.masthead.name}"
-    service_accounts = local.masthead_service_accounts
+    service_accounts = local.masthead_federation_service_accounts
   }
 }
