@@ -202,7 +202,7 @@ Masthead reads Dataplex data products and data scans with the `dataplex_sa` serv
 
 ## Data scans
 
-Data scans run SQL on metrics tables that you maintain, in a dataset in your own project, conventionally `masthead_dq`. Masthead runs them as your `quality_sa` service account. The module doesn't grant this account any monitoring roles. It needs only read access to your metrics datasets:
+Data scans run SQL on metrics tables that you maintain, in a dataset in your own project, conventionally `masthead_dq`. Masthead runs them as your `quality_sa` service account. The module doesn't grant this account any monitoring roles. It needs only read access to your metrics datasets. With the [example module](../examples/workload-identity-federation), set `enable_modules.data_scans = true` instead of step 1. In step 2, use `module.masthead_federation.masthead_federation.service_accounts["quality_sa"]` as the account:
 
 1. Add the Masthead data scan subject to `masthead_subjects` in step 1, so that the provider trusts it and `quality_sa` gets a service account:
 

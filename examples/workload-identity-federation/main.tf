@@ -1,26 +1,18 @@
 locals {
   pool_project_id = coalesce(var.pool_project_id, var.project_id)
 
-  # OIDC subjects (unique IDs) of Masthead service accounts, for the configured features only.
+  # OIDC subjects (unique IDs) of Masthead service accounts, for the enabled modules only.
   # Keys match the module's `masthead_service_accounts` input, plus `quality_sa` for data scans.
-  # A feature that is not configured has no subject, no service account and no trust binding.
-  all_masthead_subjects = {
-    bigquery_sa = "110299410351654081203" # masthead-data@masthead-prod
-    dataform_sa = "113640520915211463906" # masthead-dataform@masthead-prod
-    dataplex_sa = "117888223789069357263" # masthead-dataplex@masthead-prod
-    retro_sa    = "115289587456476335753" # retro-data@masthead-prod
-    quality_sa  = "107725254217268738982" # masthead-quality-checks@masthead-prod
-  }
-
-  enabled_features = {
-    bigquery_sa = true
-    retro_sa    = true
-    dataform_sa = var.enable_dataform
-    dataplex_sa = var.enable_dataplex
-    quality_sa  = length(var.data_scan_dataset_ids) > 0
-  }
-
-  masthead_subjects = { for k, subject in local.all_masthead_subjects : k => subject if local.enabled_features[k] }
+  # A disabled module has no subject, no service account and no trust binding.
+  masthead_subjects = merge(
+    {
+      bigquery_sa = "110299410351654081203" # masthead-data@masthead-prod
+      retro_sa    = "115289587456476335753" # retro-data@masthead-prod
+    },
+    var.enable_modules.dataform ? { dataform_sa = "113640520915211463906" } : {},  # masthead-dataform@masthead-prod
+    var.enable_modules.dataplex ? { dataplex_sa = "117888223789069357263" } : {},  # masthead-dataplex@masthead-prod
+    var.enable_modules.data_scans ? { quality_sa = "107725254217268738982" } : {}, # masthead-quality-checks@masthead-prod
+  )
 
   # Service account per key of `google_service_account.masthead`: one shared, or one per Masthead identity.
   service_account_ids = var.separate_service_accounts ? {
@@ -28,14 +20,6 @@ locals {
   } : { shared = var.service_account_id }
 
   service_account_key = { for k in keys(local.masthead_subjects) : k => var.separate_service_accounts ? k : "shared" }
-
-  # Customer datasets that hold the data scan metrics, as { "project.dataset" = { project, dataset } }.
-  data_scan_datasets = {
-    for id in var.data_scan_dataset_ids : id => {
-      project = split(".", id)[0]
-      dataset = split(".", id)[1]
-    }
-  }
 }
 
 resource "google_project_service" "apis" {
@@ -106,22 +90,12 @@ resource "google_service_account_iam_member" "masthead_workload_user" {
   member             = "principal://iam.googleapis.com/${local.pool.name}/subject/${each.value}"
 }
 
-# Lets the quality account read the customer's scan metrics datasets. Masthead reads only these datasets.
-resource "google_bigquery_dataset_iam_member" "quality_data_viewer" {
-  for_each = local.data_scan_datasets
-
-  project    = each.value.project
-  dataset_id = each.value.dataset
-  role       = "roles/bigquery.dataViewer"
-  member     = "serviceAccount:${google_service_account.masthead[local.service_account_key["quality_sa"]].email}"
-}
-
 locals {
-  # Configured features only. Used in `masthead_federation`, which Masthead maps to its deploy request.
+  # Enabled modules only. Used in `masthead_federation`, which Masthead maps to its deploy request.
   masthead_federation_service_accounts = { for k, sa_key in local.service_account_key : k => google_service_account.masthead[sa_key].email }
 
-  # For the module's `masthead_service_accounts` input: the four module keys, null for a feature that is not
-  # configured. Set the matching `enable_modules` entry to false.
+  # For the module's `masthead_service_accounts` input: the four module keys, null for a disabled module.
+  # Pass the `enable_modules` output to the module.
   masthead_service_accounts = {
     for k in ["bigquery_sa", "dataform_sa", "dataplex_sa", "retro_sa"] :
     k => lookup(local.masthead_federation_service_accounts, k, null)
