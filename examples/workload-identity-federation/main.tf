@@ -1,18 +1,15 @@
 locals {
   pool_project_id = coalesce(var.pool_project_id, var.project_id)
 
-  # OIDC subjects (unique IDs) of Masthead service accounts, for the enabled modules only.
+  # OIDC subjects (unique IDs) of Masthead service accounts.
   # Keys match the module's `masthead_service_accounts` input, plus `quality_sa` for data scans.
-  # A disabled module has no subject, no service account and no trust binding.
-  masthead_subjects = merge(
-    {
-      bigquery_sa = "110299410351654081203" # masthead-data@masthead-prod
-      retro_sa    = "115289587456476335753" # retro-data@masthead-prod
-    },
-    var.enable_modules.dataform ? { dataform_sa = "113640520915211463906" } : {},  # masthead-dataform@masthead-prod
-    var.enable_modules.dataplex ? { dataplex_sa = "117888223789069357263" } : {},  # masthead-dataplex@masthead-prod
-    var.enable_modules.data_scans ? { quality_sa = "107725254217268738982" } : {}, # masthead-quality-checks@masthead-prod
-  )
+  masthead_subjects = {
+    bigquery_sa = "110299410351654081203" # masthead-data@masthead-prod
+    dataform_sa = "113640520915211463906" # masthead-dataform@masthead-prod
+    dataplex_sa = "117888223789069357263" # masthead-dataplex@masthead-prod
+    retro_sa    = "115289587456476335753" # retro-data@masthead-prod
+    quality_sa  = "107725254217268738982" # masthead-quality-checks@masthead-prod
+  }
 
   # Service account per key of `google_service_account.masthead`: one shared, or one per Masthead identity.
   service_account_ids = var.separate_service_accounts ? {
@@ -91,13 +88,5 @@ resource "google_service_account_iam_member" "masthead_workload_user" {
 }
 
 locals {
-  # Enabled modules only. Used in `masthead_federation`, which Masthead maps to its deploy request.
-  masthead_federation_service_accounts = { for k, sa_key in local.service_account_key : k => google_service_account.masthead[sa_key].email }
-
-  # For the module's `masthead_service_accounts` input: the four module keys, null for a disabled module.
-  # Pass the `enable_modules` output to the module.
-  masthead_service_accounts = {
-    for k in ["bigquery_sa", "dataform_sa", "dataplex_sa", "retro_sa"] :
-    k => lookup(local.masthead_federation_service_accounts, k, null)
-  }
+  masthead_service_accounts = { for k, sa_key in local.service_account_key : k => google_service_account.masthead[sa_key].email }
 }
