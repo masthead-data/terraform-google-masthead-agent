@@ -51,13 +51,12 @@ The provider ID (`masthead-google` by default) must be unused in that pool. The 
 
 ### Configure features
 
-`bigquery_sa` and `retro_sa` are always created. `enable_modules` takes the same keys as the agent module's, plus `data_scans`. Dataform and Dataplex are on by default, so existing setups don't change. Data scans are off by default. Pass the example's `enable_modules` output to the agent module. It fills in the defaults and drops `data_scans`:
+`bigquery_sa` and `retro_sa` are always created. `enable_modules` takes the same keys as the agent module's, plus `data_scans`. All of them are on by default. Pass the example's `enable_modules` output to the agent module. It fills in the defaults and drops `data_scans`:
 
 ```hcl
 locals {
   enable_modules = {
-    dataform   = false
-    data_scans = true
+    dataform = false
   }
 }
 
@@ -82,7 +81,7 @@ module "masthead_agent" {
 ```
 
 - With `dataform` or `dataplex` set to `false`, the example creates no account, trust binding or provider subject for that module. It also sets the module's key in `masthead_service_accounts` to `null` and leaves it out of `masthead_federation`.
-- `data_scans = true` creates `quality_sa`, with no roles. Grant it `roles/bigquery.dataViewer` on your own metrics datasets, conventionally `masthead_dq`, yourself; see [Data scans](../../docs/workload-identity-federation.md#data-scans). The agent module doesn't take `quality_sa`. The key appears only in `masthead_federation`, which Masthead maps to `qualitySa`.
+- `data_scans` creates `quality_sa`, with no roles. You grant it read access to your own metrics dataset when you set up data scans, which the Masthead agent plugin does with you. The agent module doesn't take `quality_sa`. The key appears only in `masthead_federation`, which Masthead maps to `qualitySa`.
 - With `separate_service_accounts = true`, each enabled key gets its own account: `masthead-bigquery`, `masthead-retro`, `masthead-dataform`, `masthead-dataplex` and `masthead-quality`. Separate accounts are recommended. With one shared account, the data scan identity can use every monitoring role, and every Masthead identity can read your metrics datasets.
 
 ## Inputs
@@ -91,7 +90,7 @@ module "masthead_agent" {
 |---|---|---|
 | `project_id` | Project for the service account, and the pool unless `pool_project_id` is set | required |
 | `service_account_id` | Account ID of the service account. With `separate_service_accounts`, the prefix of the per-identity account IDs | `masthead` |
-| `enable_modules` | Modules to create identities for: the agent module's `enable_modules` keys plus `data_scans`. `dataform`, `dataplex` and `data_scans` create `dataform_sa`, `dataplex_sa` and `quality_sa` | `dataform`, `dataplex` on; `data_scans` off |
+| `enable_modules` | Modules to create identities for: the agent module's `enable_modules` keys plus `data_scans`. `dataform`, `dataplex` and `data_scans` create `dataform_sa`, `dataplex_sa` and `quality_sa` | all on |
 | `separate_service_accounts` | One service account per configured Masthead identity: `masthead-bigquery`, `masthead-retro`, `masthead-dataform`, `masthead-dataplex`, `masthead-quality`. Recommended | `false` |
 | `create_pool` | Create the workload identity pool. `false` adds the Masthead provider to an existing pool | `true` |
 | `pool_id` | Workload identity pool ID, created or existing. A deleted pool's ID stays reserved for 30 days | `masthead` |

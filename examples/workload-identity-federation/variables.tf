@@ -51,7 +51,7 @@ variable "enable_modules" {
     dataform      = optional(bool, true)
     dataplex      = optional(bool, true)
     analytics_hub = optional(bool, true)
-    data_scans    = optional(bool, false)
+    data_scans    = optional(bool, true)
   })
   description = "Masthead modules to create identities for. Pass the enable_modules output to the agent module. dataform, dataplex and data_scans create dataform_sa, dataplex_sa and quality_sa; bigquery_sa and retro_sa are always created"
   default     = {}

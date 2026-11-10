@@ -23,13 +23,13 @@ Create these resources in one of your projects, for example the deployment proje
 ```hcl
 locals {
   # OIDC subjects (unique IDs) of Masthead service accounts.
-  # Keys match the module's `masthead_service_accounts` input. Remove the entries of features that you don't use,
-  # and add `quality_sa` for data scans (see "Data scans").
+  # Keys match the module's `masthead_service_accounts` input, plus `quality_sa` for data scans.
   masthead_subjects = {
     bigquery_sa = "110299410351654081203" # masthead-data@masthead-prod
     dataform_sa = "113640520915211463906" # masthead-dataform@masthead-prod
     dataplex_sa = "117888223789069357263" # masthead-dataplex@masthead-prod
     retro_sa    = "115289587456476335753" # retro-data@masthead-prod
+    quality_sa  = "107725254217268738982" # masthead-quality-checks@masthead-prod
   }
 }
 
@@ -111,7 +111,8 @@ terraform output -json masthead_federation
     "bigquery_sa": "masthead@my-project.iam.gserviceaccount.com",
     "dataform_sa": "masthead@my-project.iam.gserviceaccount.com",
     "dataplex_sa": "masthead@my-project.iam.gserviceaccount.com",
-    "retro_sa": "masthead@my-project.iam.gserviceaccount.com"
+    "retro_sa": "masthead@my-project.iam.gserviceaccount.com",
+    "quality_sa": "masthead@my-project.iam.gserviceaccount.com"
   }
 }
 ```
@@ -136,27 +137,6 @@ module "masthead_agent" {
 ```
 
 The module grants the same roles as in the default setup, now to your service account.
-
-If you don't use Dataform or Dataplex with Masthead, omit their service accounts from the federation and turn off the matching modules. `masthead_service_accounts` accepts `null` for these keys only when the matching module is disabled:
-
-```hcl
-module "masthead_agent" {
-  # ...
-  masthead_service_accounts = {
-    bigquery_sa = local.masthead_service_accounts.bigquery_sa
-    dataform_sa = null
-    dataplex_sa = null
-    retro_sa    = local.masthead_service_accounts.retro_sa
-  }
-
-  enable_modules = {
-    bigquery      = true
-    dataform      = false
-    dataplex      = false
-    analytics_hub = true
-  }
-}
-```
 
 If the module is already deployed with the default Masthead service accounts, this change removes their grants. Apply it after Masthead confirms step 2, so monitoring continues without a gap.
 
@@ -191,41 +171,6 @@ locals {
 This creates `masthead-bigquery`, `masthead-retro`, and `masthead-dataform`, `masthead-dataplex` and `masthead-quality` for the features that you configure. Each Masthead identity can use only its matching service account.
 
 Separate service accounts are recommended. With one shared service account, the data scan identity can use every role that you grant for monitoring, and every Masthead identity that impersonates the shared account can read your metrics dataset. You can still share one service account across keys, including `quality_sa`, if your policy requires it.
-
-## Dataform
-
-Masthead reads Dataform repositories and workflows with the `dataform_sa` service account. The module grants it `roles/dataform.viewer` on the monitored projects and folders. Dataform is supported with federation. Without a `dataform_sa` key, Masthead doesn't connect Dataform for your tenant. Set `enable_modules.dataform` to `false` in that case.
-
-## Dataplex
-
-Masthead reads Dataplex data products and data scans with the `dataplex_sa` service account. The module grants it `roles/dataplex.dataProductsViewer` and `roles/dataplex.dataScanDataViewer` on the monitored projects and folders. With `enable_datascan_editing = true`, it also grants `roles/dataplex.dataScanEditor`, `roles/dataplex.storageDataReader` and `roles/bigquery.jobUser`. Dataplex is supported with federation. Without a `dataplex_sa` key, Masthead doesn't connect Dataplex for your tenant. Set `enable_modules.dataplex` to `false` in that case.
-
-## Data scans
-
-Data scans run SQL on metrics tables that you maintain, in a dataset in your own project, conventionally `masthead_dq`. Masthead runs them as your `quality_sa` service account. The module doesn't grant this account any monitoring roles. It needs only read access to your metrics datasets. With the [example module](../examples/workload-identity-federation), set `enable_modules.data_scans = true` instead of step 1. In step 2, use `module.masthead_federation.masthead_federation.service_accounts["quality_sa"]` as the account:
-
-1. Add the Masthead data scan subject to `masthead_subjects` in step 1, so that the provider trusts it and `quality_sa` gets a service account:
-
-    ```hcl
-    quality_sa = "107725254217268738982" # masthead-quality-checks@masthead-prod
-    ```
-
-2. Grant `roles/bigquery.dataViewer` on each metrics dataset to that service account:
-
-    ```hcl
-    resource "google_bigquery_dataset_iam_member" "quality_data_viewer" {
-      project    = "project-1"
-      dataset_id = "masthead_dq"
-      role       = "roles/bigquery.dataViewer"
-      member     = "serviceAccount:${local.masthead_service_accounts["quality_sa"]}"
-    }
-    ```
-
-3. If a metrics table is a view over tables in other datasets, [authorize the view](https://cloud.google.com/bigquery/docs/authorized-views) or its dataset to read them. `roles/bigquery.dataViewer` on the metrics dataset doesn't cover the source tables.
-
-`quality_sa` is not an input of the module's `masthead_service_accounts`. Send it to Masthead in the `masthead_federation` output only. Without a `quality_sa` key, Masthead refuses to create data scans for your tenant.
-
-If you use VPC Service Controls, add the `quality_sa` account to the ingress identities of your perimeter yourself: the module's `vpc_service_controls_config` output doesn't list it, because it isn't a module input.
 
 ## Remove log access after the backfill
 
