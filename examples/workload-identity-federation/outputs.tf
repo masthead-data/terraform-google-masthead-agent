@@ -1,5 +1,5 @@
 output "masthead_service_accounts" {
-  description = "Service accounts to pass to the module's masthead_service_accounts input"
+  description = "Service accounts to pass to the module's masthead_service_accounts input; the module ignores quality_sa"
   value       = local.masthead_service_accounts
 }
 

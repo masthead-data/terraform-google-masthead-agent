@@ -11,7 +11,7 @@ variable "service_account_id" {
 
 variable "separate_service_accounts" {
   type        = bool
-  description = "Create one service account per Masthead identity (masthead-bigquery, masthead-dataform, masthead-dataplex, masthead-retro) instead of one shared"
+  description = "Create one service account per Masthead identity (masthead-bigquery, masthead-dataform, masthead-dataplex, masthead-retro, masthead-quality) instead of one shared. Recommended for least privilege"
   default     = false
 }
 

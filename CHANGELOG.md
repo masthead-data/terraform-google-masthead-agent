@@ -14,7 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Example**: `examples/workload-identity-federation` module with the service account, workload identity pool and provider from the Workload Identity Federation guide, usable as `masthead-data/masthead-agent/google//examples/workload-identity-federation`
 - **Docs**: Domain Restricted Sharing guide (`docs/domain-restricted-sharing.md`) with Masthead's Google Cloud customer ID and an example org policy override
 
+- **Example**: `quality_sa` in `examples/workload-identity-federation` for data scans, with no roles; you grant it read access to your metrics dataset when you set up data scans
+
 ### Changed
+
+- **Outputs**: `vpc_service_controls_config` skips a `masthead_service_accounts` entry that is `null`, so a disabled feature's service account can be omitted
 
 ### Deprecated
 

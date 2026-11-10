@@ -47,13 +47,17 @@ module "masthead_federation" {
 
 The provider ID (`masthead-google` by default) must be unused in that pool. The provider's attribute condition admits only Masthead service accounts, so other providers in the pool are unaffected.
 
+### Data scans
+
+`quality_sa` is the account Masthead runs data scans as. It gets no roles here: you grant it read access to your own metrics dataset when you set up data scans, which the Masthead agent plugin does with you. The agent module ignores it; Masthead reads it from `masthead_federation`.
+
 ## Inputs
 
 | Name | Description | Default |
 |---|---|---|
 | `project_id` | Project for the service account, and the pool unless `pool_project_id` is set | required |
 | `service_account_id` | Account ID of the service account. With `separate_service_accounts`, the prefix of the per-identity account IDs | `masthead` |
-| `separate_service_accounts` | One service account per Masthead identity: `masthead-bigquery`, `masthead-dataform`, `masthead-dataplex`, `masthead-retro` | `false` |
+| `separate_service_accounts` | One service account per Masthead identity: `masthead-bigquery`, `masthead-dataform`, `masthead-dataplex`, `masthead-retro`, `masthead-quality`. Recommended | `false` |
 | `create_pool` | Create the workload identity pool. `false` adds the Masthead provider to an existing pool | `true` |
 | `pool_id` | Workload identity pool ID, created or existing. A deleted pool's ID stays reserved for 30 days | `masthead` |
 | `pool_project_id` | Project of the pool and provider | `project_id` |
@@ -64,5 +68,5 @@ The provider ID (`masthead-google` by default) must be unused in that pool. The 
 
 | Name | Description |
 |---|---|
-| `masthead_service_accounts` | Service accounts for the module's `masthead_service_accounts` input |
+| `masthead_service_accounts` | Service accounts for the module's `masthead_service_accounts` input. The module ignores `quality_sa` |
 | `masthead_federation` | Provider and service accounts to share with Masthead. Contains no secrets |

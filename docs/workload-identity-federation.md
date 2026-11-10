@@ -23,12 +23,13 @@ Create these resources in one of your projects, for example the deployment proje
 ```hcl
 locals {
   # OIDC subjects (unique IDs) of Masthead service accounts.
-  # Keys match the module's `masthead_service_accounts` input.
+  # Keys match the module's `masthead_service_accounts` input, plus `quality_sa` for data scans.
   masthead_subjects = {
     bigquery_sa = "110299410351654081203" # masthead-data@masthead-prod
     dataform_sa = "113640520915211463906" # masthead-dataform@masthead-prod
     dataplex_sa = "117888223789069357263" # masthead-dataplex@masthead-prod
     retro_sa    = "115289587456476335753" # retro-data@masthead-prod
+    quality_sa  = "107725254217268738982" # masthead-quality-checks@masthead-prod
   }
 }
 
@@ -110,10 +111,13 @@ terraform output -json masthead_federation
     "bigquery_sa": "masthead@my-project.iam.gserviceaccount.com",
     "dataform_sa": "masthead@my-project.iam.gserviceaccount.com",
     "dataplex_sa": "masthead@my-project.iam.gserviceaccount.com",
-    "retro_sa": "masthead@my-project.iam.gserviceaccount.com"
+    "retro_sa": "masthead@my-project.iam.gserviceaccount.com",
+    "quality_sa": "masthead@my-project.iam.gserviceaccount.com"
   }
 }
 ```
+
+The `service_accounts` map contains one entry for each feature that you configured. `bigquery_sa` and `retro_sa` are always present. Masthead maps the keys to its deploy request: `bigquery_sa` to `bigquerySa`, `retro_sa` to `retroSa`, `dataform_sa` to `dataformSa`, `dataplex_sa` to `dataplexSa` and `quality_sa` to `qualitySa`. For a feature without a key, Masthead disables the feature for your tenant instead of using a Masthead identity.
 
 Masthead confirms when the token exchange works. This doesn't require any roles on your service account yet.
 
@@ -164,7 +168,9 @@ locals {
 }
 ```
 
-This creates `masthead-bigquery`, `masthead-dataform`, `masthead-dataplex` and `masthead-retro`. Each Masthead identity can use only its matching service account.
+This creates `masthead-bigquery`, `masthead-retro`, and `masthead-dataform`, `masthead-dataplex` and `masthead-quality` for the features that you configure. Each Masthead identity can use only its matching service account.
+
+Separate service accounts are recommended. With one shared service account, the data scan identity can use every role that you grant for monitoring, and every Masthead identity that impersonates the shared account can read your metrics dataset. You can still share one service account across keys, including `quality_sa`, if your policy requires it.
 
 ## Remove log access after the backfill
 

@@ -2,12 +2,13 @@ locals {
   pool_project_id = coalesce(var.pool_project_id, var.project_id)
 
   # OIDC subjects (unique IDs) of Masthead service accounts.
-  # Keys match the module's `masthead_service_accounts` input.
+  # Keys match the module's `masthead_service_accounts` input, plus `quality_sa` for data scans.
   masthead_subjects = {
     bigquery_sa = "110299410351654081203" # masthead-data@masthead-prod
     dataform_sa = "113640520915211463906" # masthead-dataform@masthead-prod
     dataplex_sa = "117888223789069357263" # masthead-dataplex@masthead-prod
     retro_sa    = "115289587456476335753" # retro-data@masthead-prod
+    quality_sa  = "107725254217268738982" # masthead-quality-checks@masthead-prod
   }
 
   # Service account per key of `google_service_account.masthead`: one shared, or one per Masthead identity.
