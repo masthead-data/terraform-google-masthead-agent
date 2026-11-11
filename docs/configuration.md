@@ -107,7 +107,7 @@ pii_redaction = {
 
 - Disabled by default. The SMT is enabled only when `custom_code` is provided.
 - The UDF must export a function named `redactPii(message, metadata)` matching the [Pub/Sub SMT UDF signature](https://docs.cloud.google.com/pubsub/docs/smts/udfs-overview).
-- The transform runs on the **topic**, so all subscribers automatically receive redacted messages.
+- The transform runs on the **subscription** (`logs_subscription`), ensuring that log publishing to the topic is never blocked by UDF errors, while the Masthead agent receives redacted messages.
 - Only applies to the BigQuery module. Other modules (Dataform, Dataplex) are unaffected.
 
 ### Externally managed organization level custom IAM roles
